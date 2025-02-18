@@ -1,11 +1,12 @@
 from __future__ import annotations
-from evaluators.types import ChatCompletionMessage, EvaluatorResult
-from evaluators.utils import (
+from openevals.evaluators.utils import (
     _run_evaluator,
     _normalize_to_openai_messages_list,
     _arun_evaluator,
 )
-from evaluators.trajectory.utils import _is_trajectory_superset
+
+from agentevals.evaluators.types import ChatCompletionMessage, EvaluatorResult
+from agentevals.evaluators.trajectory.utils import _is_trajectory_superset
 
 from typing import Any, Union, TYPE_CHECKING
 
@@ -13,15 +14,15 @@ if TYPE_CHECKING:
     from langchain_core.messages import BaseMessage
 
 
-def trajectory_unordered_match(
+def trajectory_superset(
     *,
     outputs: Union[list[ChatCompletionMessage], list[BaseMessage], dict],
     reference_outputs: Union[list[ChatCompletionMessage], list[BaseMessage], dict],
     **kwargs: Any,
 ) -> EvaluatorResult:
     """
-    Evaluate whether an input agent trajectory and called tools contains all the tools used in a reference trajectory.
-    This accounts for some differences in an LLM's reasoning process in a case-by-case basis.
+    Evaluate whether an agent trajectory and called tools is a superset of a reference trajectory and called tools.
+    This means the agent called a superset of the tools specified in the reference trajectory.
 
     Args:
         outputs (Union[list[ChatCompletionMessage], list[BaseMessage], dict]): Actual trajectory the agent followed.
@@ -32,7 +33,7 @@ def trajectory_unordered_match(
             a "messages" key with one of the above.
 
     Returns:
-        EvaluatorResult: Contains a score of True if trajectory matches, False otherwise
+        EvaluatorResult: Contains a score of True if trajectory (including called tools) matches, False otherwise
     """
     outputs = _normalize_to_openai_messages_list(outputs)
     reference_outputs = _normalize_to_openai_messages_list(reference_outputs)
@@ -40,29 +41,27 @@ def trajectory_unordered_match(
     def get_score():
         if outputs is None or reference_outputs is None:
             raise ValueError(
-                "Trajectory unordered match requires both outputs and reference_outputs"
+                "Trajectory superset match requires both outputs and reference_outputs"
             )
-        unordered_match = _is_trajectory_superset(
-            outputs, reference_outputs
-        ) and _is_trajectory_superset(reference_outputs, outputs)
-        return unordered_match
+        is_superset = _is_trajectory_superset(outputs, reference_outputs)
+        return is_superset
 
     return _run_evaluator(
-        run_name="trajectory_unordered_match",
+        run_name="trajectory_superset",
         scorer=get_score,
-        feedback_key="trajectory_unordered_match",
+        feedback_key="trajectory_superset",
     )
 
 
-async def trajectory_unordered_match_async(
+async def trajectory_superset_async(
     *,
     outputs: Union[list[ChatCompletionMessage], list[BaseMessage], dict],
     reference_outputs: Union[list[ChatCompletionMessage], list[BaseMessage], dict],
     **kwargs: Any,
 ) -> EvaluatorResult:
     """
-    Evaluate whether an input agent trajectory and called tools contains all the tools used in a reference trajectory.
-    This accounts for some differences in an LLM's reasoning process in a case-by-case basis.
+    Evaluate whether an agent trajectory and called tools is a superset of a reference trajectory and called tools.
+    This means the agent called a superset of the tools specified in the reference trajectory.
 
     Args:
         outputs (Union[list[ChatCompletionMessage], list[BaseMessage], dict]): Actual trajectory the agent followed.
@@ -73,7 +72,7 @@ async def trajectory_unordered_match_async(
             a "messages" key with one of the above.
 
     Returns:
-        EvaluatorResult: Contains a score of True if trajectory matches, False otherwise
+        EvaluatorResult: Contains a score of True if trajectory (including called tools) matches, False otherwise
     """
     outputs = _normalize_to_openai_messages_list(outputs)
     reference_outputs = _normalize_to_openai_messages_list(reference_outputs)
@@ -81,15 +80,13 @@ async def trajectory_unordered_match_async(
     async def aget_score():
         if outputs is None or reference_outputs is None:
             raise ValueError(
-                "Trajectory unordered match requires both outputs and reference_outputs"
+                "Trajectory superset match requires both outputs and reference_outputs"
             )
-        unordered_match = _is_trajectory_superset(
-            outputs, reference_outputs
-        ) and _is_trajectory_superset(reference_outputs, outputs)
-        return unordered_match
+        is_superset = _is_trajectory_superset(outputs, reference_outputs)
+        return is_superset
 
     return await _arun_evaluator(
-        run_name="trajectory_unordered_match",
+        run_name="trajectory_superset",
         scorer=aget_score,
-        feedback_key="trajectory_unordered_match",
+        feedback_key="trajectory_superset",
     )

@@ -1,5 +1,5 @@
 {
-  "name": "openevals",
+  "name": "agentevals",
   "version": "0.0.0",
   "packageManager": "yarn@4.3.1",
   "type": "module",

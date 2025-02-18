@@ -1,6 +1,6 @@
-from evaluators.trajectory.llm import create_trajectory_llm_as_judge, DEFAULT_PROMPT
+from agentevals.evaluators.trajectory.llm import create_trajectory_llm_as_judge, DEFAULT_PROMPT
 
-from evaluators.types import ChatCompletionMessage
+from agentevals.evaluators.types import ChatCompletionMessage
 
 import pytest
 import json

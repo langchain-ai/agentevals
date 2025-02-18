@@ -1,24 +1,26 @@
 from __future__ import annotations
-from evaluators.llm import (
+from openevals.evaluators.llm import (
     _create_llm_as_judge_scorer,
     _create_async_llm_as_judge_scorer,
     ChatCompletionMessage,
     RunnableLike,
     ModelClient,
-    LangChainLikeModel,
     SimpleEvaluator,
     SimpleAsyncEvaluator,
     Callable,
     Optional,
     Union,
 )
-from evaluators.types import EvaluatorResult, FewShotExample
-from evaluators.utils import (
+from openevals.evaluators.utils import (
     _chat_completion_messages_to_string,
     _run_evaluator,
     _arun_evaluator,
     _normalize_to_openai_messages_list,
 )
+from agentevals.evaluators.types import EvaluatorResult, FewShotExample
+
+from langchain_core.language_models.chat_models import BaseChatModel
+
 from typing import TYPE_CHECKING
 
 DEFAULT_PROMPT = """Grade the following agent trajectory:
@@ -79,7 +81,7 @@ def create_trajectory_llm_as_judge(
     judge: Optional[
         Union[
             ModelClient,
-            LangChainLikeModel,
+            BaseChatModel,
         ]
     ] = None,
     continuous: bool = False,
@@ -161,7 +163,7 @@ def create_async_trajectory_llm_as_judge(
     judge: Optional[
         Union[
             ModelClient,
-            LangChainLikeModel,
+            BaseChatModel,
         ]
     ] = None,
     continuous: bool = False,

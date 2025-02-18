@@ -1,6 +1,6 @@
 __all__ = ["_is_trajectory_superset", "_extract_tool_calls"]
 
-from evaluators.types import ChatCompletionMessage
+from agentevals.evaluators.types import ChatCompletionMessage
 
 
 def _normalize_tool_call(tool_call: dict) -> dict:

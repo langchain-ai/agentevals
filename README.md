@@ -830,6 +830,9 @@ The `trajectory_strict_match` evaluator, compares two trajectories and
 ensures that they contain the same messages in the same order with the same tool calls. It allows for differences in message content and tool call arguments,
 but requires that the selected tools at each step are the same.
 
+<details open>
+<summary>Python</summary>
+
 ```python
 import json
 from openevals.evaluators.trajectory.strict import trajectory_strict_match
@@ -881,7 +884,48 @@ print(result)
     'comment': None,
 }
 ```
+</details>
 
+<details>
+<summary>TypeScript</summary>
+
+```ts
+import { trajectoryStrictMatch } from "openevals";
+
+const inputs = {};
+const outputs = [
+    { role: "user", content: "What is the weather in SF?" },
+    {
+      role: "assistant",
+      tool_calls: [{
+        function: { name: "get_weather", arguments: JSON.stringify({ city: "SF" }) }
+      }]
+    },
+    { role: "tool", content: "It's 80 degrees and sunny in SF." },
+    { role: "assistant", content: "The weather in SF is 80 degrees and sunny." },
+];
+
+const reference_outputs = [
+    { role: "user", content: "What is the weather in San Francisco?" },
+    { role: "assistant", tool_calls: [{ function: { name: "get_weather", arguments: JSON.stringify({ city: "San Francisco" }) } }] },
+    { role: "tool", content: "It's 80 degrees and sunny in San Francisco." },
+];
+
+const result = await trajectoryStrictMatch({
+  inputs,
+  outputs,
+  referenceOutputs,
+});
+
+console.log(result);
+```
+
+```
+{
+    'key': 'trajectory_accuracy',
+    'score': 1.0,
+    'comment': None,
+}
 #### Unordered match
 
 The `trajectory_unordered_match` evaluator, compares two trajectories and ensures that they contain the same number of tool calls in any order. This is useful if you want to allow flexibility in how an agent obtains the proper information, but still do care that all information was retrieved.
