@@ -1,8 +1,7 @@
 import { BaseMessage } from "@langchain/core/messages";
 import { _createLLMAsJudgeScorer } from "openevals/llm";
 
-import { _runEvaluator } from "../utils.js";
-import { _normalizeToOpenAIMessagesList } from "../utils.js";
+import { _runEvaluator, _normalizeToOpenAIMessagesList } from "../utils.js";
 import { _chatCompletionMessagesToString } from "./utils.js";
 import {
   ChatCompletionMessage,
@@ -54,6 +53,7 @@ Grade the following trajectory:
 `;
 
 function _formatInputs(params: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   inputs?: Record<string, any>;
   outputs:
     | ChatCompletionMessage[]
@@ -139,6 +139,7 @@ export const createTrajectoryLLMAsJudge = ({
     referenceOutputs,
     ...extra
   }: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     inputs?: Record<string, any>;
     outputs:
       | ChatCompletionMessage[]

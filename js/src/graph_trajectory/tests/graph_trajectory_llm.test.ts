@@ -55,7 +55,6 @@ ls.describe("graph_trajectory_llm", () => {
         inputs: trajectory.inputs,
         outputs: trajectory.outputs,
       });
-      console.log(res);
       expect(res.key).toBe("graph_trajectory_accuracy");
       expect(res.score).toBe(true);
     }
@@ -124,7 +123,6 @@ Your task is to grade the accuracy of an AI agent's internal steps in resolving 
         inputs: trajectory.inputs,
         outputs: trajectory.outputs,
       });
-      console.log(res);
       expect(res.key).toBe("graph_trajectory_accuracy");
       expect(res.score).toBe(false);
     }

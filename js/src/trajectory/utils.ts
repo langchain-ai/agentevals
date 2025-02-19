@@ -1,5 +1,6 @@
 import { ChatCompletionMessage } from "../types.js";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function _normalizeToolCall(toolCall: Record<string, any>): {
   name: string;
   args: string;

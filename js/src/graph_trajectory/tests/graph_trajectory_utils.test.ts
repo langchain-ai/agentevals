@@ -1,3 +1,4 @@
+/* eslint-disable no-promise-executor-return */
 import { expect, test } from "vitest";
 import { Annotation, StateGraph, MemorySaver } from "@langchain/langgraph";
 
@@ -81,14 +82,14 @@ test("trajectory match", async () => {
       ],
       steps: [
         [
-          ":__start__",
-          ":outer1",
-          ":inner",
+          "__start__",
+          "outer1",
+          "inner",
           "inner:__start__",
           "inner:inner1",
           "inner:inner2",
         ],
-        [":outer2"],
+        ["outer2"],
       ],
     },
   });
