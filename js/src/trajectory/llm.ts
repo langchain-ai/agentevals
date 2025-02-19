@@ -1,19 +1,16 @@
-import {
-  ChatCompletionMessage,
-  EvaluatorResult,
-  FewShotExample,
-  ModelClient,
-} from "../types.js";
 import { BaseMessage } from "@langchain/core/messages";
-import { BaseChatModel } from "@langchain/core/language_models/chat_models";
-import { RunnableInterface } from "@langchain/core/runnables";
-
 import { _createLLMAsJudgeScorer } from "openevals/llm";
+
 import { _runEvaluator } from "../utils.js";
 import { _normalizeToOpenAIMessagesList } from "../utils.js";
 import { _chatCompletionMessagesToString } from "./utils.js";
+import {
+  ChatCompletionMessage,
+  EvaluatorResult,
+  TrajectoryLLMAsJudgeParams,
+} from "../types.js";
 
-export const DEFAULT_REF_COMPARE_PROMPT = `You are an expert data labeler.
+export const TRAJECTORY_ACCURACY_PROMPT_WITH_REFERENCE = `You are an expert data labeler.
 Your task is to grade the accuracy of an AI agent's internal trajectory.
 
 <Rubric>
@@ -33,7 +30,7 @@ Grade the following trajectory:
 {reference_outputs}
 `;
 
-export const DEFAULT_NO_REF_PROMPT = `You are an expert data labeler.
+export const TRAJECTORY_ACCURACY_PROMPT = `You are an expert data labeler.
 Your task is to grade the accuracy of an AI agent's internal trajectory.
 
 <Rubric>
@@ -98,9 +95,7 @@ function _formatInputs(params: {
  *
  * @param options - Configuration options
  * @param options.prompt - The evaluation prompt. Can be a string template, LangChain prompt template,
- *                        or callable that returns a list of chat messages. Note that the default prompt
- *                        allows a rubric in addition to the typical "inputs", "outputs", and
- *                        "reference_outputs" parameters.
+ *                        or callable that returns a list of chat messages.
  * @param options.feedbackKey - Key used to store the evaluation result. Defaults to "trajectory_accuracy".
  * @param options.model - Model identifier to use. If judge is an OpenAI client,
  *                       this should be a model name directly. If judge is omitted, must be a valid
@@ -117,7 +112,7 @@ function _formatInputs(params: {
  * @returns A function that evaluates agent trajectories using the configured LLM judge.
  */
 export const createTrajectoryLLMAsJudge = ({
-  prompt = DEFAULT_REF_COMPARE_PROMPT,
+  prompt = TRAJECTORY_ACCURACY_PROMPT,
   feedbackKey = "trajectory_accuracy",
   model,
   system,
@@ -126,22 +121,7 @@ export const createTrajectoryLLMAsJudge = ({
   choices,
   useReasoning = true,
   fewShotExamples,
-}: {
-  prompt?:
-    | string
-    | RunnableInterface
-    | ((
-        ...args: unknown[]
-      ) => ChatCompletionMessage[] | Promise<ChatCompletionMessage[]>);
-  feedbackKey?: string;
-  model?: string;
-  system?: string;
-  judge?: ModelClient | BaseChatModel;
-  continuous?: boolean;
-  choices?: number[];
-  useReasoning?: boolean;
-  fewShotExamples?: FewShotExample[];
-}) => {
+}: TrajectoryLLMAsJudgeParams) => {
   const scorer = _createLLMAsJudgeScorer({
     prompt,
     judge,
@@ -157,7 +137,6 @@ export const createTrajectoryLLMAsJudge = ({
     inputs,
     outputs,
     referenceOutputs,
-    rubric,
     ...extra
   }: {
     inputs?: Record<string, any>;
@@ -172,12 +151,17 @@ export const createTrajectoryLLMAsJudge = ({
     [key: string]: unknown;
   }): Promise<EvaluatorResult> => {
     const [formattedOutputs, formattedReferenceOutputs, formattedInputs] =
-      prompt === DEFAULT_PROMPT || prompt === DEFAULT_NO_REF_PROMPT
+      prompt === TRAJECTORY_ACCURACY_PROMPT ||
+      prompt === TRAJECTORY_ACCURACY_PROMPT_WITH_REFERENCE
         ? _formatInputs({ inputs, outputs, referenceOutputs })
         : [
-            inputs,
-            _normalizeToOpenAIMessagesList(outputs),
-            _normalizeToOpenAIMessagesList(referenceOutputs),
+            inputs ? JSON.stringify(inputs) : "",
+            _chatCompletionMessagesToString(
+              _normalizeToOpenAIMessagesList(outputs)
+            ),
+            _chatCompletionMessagesToString(
+              _normalizeToOpenAIMessagesList(referenceOutputs)
+            ),
           ];
 
     return _runEvaluator(`llm_as_${feedbackKey}_judge`, scorer, feedbackKey, {

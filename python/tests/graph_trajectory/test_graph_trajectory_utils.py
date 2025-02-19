@@ -13,18 +13,6 @@ import time
 
 from langgraph.graph import StateGraph
 from langgraph.checkpoint.memory import MemorySaver
-from langgraph.types import interrupt
-from langchain_core.tools import tool
-
-
-@tool
-def search(query: str):
-    """Call to surf the web."""
-    user_answer = interrupt("Tell me the answer to the question.")
-    return user_answer
-
-
-tools = [search]
 
 
 def test_trajectory_match():

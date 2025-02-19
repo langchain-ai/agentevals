@@ -52,7 +52,7 @@ def extract_langgraph_trajectory_from_snapshots(
                 "checkpoint_ns", ""
             )
             subgraph_path = ""
-            if checkpoint_ns and len(checkpoint_ns.split(":")):
+            if checkpoint_ns and len(checkpoint_ns.split(":")) > 1:
                 subgraph_path = f"{checkpoint_ns.split(':')[0]}:"
             for task in snapshot.tasks:
                 if task.interrupts:

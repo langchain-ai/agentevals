@@ -23,8 +23,7 @@ export const extractLangGraphTrajectoryFromSnapshots = (
       isAccumulatingSteps = true;
       if (hasInterrupts) {
         trajectory.results.push({});
-      }
-      if (
+      } else if (
         snapshot.values != null &&
         typeof snapshot.values === "object" &&
         !Array.isArray(snapshot.values) &&
@@ -40,13 +39,15 @@ export const extractLangGraphTrajectoryFromSnapshots = (
         } else {
           trajectory.results.push({ messages: [lastMessage] });
         }
-        trajectory.steps.push([]);
+      } else {
+        trajectory.results.push(snapshot.values);
       }
+      trajectory.steps.push([]);
     }
     if (isAccumulatingSteps && snapshot.tasks?.length) {
       const checkpointNs = snapshot.config?.configurable?.checkpoint_ns ?? "";
       let subgraphPath = "";
-      if (checkpointNs.split(":").length) {
+      if (checkpointNs.split(":").length > 1) {
         subgraphPath = `${checkpointNs.split(":")[0]}:`;
       }
       for (const task of snapshot.tasks) {
@@ -94,9 +95,12 @@ export const _getLangGraphStateHistoryRecursive = async (
   for await (const history of graph.getStateHistory(config)) {
     if (history.tasks?.length) {
       for (const task of history.tasks) {
-        if ((task.state as RunnableConfig)?.configurable?.configurable_ns) {
+        if ((task.state as RunnableConfig)?.configurable?.checkpoint_ns) {
           stateHistory.push(
-            ...(await _getLangGraphStateHistoryRecursive(graph, task.state as RunnableConfig))
+            ...(await _getLangGraphStateHistoryRecursive(
+              graph,
+              task.state as RunnableConfig
+            ))
           );
         }
       }
@@ -111,7 +115,6 @@ export const extractLangGraphTrajectoryFromThread = async (
   graph: Pregel<any, any>,
   config: RunnableConfig
 ) => {
-  return extractLangGraphTrajectoryFromSnapshots(
-    await _getLangGraphStateHistoryRecursive(graph, config)
-  );
+  const history = await _getLangGraphStateHistoryRecursive(graph, config);
+  return extractLangGraphTrajectoryFromSnapshots(history);
 };
