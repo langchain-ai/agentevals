@@ -1,4 +1,7 @@
-from agentevals.evaluators.trajectory.llm import create_trajectory_llm_as_judge, DEFAULT_PROMPT
+from agentevals.evaluators.trajectory.llm import (
+    create_trajectory_llm_as_judge,
+    DEFAULT_PROMPT,
+)
 
 from agentevals.evaluators.types import ChatCompletionMessage
 
