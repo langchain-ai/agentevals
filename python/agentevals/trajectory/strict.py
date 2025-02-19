@@ -17,6 +17,8 @@ def _scorer(
     *,
     outputs: Union[list[ChatCompletionMessage], list[BaseMessage], dict],
     reference_outputs: Union[list[ChatCompletionMessage], list[BaseMessage], dict],
+    tool_call_args_exact_match: bool = True,
+    message_content_exact_match: bool = False,
 ) -> float:
     outputs = _normalize_to_openai_messages_list(outputs)
     reference_outputs = _normalize_to_openai_messages_list(reference_outputs)
@@ -52,6 +54,16 @@ def _scorer(
                 ):
                     exact_match = False
                     break
+                if tool_call_args_exact_match:
+                    if (
+                        output_call["function"]["arguments"]
+                        != reference_call["function"]["arguments"]
+                    ):
+                        exact_match = False
+                        break
+        if message_content_exact_match:
+            if output["content"] != reference_output["content"]:
+                exact_match = False
     return exact_match
 
 
@@ -59,6 +71,8 @@ def trajectory_strict_match(
     *,
     outputs: Union[list[ChatCompletionMessage], list[BaseMessage], dict],
     reference_outputs: Union[list[ChatCompletionMessage], list[BaseMessage], dict],
+    tool_call_args_exact_match: bool = True,
+    message_content_exact_match: bool = False,
     **kwargs: Any,
 ) -> EvaluatorResult:
     """
@@ -72,13 +86,22 @@ def trajectory_strict_match(
         reference_outputs (Union[list[ChatCompletionMessage], list[BaseMessage], dict]): Ideal reference trajectory the agent should have followed.
             May be a list of OpenAI messages, a list of LangChain messages, or a dictionary containing
             a "messages" key with one of the above.
+        tool_call_args_exact_match (bool): Whether to require exact matches for tool call arguments
+        message_content_exact_match (bool): Whether to require exact matches for message content
 
     Returns:
         EvaluatorResult: Contains a score of True if trajectory (including called tools) matches, False otherwise
     """
+    def wrapper(**kwargs: Any):
+        return _scorer(
+            tool_call_args_exact_match=tool_call_args_exact_match,
+            message_content_exact_match=message_content_exact_match,
+            **kwargs
+        )
+
     return _run_evaluator(
         run_name="trajectory_strict_match",
-        scorer=_scorer,
+        scorer=wrapper,
         feedback_key="trajectory_strict_match",
         outputs=outputs,
         reference_outputs=reference_outputs,
@@ -89,6 +112,8 @@ async def trajectory_strict_match_async(
     *,
     outputs: Union[list[ChatCompletionMessage], list[BaseMessage], dict],
     reference_outputs: Union[list[ChatCompletionMessage], list[BaseMessage], dict],
+    tool_call_args_exact_match: bool = True,
+    message_content_exact_match: bool = False,
     **kwargs: Any,
 ) -> EvaluatorResult:
     """
@@ -102,13 +127,19 @@ async def trajectory_strict_match_async(
         reference_outputs (Union[list[ChatCompletionMessage], list[BaseMessage], dict]): Ideal reference trajectory the agent should have followed.
             May be a list of OpenAI messages, a list of LangChain messages, or a dictionary containing
             a "messages" key with one of the above.
+        tool_call_args_exact_match (bool): Whether to require exact matches for tool call arguments
+        message_content_exact_match (bool): Whether to require exact matches for message content
 
     Returns:
         EvaluatorResult: Contains a score of True if trajectory (including called tools) matches, False otherwise
     """
 
     async def async_wrapper(**kwargs: Any):
-        return _scorer(**kwargs)
+        return _scorer(
+            tool_call_args_exact_match=tool_call_args_exact_match,
+            message_content_exact_match=message_content_exact_match,
+            **kwargs
+        )
 
     return await _arun_evaluator(
         run_name="trajectory_strict_match",

@@ -751,4 +751,85 @@ ls.describe("trajectory", () => {
       expect(result.comment).toBeUndefined();
     }
   );
+
+  ls.test.each([
+    {
+      inputs: {},
+      toolCallArgsExactMatch: true,
+      messageContentExactMatch: false,
+      score: false,
+    },
+    {
+      inputs: {},
+      toolCallArgsExactMatch: false,
+      messageContentExactMatch: false,
+      score: true,
+    },
+    {
+      inputs: {},
+      toolCallArgsExactMatch: false,
+      messageContentExactMatch: true,
+      score: true,
+    },
+    {
+      inputs: {},
+      toolCallArgsExactMatch: true,
+      messageContentExactMatch: true,
+      score: false,
+    },
+  ])(
+    "trajectory match strict params",
+    async ({ toolCallArgsExactMatch, messageContentExactMatch, score }) => {
+      const outputs = [
+        new HumanMessage("What is the weather in SF?"),
+        new AIMessage({
+          content: "",
+          tool_calls: [
+            {
+              id: "1234",
+              name: "get_weather",
+              args: { city: "SF" },
+            },
+          ],
+        }),
+        new ToolMessage({
+          content: "It's 80 degrees and sunny in SF.",
+          tool_call_id: "1234",
+        }),
+        new AIMessage("The weather in SF is 80 degrees and sunny."),
+      ];
+
+      const referenceOutputs = [
+        new HumanMessage("What is the weather in SF?"),
+        new AIMessage({
+          content: "",
+          tool_calls: [
+            {
+              id: "1234",
+              name: "get_weather",
+              args: { city: "San Francisco" },
+            },
+          ],
+        }),
+        new ToolMessage({
+          content: "It's 80 degrees and sunny in SF.",
+          tool_call_id: "1234",
+        }),
+        new AIMessage("The weather in SF is 80 degrees and sunny."),
+      ];
+
+      const result = await trajectoryStrictMatch({
+        outputs,
+        referenceOutputs,
+        toolCallArgsExactMatch,
+        messageContentExactMatch,
+      });
+
+      expect(result).toEqual({
+        key: "trajectory_strict_match",
+        score,
+        comment: null,
+      });
+    }
+  );
 });

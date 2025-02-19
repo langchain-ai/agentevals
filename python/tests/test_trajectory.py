@@ -592,3 +592,52 @@ def test_trajectory_match_with_langchain_messages_failure(evaluator, feedback_ke
     assert evaluator(
         inputs=inputs, outputs=outputs, reference_outputs=reference_outputs
     ) == EvaluatorResult(key=feedback_key, score=False, comment=None)
+
+@pytest.mark.langsmith
+@pytest.mark.parametrize(
+    "tool_call_args_exact_match, message_content_exact_match, score",
+    [
+        (True, False, False),
+        (False, False, True),
+        (False, True, True),
+        (True, True, False),
+    ],
+)
+def test_trajectory_match_strict_params(tool_call_args_exact_match, message_content_exact_match, score):
+    inputs = {}
+    outputs = [
+        HumanMessage(content="What is the weather in SF?"),
+        AIMessage(
+            content="",
+            tool_calls=[
+                {
+                    "id": "1234",
+                    "name": "get_weather",
+                    "args": {"city": "SF"},
+                }
+            ],
+        ),
+        ToolMessage(tool_call_id="1234", content="It's 80 degrees and sunny in SF."),
+        AIMessage(content="The weather in SF is 80 degrees and sunny."),
+    ]
+    reference_outputs = [
+        HumanMessage(content="What is the weather in SF?"),
+        AIMessage(
+            content="",
+            tool_calls=[
+                {
+                    "id": "1234",
+                    "name": "get_weather",
+                    "args": {"city": "San Francisco"},
+                }
+            ],
+        ),
+        ToolMessage(tool_call_id="1234", content="It's 80 degrees and sunny in SF."),
+        AIMessage(content="The weather in SF is 80 degrees and sunny."),
+    ]
+
+    assert trajectory_strict_match(
+        inputs=inputs, outputs=outputs, reference_outputs=reference_outputs,
+        tool_call_args_exact_match=tool_call_args_exact_match,
+        message_content_exact_match=message_content_exact_match,
+    ) == EvaluatorResult(key="trajectory_strict_match", score=score, comment=None)
