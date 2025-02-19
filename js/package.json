@@ -17,13 +17,15 @@
     "@langchain/openai": "^0.4.4",
     "langchain": "^0.3.18",
     "langsmith": "^0.3.10",
-    "openevals": "^0.0.1-rc.4"
+    "openevals": "^0.0.1-rc.6"
   },
   "peerDependencies": {
-    "@langchain/core": "^0.3.40"
+    "@langchain/core": "^0.3.40",
+    "@langchain/langgraph": "^0.2.46"
   },
   "devDependencies": {
     "@langchain/core": "^0.3.40",
+    "@langchain/langgraph": "^0.2.46",
     "@langchain/scripts": "0.1.3",
     "@tsconfig/recommended": "^1.0.8",
     "dotenv": "^16.4.7",

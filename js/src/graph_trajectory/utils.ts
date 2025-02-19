@@ -85,17 +85,18 @@ export const extractLangGraphTrajectoryFromSnapshots = (
   return { inputs, outputs: trajectory };
 };
 
-const _getLangGraphStateHistoryRecursive = async (
-  graph: Pregel,
+export const _getLangGraphStateHistoryRecursive = async (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  graph: Pregel<any, any>,
   config: RunnableConfig
-) => {
+): Promise<StateSnapshot[]> => {
   const stateHistory = [];
   for await (const history of graph.getStateHistory(config)) {
     if (history.tasks?.length) {
       for (const task of history.tasks) {
-        if (task.state?.configurable?.configurable_ns) {
+        if ((task.state as RunnableConfig)?.configurable?.configurable_ns) {
           stateHistory.push(
-            ...(await _getLangGraphStateHistoryRecursive(graph, task.state))
+            ...(await _getLangGraphStateHistoryRecursive(graph, task.state as RunnableConfig))
           );
         }
       }
@@ -105,23 +106,12 @@ const _getLangGraphStateHistoryRecursive = async (
   return stateHistory;
 };
 
-// def _get_langgraph_state_history_recursive(graph: Pregel, config: RunnableConfig):
-//     state_history = []
-//     for history in graph.get_state_history(config=config):
-//         if history.tasks:
-//             for task in history.tasks:
-//                 if task.state and task.state.get("configurable", {}).get(
-//                     "checkpoint_ns", None
-//                 ):
-//                     state_history.extend(
-//                         _get_langgraph_state_history_recursive(graph, task.state)
-//                     )
-//         state_history.append(history)
-//     return state_history
-
-// def extract_langgraph_trajectory_from_thread(
-//     graph: Pregel, config: RunnableConfig
-// ) -> ExtractedLangGraphThreadTrajectory:
-//     return extract_langgraph_trajectory_from_snapshots(
-//         _get_langgraph_state_history_recursive(graph, config)
-//     )
+export const extractLangGraphTrajectoryFromThread = async (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  graph: Pregel<any, any>,
+  config: RunnableConfig
+) => {
+  return extractLangGraphTrajectoryFromSnapshots(
+    await _getLangGraphStateHistoryRecursive(graph, config)
+  );
+};
