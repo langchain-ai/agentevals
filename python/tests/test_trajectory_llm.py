@@ -54,6 +54,7 @@ def test_trajectory_match():
     assert eval_result["key"] == "trajectory_accuracy"
     assert eval_result["score"]
 
+
 @pytest.mark.langsmith
 def test_trajectory_no_ref():
     evaluator = create_trajectory_llm_as_judge(
@@ -107,7 +108,7 @@ def test_trajectory_no_ref_bad_trajectory():
         outputs=outputs,
     )
     assert eval_result["key"] == "trajectory_accuracy"
-    assert eval_result["score"] == False
+    assert not eval_result["score"]
 
 
 @pytest.mark.langsmith

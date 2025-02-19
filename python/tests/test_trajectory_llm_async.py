@@ -57,6 +57,7 @@ async def test_trajectory_match():
     assert eval_result["key"] == "trajectory_accuracy"
     assert eval_result["score"]
 
+
 @pytest.mark.langsmith
 @pytest.mark.asyncio
 async def test_trajectory_no_ref():
@@ -112,7 +113,8 @@ async def test_trajectory_no_ref_bad_trajectory():
         outputs=outputs,
     )
     assert eval_result["key"] == "trajectory_accuracy"
-    assert eval_result["score"] == False
+    assert not eval_result["score"]
+
 
 @pytest.mark.langsmith
 @pytest.mark.asyncio
