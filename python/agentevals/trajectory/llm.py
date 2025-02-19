@@ -25,7 +25,7 @@ from langchain_core.language_models.chat_models import BaseChatModel
 
 from typing import TYPE_CHECKING
 
-DEFAULT_PROMPT = """You are an expert data labeler.
+DEFAULT_REF_COMPARE_PROMPT = """You are an expert data labeler.
 Your task is to grade the accuracy of an AI agent's internal trajectory.
 
 <Rubric>
@@ -33,7 +33,7 @@ Your task is to grade the accuracy of an AI agent's internal trajectory.
   - Makes logical sense between steps
   - Shows clear progression
   - Is relatively efficient, though it does not need to be perfectly efficient
-  - Is semantically equivalent to the provided reference trajectory, if present
+  - Is semantically equivalent to the provided reference trajectory
 </Rubric>
 
 Grade the following trajectory:
@@ -43,6 +43,29 @@ Grade the following trajectory:
 </trajectory>
 {inputs}
 {reference_outputs}
+"""
+
+DEFAULT_NO_REF_PROMPT = """You are an expert data labeler.
+Your task is to grade the accuracy of an AI agent's internal trajectory.
+
+<Rubric>
+  An accurate trajectory:
+  - Makes logical sense between steps
+  - Shows clear progression
+  - Is relatively efficient, though it does not need to be perfectly efficient
+</Rubric>
+
+First, try to understand the goal of the trajectory by looking at the input
+(if the input is not present try to infer it from the content of the first message),
+as well as the output of the final message. Once you understand the goal, grade the trajectory
+as it relates to achieving that goal.
+
+Grade the following trajectory:
+
+<trajectory>
+{outputs}
+</trajectory>
+{inputs}
 """
 
 if TYPE_CHECKING:
@@ -81,7 +104,7 @@ def create_trajectory_llm_as_judge(
     *,
     prompt: str
     | RunnableLike
-    | Callable[..., list[ChatCompletionMessage]] = DEFAULT_PROMPT,
+    | Callable[..., list[ChatCompletionMessage]] = DEFAULT_REF_COMPARE_PROMPT,
     model: Optional[str] = None,
     feedback_key: str = "trajectory_accuracy",
     judge: Optional[
@@ -138,7 +161,21 @@ def create_trajectory_llm_as_judge(
         ] = None,
         **kwargs,
     ) -> EvaluatorResult:
-        if prompt == DEFAULT_PROMPT:
+        if prompt == DEFAULT_REF_COMPARE_PROMPT:
+            if reference_outputs is None:
+                raise ValueError(
+                    "DEFAULT_REF_COMPARE_PROMPT requires reference_outputs to compare against"
+                )
+            (
+                formatted_outputs,
+                formatted_reference_outputs,
+                formatted_inputs,
+            ) = _format_inputs(inputs, outputs, reference_outputs)
+        elif prompt == DEFAULT_NO_REF_PROMPT:
+            if reference_outputs is not None:
+                raise ValueError(
+                    "DEFAULT_NO_REF_PROMPT requires reference_outputs to be None"
+                )
             (
                 formatted_outputs,
                 formatted_reference_outputs,
@@ -167,7 +204,7 @@ def create_async_trajectory_llm_as_judge(
     *,
     prompt: str
     | RunnableLike
-    | Callable[..., list[ChatCompletionMessage]] = DEFAULT_PROMPT,
+    | Callable[..., list[ChatCompletionMessage]] = DEFAULT_REF_COMPARE_PROMPT,
     model: Optional[str] = None,
     feedback_key: str = "trajectory_accuracy",
     judge: Optional[
@@ -224,7 +261,21 @@ def create_async_trajectory_llm_as_judge(
         ] = None,
         **kwargs,
     ) -> EvaluatorResult:
-        if prompt == DEFAULT_PROMPT:
+        if prompt == DEFAULT_REF_COMPARE_PROMPT:
+            if reference_outputs is None:
+                raise ValueError(
+                    "DEFAULT_REF_COMPARE_PROMPT requires reference_outputs to compare against"
+                )
+            (
+                formatted_outputs,
+                formatted_reference_outputs,
+                formatted_inputs,
+            ) = _format_inputs(inputs, outputs, reference_outputs)
+        elif prompt == DEFAULT_NO_REF_PROMPT:
+            if reference_outputs is not None:
+                raise ValueError(
+                    "DEFAULT_NO_REF_PROMPT requires reference_outputs to be None"
+                )
             (
                 formatted_outputs,
                 formatted_reference_outputs,

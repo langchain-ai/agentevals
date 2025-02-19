@@ -41,10 +41,10 @@ Once you've done this, you can run your first trajectory evaluator. We represent
 <summary>Python</summary>
 
 ```python
-from agentevals.trajectory.llm import create_trajectory_llm_as_judge, DEFAULT_PROMPT
+from agentevals.trajectory.llm import create_trajectory_llm_as_judge, DEFAULT_REF_COMPARE_PROMPT
 
 trajectory_evaluator = create_trajectory_llm_as_judge(
-    prompt=DEFAULT_PROMPT,
+    prompt=DEFAULT_REF_COMPARE_PROMPT,
     model="openai:o3-mini",
 )
 
@@ -105,11 +105,11 @@ print(eval_result)
 ```ts
 import {
   createTrajectoryLLMAsJudge,
-  DEFAULT_TRAJECTORY_EVALUATOR_PROMPT
+  DEFAULT_REF_COMPARE_PROMPT
 } from "agentevals";
 
 const trajectoryEvaluator = createTrajectoryLLMAsJudge({
-  prompt: DEFAULT_TRAJECTORY_EVALUATOR_PROMPT,
+  prompt: DEFAULT_REF_COMPARE_PROMPT,
   model: "openai:o3-mini",
 });
 
@@ -625,10 +625,10 @@ This allows for more flexibility in the trajectory comparison:
 
 ```python
 import json
-from openevals.trajectory.llm import create_trajectory_llm_as_judge, DEFAULT_PROMPT
+from openevals.trajectory.llm import create_trajectory_llm_as_judge, DEFAULT_REF_COMPARE_PROMPT
 
 evaluator = create_trajectory_llm_as_judge(
-  prompt=DEFAULT_PROMPT,
+  prompt=DEFAULT_REF_COMPARE_PROMPT,
   model="openai:o3-mini"
 )
 outputs = [
@@ -686,11 +686,11 @@ print(eval_result)
 ```ts
 import {
   createTrajectoryLLMAsJudge,
-  DEFAULT_TRAJECTORY_EVALUATOR_PROMPT
+  DEFAULT_REF_COMPARE_PROMPT
 } from "agentevals";
 
 const evaluator = createTrajectoryLLMAsJudge({
-  prompt: DEFAULT_TRAJECTORY_EVALUATOR_PROMPT,
+  prompt: DEFAULT_REF_COMPARE_PROMPT,
   model: "openai:o3-mini",
 });
 
@@ -1257,7 +1257,7 @@ experiment_results = client.evaluate(
 
 ```ts
 import { evaluate } from "langsmith/evaluation";
-import { createTrajectoryLLMAsJudge, DEFAULT_PROMPT } from "agentevals";
+import { createTrajectoryLLMAsJudge, DEFAULT_REF_COMPARE_PROMPT } from "agentevals";
 
 const trajectoryEvaluator = createTrajectoryLLMAsJudge({
   model: "openai:o3-mini",

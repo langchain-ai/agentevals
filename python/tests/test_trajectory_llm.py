@@ -1,6 +1,7 @@
 from agentevals.trajectory.llm import (
     create_trajectory_llm_as_judge,
-    DEFAULT_PROMPT,
+    DEFAULT_REF_COMPARE_PROMPT,
+    DEFAULT_NO_REF_PROMPT,
 )
 
 from agentevals.types import ChatCompletionMessage
@@ -12,7 +13,7 @@ import json
 @pytest.mark.langsmith
 def test_trajectory_match():
     evaluator = create_trajectory_llm_as_judge(
-        prompt=DEFAULT_PROMPT, model="openai:o3-mini"
+        prompt=DEFAULT_REF_COMPARE_PROMPT, model="openai:o3-mini"
     )
     outputs = [
         {"role": "user", "content": "What is the weather in SF?"},
@@ -52,6 +53,61 @@ def test_trajectory_match():
     )
     assert eval_result["key"] == "trajectory_accuracy"
     assert eval_result["score"]
+
+@pytest.mark.langsmith
+def test_trajectory_no_ref():
+    evaluator = create_trajectory_llm_as_judge(
+        prompt=DEFAULT_NO_REF_PROMPT, model="openai:o3-mini"
+    )
+    outputs = [
+        {"role": "user", "content": "What is the weather in SF?"},
+        {
+            "role": "assistant",
+            "tool_calls": [
+                {
+                    "function": {
+                        "name": "get_weather",
+                        "arguments": json.dumps({"city": "SF"}),
+                    }
+                }
+            ],
+        },
+        {"role": "tool", "content": "It's 80 degrees and sunny in SF."},
+        {"role": "assistant", "content": "The weather in SF is 80 degrees and sunny."},
+    ]
+    eval_result = evaluator(
+        outputs=outputs,
+    )
+    assert eval_result["key"] == "trajectory_accuracy"
+    assert eval_result["score"]
+
+
+@pytest.mark.langsmith
+def test_trajectory_no_ref_bad_trajectory():
+    evaluator = create_trajectory_llm_as_judge(
+        prompt=DEFAULT_NO_REF_PROMPT, model="openai:o3-mini"
+    )
+    outputs = [
+        {"role": "user", "content": "What are some good restaurants in SF?"},
+        {
+            "role": "assistant",
+            "tool_calls": [
+                {
+                    "function": {
+                        "name": "get_weather",
+                        "arguments": json.dumps({"city": "SF"}),
+                    }
+                }
+            ],
+        },
+        {"role": "tool", "content": "It's 80 degrees and sunny in SF."},
+        {"role": "assistant", "content": "The weather in SF is 80 degrees and sunny."},
+    ]
+    eval_result = evaluator(
+        outputs=outputs,
+    )
+    assert eval_result["key"] == "trajectory_accuracy"
+    assert eval_result["score"] == False
 
 
 @pytest.mark.langsmith
