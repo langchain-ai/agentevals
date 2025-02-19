@@ -148,11 +148,14 @@ export const createTrajectoryLLMAsJudge = ({
       | { messages: (BaseMessage | ChatCompletionMessage)[] };
     [key: string]: unknown;
   }): Promise<EvaluatorResult> => {
-    const [
-      formattedOutputs,
-      formattedReferenceOutputs,
-      formattedInputs,
-    ] = prompt === DEFAULT_PROMPT ? _formatInputs({ inputs, outputs, referenceOutputs }) : [inputs, _normalizeToOpenAIMessagesList(outputs), _normalizeToOpenAIMessagesList(referenceOutputs)];
+    const [formattedOutputs, formattedReferenceOutputs, formattedInputs] =
+      prompt === DEFAULT_PROMPT
+        ? _formatInputs({ inputs, outputs, referenceOutputs })
+        : [
+            inputs,
+            _normalizeToOpenAIMessagesList(outputs),
+            _normalizeToOpenAIMessagesList(referenceOutputs),
+          ];
 
     return _runEvaluator(`llm_as_${feedbackKey}_judge`, scorer, feedbackKey, {
       outputs: formattedOutputs,

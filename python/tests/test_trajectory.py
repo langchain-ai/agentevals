@@ -593,6 +593,7 @@ def test_trajectory_match_with_langchain_messages_failure(evaluator, feedback_ke
         inputs=inputs, outputs=outputs, reference_outputs=reference_outputs
     ) == EvaluatorResult(key=feedback_key, score=False, comment=None)
 
+
 @pytest.mark.langsmith
 @pytest.mark.parametrize(
     "tool_call_args_exact_match, message_content_exact_match, score",
@@ -603,7 +604,9 @@ def test_trajectory_match_with_langchain_messages_failure(evaluator, feedback_ke
         (True, True, False),
     ],
 )
-def test_trajectory_match_strict_params(tool_call_args_exact_match, message_content_exact_match, score):
+def test_trajectory_match_strict_params(
+    tool_call_args_exact_match, message_content_exact_match, score
+):
     inputs = {}
     outputs = [
         HumanMessage(content="What is the weather in SF?"),
@@ -637,7 +640,9 @@ def test_trajectory_match_strict_params(tool_call_args_exact_match, message_cont
     ]
 
     assert trajectory_strict_match(
-        inputs=inputs, outputs=outputs, reference_outputs=reference_outputs,
+        inputs=inputs,
+        outputs=outputs,
+        reference_outputs=reference_outputs,
         tool_call_args_exact_match=tool_call_args_exact_match,
         message_content_exact_match=message_content_exact_match,
     ) == EvaluatorResult(key="trajectory_strict_match", score=score, comment=None)
