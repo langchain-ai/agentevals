@@ -8,19 +8,29 @@ import { BaseMessage } from "@langchain/core/messages";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { RunnableInterface } from "@langchain/core/runnables";
 
-import { _createLLMAsJudgeScorer } from "../llm.js";
+import { _createLLMAsJudgeScorer } from "openevals/llm";
 import { _runEvaluator } from "../utils.js";
 import { _normalizeToOpenAIMessagesList } from "../utils.js";
 import { _chatCompletionMessagesToString } from "./utils.js";
 
-export const DEFAULT_PROMPT = `Grade the following agent trajectory:
+export const DEFAULT_PROMPT = `You are an expert data labeler.
+Your task is to grade the accuracy of an AI agent's internal trajectory.
+
+<Rubric>
+  An accurate trajectory:
+  - Makes logical sense between steps
+  - Shows clear progression
+  - Is relatively efficient, though it does not need to be perfectly efficient
+  - Is semantically equivalent to the provided reference trajectory, if present
+</Rubric>
+
+Grade the following trajectory:
 
 <trajectory>
 {outputs}
 </trajectory>
 {inputs}
 {reference_outputs}
-{rubric}
 `;
 
 function _formatInputs(params: {
@@ -33,9 +43,8 @@ function _formatInputs(params: {
     | ChatCompletionMessage[]
     | BaseMessage[]
     | { messages: (BaseMessage | ChatCompletionMessage)[] };
-  rubric?: string;
-}): [string, string, string, string] {
-  const { inputs, outputs, referenceOutputs, rubric } = params;
+}): [string, string, string] {
+  const { inputs, outputs, referenceOutputs } = params;
   const normalizedOutputs = _normalizeToOpenAIMessagesList(outputs);
   const normalizedReferenceOutputs = _normalizeToOpenAIMessagesList(
     referenceOutputs ?? []
@@ -54,15 +63,10 @@ function _formatInputs(params: {
       ? outputs
       : _chatCompletionMessagesToString(normalizedOutputs);
 
-  const formattedRubric = rubric
-    ? `\nGrade the agent trajectory along the following rubric:\n<rubric>\n${rubric}\n</rubric>\n`
-    : "";
-
   return [
     formattedOutputs as string,
     formattedReferenceOutputs,
     formattedInputs,
-    formattedRubric,
   ];
 }
 
@@ -75,7 +79,7 @@ function _formatInputs(params: {
  *                        allows a rubric in addition to the typical "inputs", "outputs", and
  *                        "reference_outputs" parameters.
  * @param options.feedbackKey - Key used to store the evaluation result. Defaults to "trajectory_accuracy".
- * @param options.model - Model identifier to use. Defaults to "openai:o3-mini". If judge is an OpenAI client,
+ * @param options.model - Model identifier to use. If judge is an OpenAI client,
  *                       this should be a model name directly. If judge is omitted, must be a valid
  *                       LangChain model identifier.
  * @param options.system - Optional system message to prepend to the prompt.
@@ -92,7 +96,7 @@ function _formatInputs(params: {
 export const createTrajectoryLLMAsJudge = ({
   prompt = DEFAULT_PROMPT,
   feedbackKey = "trajectory_accuracy",
-  model = "openai:o3-mini",
+  model,
   system,
   judge,
   continuous = false,
@@ -142,21 +146,18 @@ export const createTrajectoryLLMAsJudge = ({
       | ChatCompletionMessage[]
       | BaseMessage[]
       | { messages: (BaseMessage | ChatCompletionMessage)[] };
-    rubric?: string;
     [key: string]: unknown;
   }): Promise<EvaluatorResult> => {
     const [
       formattedOutputs,
       formattedReferenceOutputs,
       formattedInputs,
-      formattedRubric,
-    ] = _formatInputs({ inputs, outputs, referenceOutputs, rubric });
+    ] = prompt === DEFAULT_PROMPT ? _formatInputs({ inputs, outputs, referenceOutputs }) : [inputs, _normalizeToOpenAIMessagesList(outputs), _normalizeToOpenAIMessagesList(referenceOutputs)];
 
     return _runEvaluator(`llm_as_${feedbackKey}_judge`, scorer, feedbackKey, {
       outputs: formattedOutputs,
       referenceOutputs: formattedReferenceOutputs,
       inputs: formattedInputs,
-      rubric: formattedRubric,
       ...extra,
     });
   };

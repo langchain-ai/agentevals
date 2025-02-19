@@ -1,6 +1,6 @@
 __all__ = ["_is_trajectory_superset", "_extract_tool_calls"]
 
-from agentevals.evaluators.types import ChatCompletionMessage
+from agentevals.types import ChatCompletionMessage
 
 
 def _normalize_tool_call(tool_call: dict) -> dict:
@@ -14,7 +14,7 @@ def _normalize_tool_call(tool_call: dict) -> dict:
 
 
 def _extract_tool_calls(messages: list[ChatCompletionMessage]) -> list[dict]:
-    tool_calls = []
+    tool_calls: list[dict] = []
     for message in messages:
         if "tool_calls" in message:
             tool_calls.extend(
@@ -29,8 +29,8 @@ def _is_trajectory_superset(
 ):
     output_tool_calls = _extract_tool_calls(outputs)
     reference_tool_calls = _extract_tool_calls(reference_outputs)
-    output_tool_counts = {}
-    reference_tool_counts = {}
+    output_tool_counts: dict[str, int] = {}
+    reference_tool_counts: dict[str, int] = {}
     for call in output_tool_calls:
         name = call["name"]
         output_tool_counts[name] = output_tool_counts.get(name, 0) + 1

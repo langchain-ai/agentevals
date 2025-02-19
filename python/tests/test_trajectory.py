@@ -1,9 +1,9 @@
-from agentevals.evaluators.trajectory.unordered import trajectory_unordered_match
-from agentevals.evaluators.trajectory.superset import trajectory_superset
-from agentevals.evaluators.trajectory.subset import trajectory_subset
-from agentevals.evaluators.trajectory.strict import trajectory_strict_match
+from agentevals.trajectory.unordered import trajectory_unordered_match
+from agentevals.trajectory.superset import trajectory_superset
+from agentevals.trajectory.subset import trajectory_subset
+from agentevals.trajectory.strict import trajectory_strict_match
 
-from agentevals.evaluators.types import EvaluatorResult, ChatCompletionMessage
+from agentevals.types import EvaluatorResult, ChatCompletionMessage
 
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 

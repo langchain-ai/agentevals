@@ -22,10 +22,13 @@ export const _convertToOpenAIMessage = (
 };
 
 export const _normalizeToOpenAIMessagesList = (
-  messages:
+  messages?:
     | (BaseMessage | ChatCompletionMessage)[]
     | { messages: (BaseMessage | ChatCompletionMessage)[] }
 ): ChatCompletionMessage[] => {
+  if (!messages) {
+    return [];
+  }
   let messagesList: (BaseMessage | ChatCompletionMessage)[];
   if (!Array.isArray(messages)) {
     if ("messages" in messages && Array.isArray(messages.messages)) {

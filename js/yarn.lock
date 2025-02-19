@@ -968,6 +968,34 @@ __metadata:
   languageName: node
   linkType: hard
 
+"agentevals@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "agentevals@workspace:."
+  dependencies:
+    "@langchain/core": "npm:^0.3.40"
+    "@langchain/openai": "npm:^0.4.4"
+    "@langchain/scripts": "npm:0.1.3"
+    "@tsconfig/recommended": "npm:^1.0.8"
+    dotenv: "npm:^16.4.7"
+    eslint: "npm:^8.33.0"
+    eslint-config-airbnb-base: "npm:^15.0.0"
+    eslint-config-prettier: "npm:^8.6.0"
+    eslint-plugin-import: "npm:^2.27.5"
+    eslint-plugin-jest: "npm:^27.6.0"
+    eslint-plugin-no-instanceof: "npm:^1.0.1"
+    eslint-plugin-prettier: "npm:^4.2.1"
+    langchain: "npm:^0.3.18"
+    langsmith: "npm:^0.3.10"
+    openai: "npm:^4.85.1"
+    openevals: "npm:^0.0.1-rc.4"
+    prettier: "npm:^3.5.1"
+    typescript: "npm:~5.1.6"
+    vitest: "npm:^3.0.5"
+  peerDependencies:
+    "@langchain/core": ^0.3.40
+  languageName: unknown
+  linkType: soft
+
 "agentkeepalive@npm:^4.2.1":
   version: 4.6.0
   resolution: "agentkeepalive@npm:4.6.0"
@@ -3045,9 +3073,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"langsmith@npm:^0.3.10-rc.1":
-  version: 0.3.10-rc.1
-  resolution: "langsmith@npm:0.3.10-rc.1"
+"langsmith@npm:^0.3.10":
+  version: 0.3.10
+  resolution: "langsmith@npm:0.3.10"
   dependencies:
     "@types/uuid": "npm:^10.0.0"
     chalk: "npm:^4.1.2"
@@ -3061,7 +3089,7 @@ __metadata:
   peerDependenciesMeta:
     openai:
       optional: true
-  checksum: 10c0/00a8e392623d5a9b7e9f269946c3ef076e3082fb0e0fc94b6aa27ad5d357ea17291075f95c919a233ca0136b9f827666a870cdfdb7902546f9d6737b7929f794
+  checksum: 10c0/36b41d24590d3aa8a9df2a75553e53c9a12973d0800358beb31abaeb60f4eb1a30293db115b568bc6a49d211eb7d2afbfd134a513e0b0e1bf9bb85448da7a885
   languageName: node
   linkType: hard
 
@@ -3497,32 +3525,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"openevals@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "openevals@workspace:."
+"openevals@npm:^0.0.1-rc.4":
+  version: 0.0.1-rc.4
+  resolution: "openevals@npm:0.0.1-rc.4"
   dependencies:
-    "@langchain/core": "npm:^0.3.40"
     "@langchain/openai": "npm:^0.4.4"
-    "@langchain/scripts": "npm:0.1.3"
-    "@tsconfig/recommended": "npm:^1.0.8"
-    dotenv: "npm:^16.4.7"
-    eslint: "npm:^8.33.0"
-    eslint-config-airbnb-base: "npm:^15.0.0"
-    eslint-config-prettier: "npm:^8.6.0"
-    eslint-plugin-import: "npm:^2.27.5"
-    eslint-plugin-jest: "npm:^27.6.0"
-    eslint-plugin-no-instanceof: "npm:^1.0.1"
-    eslint-plugin-prettier: "npm:^4.2.1"
     langchain: "npm:^0.3.18"
-    langsmith: "npm:^0.3.10-rc.1"
-    openai: "npm:^4.85.1"
-    prettier: "npm:^3.5.1"
-    typescript: "npm:~5.1.6"
-    vitest: "npm:^3.0.5"
+    langsmith: "npm:^0.3.10"
   peerDependencies:
     "@langchain/core": ^0.3.40
-  languageName: unknown
-  linkType: soft
+  checksum: 10c0/0e7413aa2f598c88df0df980ff9fa179239af1c9be15c07f0a8e1c7bd3de0c78628424a84c00329560d2302e252b4c94c283803a33f707dd030dbce25d7923f4
+  languageName: node
+  linkType: hard
 
 "optionator@npm:^0.9.3":
   version: 0.9.4

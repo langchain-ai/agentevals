@@ -1,9 +1,9 @@
-from agentevals.evaluators.trajectory.llm import (
+from agentevals.trajectory.llm import (
     create_async_trajectory_llm_as_judge,
     DEFAULT_PROMPT,
 )
 
-from agentevals.evaluators.types import ChatCompletionMessage
+from agentevals.types import ChatCompletionMessage
 
 import pytest
 import json
@@ -12,7 +12,9 @@ import json
 @pytest.mark.langsmith
 @pytest.mark.asyncio
 async def test_trajectory_match():
-    evaluator = create_async_trajectory_llm_as_judge(prompt=DEFAULT_PROMPT)
+    evaluator = create_async_trajectory_llm_as_judge(
+        prompt=DEFAULT_PROMPT, model="openai:o3-mini"
+    )
     inputs = {}
     outputs = [
         {"role": "user", "content": "What is the weather in SF?"},
@@ -58,7 +60,30 @@ async def test_trajectory_match():
 @pytest.mark.langsmith
 @pytest.mark.asyncio
 async def test_trajectory_match_with_inverse_rubric():
-    evaluator = create_async_trajectory_llm_as_judge(prompt=DEFAULT_PROMPT)
+    REVERSE_PROMPT = """You are an expert data labeler.
+Your task is to grade the inaccuracy of an AI agent's internal trajectory.
+
+<Rubric>
+  An inaccurate trajectory:
+  - Makes no logical sense between steps
+  - Shows no clear progression
+  - Is not relatively efficient, though it does not need to be perfectly inefficient
+  - Is not semantically equivalent to the provided reference trajectory, if present
+
+  We are looking for bad trajectories, so score should be 0 if the trajectory contains reasonable steps for the agent to answer the input, and 1 if not.
+</Rubric>
+
+Grade the following trajectory:
+
+<trajectory>
+{outputs}
+</trajectory>
+{inputs}
+{reference_outputs}
+"""
+    evaluator = create_async_trajectory_llm_as_judge(
+        prompt=REVERSE_PROMPT, model="openai:o3-mini"
+    )
     inputs = {}
     outputs = [
         ChatCompletionMessage(role="user", content="What is the weather in SF?"),
@@ -102,7 +127,6 @@ async def test_trajectory_match_with_inverse_rubric():
         inputs=inputs,
         outputs=outputs,
         reference_outputs=reference_outputs,
-        rubric="We are looking for bad trajectories, so score should be 0 if the trajectory contains reasonable steps for the agent to answer the input, and 1 if not.",
     )
     assert eval_result["key"] == "trajectory_accuracy"
     assert not eval_result["score"]

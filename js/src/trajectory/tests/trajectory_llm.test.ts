@@ -2,7 +2,6 @@ import * as ls from "langsmith/vitest";
 import { expect } from "vitest";
 
 import { createTrajectoryLLMAsJudge } from "../llm.js";
-import { ChatCompletionMessage } from "../../types.js";
 
 ls.describe("Trajectory LLM", () => {
   ls.test(
@@ -11,9 +10,11 @@ ls.describe("Trajectory LLM", () => {
       inputs: {},
     },
     async () => {
-      const evaluator = createTrajectoryLLMAsJudge({});
+      const evaluator = createTrajectoryLLMAsJudge({
+        model: "openai:o3-mini",
+      });
       const inputs = {};
-      const outputs: ChatCompletionMessage[] = [
+      const outputs = [
         { role: "user", content: "What is the weather in SF?" },
         {
           role: "assistant",
@@ -34,7 +35,7 @@ ls.describe("Trajectory LLM", () => {
         },
       ];
 
-      const referenceOutputs: ChatCompletionMessage[] = [
+      const referenceOutputs = [
         { role: "user", content: "What is the weather in SF?" },
         {
           role: "assistant",
@@ -70,9 +71,34 @@ ls.describe("Trajectory LLM", () => {
     "should match trajectories with inverse rubric",
     { inputs: {} },
     async () => {
-      const evaluator = createTrajectoryLLMAsJudge({});
+      const REVERSE_PROMPT = `You are an expert data labeler.
+Your task is to grade the inaccuracy of an AI agent's internal trajectory.
+
+<Rubric>
+  An inaccurate trajectory:
+  - Makes no logical sense between steps
+  - Shows no clear progression
+  - Is not relatively efficient, though it does not need to be perfectly inefficient
+  - Is not semantically equivalent to the provided reference trajectory, if present
+
+  We are looking for bad trajectories, so score should be 0 if the trajectory contains reasonable steps for the agent to answer the input, and 1 if not.
+</Rubric>
+
+Grade the following trajectory:
+
+<trajectory>
+{outputs}
+</trajectory>
+{inputs}
+{reference_outputs}
+`;
+
+      const evaluator = createTrajectoryLLMAsJudge({
+        model: "openai:o3-mini",
+        prompt: REVERSE_PROMPT,
+      });
       const inputs = {};
-      const outputs: ChatCompletionMessage[] = [
+      const outputs = [
         { role: "user", content: "What is the weather in SF?" },
         {
           role: "assistant",
@@ -93,7 +119,7 @@ ls.describe("Trajectory LLM", () => {
         },
       ];
 
-      const referenceOutputs: ChatCompletionMessage[] = [
+      const referenceOutputs = [
         { role: "user", content: "What is the weather in SF?" },
         {
           role: "assistant",
@@ -118,8 +144,6 @@ ls.describe("Trajectory LLM", () => {
         inputs,
         outputs,
         referenceOutputs,
-        rubric:
-          "We are looking for bad trajectories, so score should be 0 if the trajectory contains reasonable steps for the agent to answer the input, and 1 if not.",
       });
 
       expect(evalResult.key).toBe("trajectory_accuracy");

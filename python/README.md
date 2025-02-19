@@ -21,8 +21,8 @@ export OPENAI_API_KEY="your_openai_api_key"
 Once you've done this, you can run your first eval:
 
 ```python
-from openevals.evaluators.llm import create_llm_as_judge
-from openevals.evaluators.prompts import CORRECTNESS_PROMPT
+from openevals.llm import create_llm_as_judge
+from openevals.prompts import CORRECTNESS_PROMPT
 
 correctness_evaluator = create_llm_as_judge(
     prompt=CORRECTNESS_PROMPT,
@@ -107,11 +107,11 @@ This package contains the `create_llm_as_judge` function, which takes a prompt a
 that handles formatting inputs, parsing the judge LLM's outputs into a score, and LangSmith tracing and result logging.
 
 To use the `create_llm_as_judge` function, you need to provide a prompt and a model. For prompts, LangSmith has some prebuilt prompts
-in the `openevals.evaluators.prompts` module that you can use out of the box. Here's an example:
+in the `openevals.prompts` module that you can use out of the box. Here's an example:
 
 ```python
-from openevals.evaluators.llm import create_llm_as_judge
-from openevals.evaluators.prompts import CORRECTNESS_PROMPT
+from openevals.llm import create_llm_as_judge
+from openevals.prompts import CORRECTNESS_PROMPT
 
 correctness_evaluator = create_llm_as_judge(
     prompt=CORRECTNESS_PROMPT,
@@ -146,8 +146,8 @@ You are an expert data labeler evaluating model outputs for correctness. Your ta
 `openevals` includes a prebuilt prompt for `create_llm_as_judge` that scores the correctness of an LLM's output. It takes `inputs`, `outputs`, and optionally, `reference_outputs` as parameters.
 
 ```python
-from openevals.evaluators.llm import create_llm_as_judge
-from openevals.evaluators.prompts import CORRECTNESS_PROMPT
+from openevals.llm import create_llm_as_judge
+from openevals.prompts import CORRECTNESS_PROMPT
 
 correctness_evaluator = create_llm_as_judge(
     prompt=CORRECTNESS_PROMPT,
@@ -179,8 +179,8 @@ print(eval_result)
 `openevals` includes a prebuilt prompt for `create_llm_as_judge` that scores the conciseness of an LLM's output. It takes `inputs` and `outputs` as parameters.
 
 ```python
-from openevals.evaluators.llm import create_llm_as_judge
-from openevals.evaluators.prompts import CONCISENESS_PROMPT
+from openevals.llm import create_llm_as_judge
+from openevals.prompts import CONCISENESS_PROMPT
 
 inputs = "How is the weather in San Francisco?"
 outputs = "Thanks for asking! The current weather in San Francisco is sunny and 90 degrees."
@@ -206,8 +206,8 @@ eval_result = llm_as_judge(inputs=inputs, outputs=outputs)
 `openevals` includes a prebuilt prompt for `create_llm_as_judge` that scores the hallucination of an LLM's output. It takes `inputs`, `outputs`, and optionally, `context` as parameters.
 
 ```python
-from openevals.evaluators.llm import create_llm_as_judge
-from openevals.evaluators.prompts import HALLUCINATION_PROMPT
+from openevals.llm import create_llm_as_judge
+from openevals.prompts import HALLUCINATION_PROMPT
 
 inputs = "What is a doodad?"
 outputs = "I know the answer. A doodad is a kitten."
@@ -236,7 +236,7 @@ The `prompt` parameter for `create_llm_as_judge` may be an f-string, LangChain p
 Though we suggest sticking to conventional names (`inputs`, `outputs`, and `reference_outputs`) as prompt variables, you can also require additional variables. In this case, you would pass extra kwargs when calling your evaluator function. Here's an example:
 
 ```python
-from openevals.evaluators.llm import create_llm_as_judge
+from openevals.llm import create_llm_as_judge
 
 MY_CUSTOM_PROMPT = """
 Use the following context to help you evaluate for hallucinations in the output:
@@ -295,8 +295,8 @@ pip install langchain-anthropic
 ```
 
 ```python
-from openevals.evaluators.llm import create_llm_as_judge
-from openevals.evaluators.prompts import CORRECTNESS_PROMPT
+from openevals.llm import create_llm_as_judge
+from openevals.prompts import CORRECTNESS_PROMPT
 
 anthropic_evaluator = create_llm_as_judge(
     prompt=CORRECTNESS_PROMPT,
@@ -307,8 +307,8 @@ anthropic_evaluator = create_llm_as_judge(
 You can also directly pass a LangChain chat model instance as `judge`. Note that your chosen model must support [structured output](https://python.langchain.com/docs/integrations/chat/):
 
 ```python
-from openevals.evaluators.llm import create_llm_as_judge
-from openevals.evaluators.prompts import CORRECTNESS_PROMPT
+from openevals.llm import create_llm_as_judge
+from openevals.prompts import CORRECTNESS_PROMPT
 
 anthropic_evaluator = create_llm_as_judge(
     prompt=CORRECTNESS_PROMPT,
@@ -322,8 +322,8 @@ Finally, you can pass a model name as `model` and a `judge` parameter set to an 
 ```python
 from openai import OpenAI
 
-from openevals.evaluators.llm import create_llm_as_judge
-from openevals.evaluators.prompts import CORRECTNESS_PROMPT
+from openevals.llm import create_llm_as_judge
+from openevals.prompts import CORRECTNESS_PROMPT
 
 openai_evaluator = create_llm_as_judge(
     prompt=CORRECTNESS_PROMPT,
@@ -344,7 +344,7 @@ These parameters are mutually exclusive. When using either of them, you should m
 For example, here's an example of how to define a less harsh definition of correctness that only penalizes incorrect answers by 50% if they are on-topic:
 
 ```python
-from openevals.evaluators.llm import create_llm_as_judge
+from openevals.llm import create_llm_as_judge
 
 MY_CUSTOM_PROMPT = """
 You are an expert data labeler evaluating model outputs for correctness. Your task is to assign a score based on the following rubric:
@@ -407,7 +407,7 @@ but requires that the selected tools at each step are the same.
 
 ```python
 import json
-from openevals.evaluators.trajectory.strict import trajectory_strict_match
+from openevals.trajectory.strict import trajectory_strict_match
 
 inputs = {}
 outputs = [
@@ -463,7 +463,7 @@ The `trajectory_unordered_match` evaluator, compares two trajectories and ensure
 
 ```python
 import json
-from openevals.evaluators.trajectory.unordered import trajectory_unordered_match
+from openevals.trajectory.unordered import trajectory_unordered_match
 
 inputs = {}
 outputs = [
@@ -534,8 +534,8 @@ There are other evaluators for checking partial trajectory matches (ensuring tha
 
 ```python
 import json
-from openevals.evaluators.trajectory.subset import trajectory_subset
-# from openevals.evaluators.trajectory.superset import trajectory_superset
+from openevals.trajectory.subset import trajectory_subset
+# from openevals.trajectory.superset import trajectory_superset
 
 inputs = {}
 outputs = [
@@ -597,7 +597,7 @@ There is also an LLM-as-judge trajectory evaluator that uses an LLM to evaluate 
 
 ```python
 import json
-from openevals.evaluators.trajectory.llm import create_trajectory_llm_as_judge, DEFAULT_PROMPT
+from openevals.trajectory.llm import create_trajectory_llm_as_judge, DEFAULT_PROMPT
 
 # Also defaults to using OpenAI's o3-mini model through LangChain's ChatOpenAI class
 evaluator = create_trajectory_llm_as_judge(prompt=DEFAULT_PROMPT)
@@ -664,7 +664,7 @@ to work for a variety of extraction/tool calling use cases.
 Here is a code example of how to evaluate a single structured output, with comments explaining every parameter:
 
 ```python
-from openevals.evaluators.json import create_json_match_evaluator
+from openevals.json import create_json_match_evaluator
 
 outputs = {"a": "Mango, Bananas", "b": 2, "c": [1,2,3]}
 reference_outputs = {"a": "Bananas, Mango", "b": 3, "c": [1,2,3]}
@@ -704,7 +704,7 @@ print(result)
 Here is a code example of how to evaluate a list of structured outputs, with comments explaining every parameter:
 
 ```python
-from openevals.evaluators.json import create_json_match_evaluator
+from openevals.json import create_json_match_evaluator
 
 outputs = [
     {"a": "Mango, Bananas", "b": 2},
@@ -753,7 +753,7 @@ This package also contains prebuilt evaluators for calculating common metrics su
 #### Exact match
 
 ```python
-from openevals.evaluators.exact import exact_match
+from openevals.exact import exact_match
 
 outputs = {"a": 1, "b": 2}
 reference_outputs = {"a": 1, "b": 2}
@@ -772,7 +772,7 @@ print(result)
 #### Levenshtein distance
 
 ```python
-from openevals.evaluators.string.levenshtein import levenshtein_distance
+from openevals.string.levenshtein import levenshtein_distance
 
 outputs = "The correct answer"
 reference_outputs = "The correct answer"
@@ -796,7 +796,7 @@ print(result)
 This evaluator uses LangChain's [`init_embedding`](https://python.langchain.com/api_reference/langchain/embeddings/langchain.embeddings.base.init_embeddings.html) method under the hood and calculates distance between two strings using cosine similarity.
 
 ```python
-from openevals.evaluators.string.embedding_similarity import create_embedding_similarity_evaluator
+from openevals.string.embedding_similarity import create_embedding_similarity_evaluator
 
 evaluator = create_embedding_similarity_evaluator()
 
@@ -823,7 +823,7 @@ All `openevals` evaluators support Python [asyncio](https://docs.python.org/3/li
 Here's an example of how to use the `create_async_llm_as_judge` evaluator asynchronously:
 
 ```python
-from openevals.evaluators.llm import create_async_llm_as_judge
+from openevals.llm import create_async_llm_as_judge
 
 evaluator = create_async_llm_as_judge(
     prompt="What is the weather in {inputs}?",
@@ -869,8 +869,8 @@ import pytest
 
 from langsmith import testing as t
 
-from openevals.evaluators.llm import create_llm_as_judge
-from openevals.evaluators.prompts import CORRECTNESS_PROMPT
+from openevals.llm import create_llm_as_judge
+from openevals.prompts import CORRECTNESS_PROMPT
 
 correctness_evaluator = create_llm_as_judge(
     prompt=CORRECTNESS_PROMPT,
@@ -915,8 +915,8 @@ Alternatively, you can [create a dataset in LangSmith](https://docs.smith.langch
 
 ```python
 from langsmith import Client
-from openevals.evaluators.llm import create_llm_as_judge
-from openevals.evaluators.prompts import CONCISENESS_PROMPT
+from openevals.llm import create_llm_as_judge
+from openevals.prompts import CONCISENESS_PROMPT
 
 client = Client()
 

@@ -16,7 +16,8 @@
   "dependencies": {
     "@langchain/openai": "^0.4.4",
     "langchain": "^0.3.18",
-    "langsmith": "^0.3.10-rc.1"
+    "langsmith": "^0.3.10",
+    "openevals": "^0.0.1-rc.4"
   },
   "peerDependencies": {
     "@langchain/core": "^0.3.40"

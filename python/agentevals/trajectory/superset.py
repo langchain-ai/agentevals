@@ -1,26 +1,28 @@
 from __future__ import annotations
-from openevals.evaluators.utils import (
+from openevals.utils import (
     _run_evaluator,
     _normalize_to_openai_messages_list,
     _arun_evaluator,
 )
-from agentevals.evaluators.types import ChatCompletionMessage, EvaluatorResult
-from agentevals.evaluators.trajectory.utils import _is_trajectory_superset
+
+from agentevals.types import ChatCompletionMessage, EvaluatorResult
+from agentevals.trajectory.utils import _is_trajectory_superset
+
 from typing import Any, Union, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from langchain_core.messages import BaseMessage
 
 
-def trajectory_subset(
+def trajectory_superset(
     *,
     outputs: Union[list[ChatCompletionMessage], list[BaseMessage], dict],
     reference_outputs: Union[list[ChatCompletionMessage], list[BaseMessage], dict],
     **kwargs: Any,
 ) -> EvaluatorResult:
     """
-    Evaluate whether an agent trajectory and called tools is a subset of a reference trajectory and called tools.
-    This means the agent called a subset of the tools specified in the reference trajectory.
+    Evaluate whether an agent trajectory and called tools is a superset of a reference trajectory and called tools.
+    This means the agent called a superset of the tools specified in the reference trajectory.
 
     Args:
         outputs (Union[list[ChatCompletionMessage], list[BaseMessage], dict]): Actual trajectory the agent followed.
@@ -39,27 +41,27 @@ def trajectory_subset(
     def get_score():
         if outputs is None or reference_outputs is None:
             raise ValueError(
-                "Trajectory subset match requires both outputs and reference_outputs"
+                "Trajectory superset match requires both outputs and reference_outputs"
             )
-        is_superset = _is_trajectory_superset(reference_outputs, outputs)
+        is_superset = _is_trajectory_superset(outputs, reference_outputs)
         return is_superset
 
     return _run_evaluator(
-        run_name="trajectory_subset",
+        run_name="trajectory_superset",
         scorer=get_score,
-        feedback_key="trajectory_subset",
+        feedback_key="trajectory_superset",
     )
 
 
-async def trajectory_subset_async(
+async def trajectory_superset_async(
     *,
     outputs: Union[list[ChatCompletionMessage], list[BaseMessage], dict],
     reference_outputs: Union[list[ChatCompletionMessage], list[BaseMessage], dict],
     **kwargs: Any,
 ) -> EvaluatorResult:
     """
-    Evaluate whether an agent trajectory and called tools is a subset of a reference trajectory and called tools.
-    This means the agent called a subset of the tools specified in the reference trajectory.
+    Evaluate whether an agent trajectory and called tools is a superset of a reference trajectory and called tools.
+    This means the agent called a superset of the tools specified in the reference trajectory.
 
     Args:
         outputs (Union[list[ChatCompletionMessage], list[BaseMessage], dict]): Actual trajectory the agent followed.
@@ -78,13 +80,13 @@ async def trajectory_subset_async(
     async def aget_score():
         if outputs is None or reference_outputs is None:
             raise ValueError(
-                "Trajectory subset match requires both outputs and reference_outputs"
+                "Trajectory superset match requires both outputs and reference_outputs"
             )
-        is_superset = _is_trajectory_superset(reference_outputs, outputs)
+        is_superset = _is_trajectory_superset(outputs, reference_outputs)
         return is_superset
 
     return await _arun_evaluator(
-        run_name="trajectory_subset",
+        run_name="trajectory_superset",
         scorer=aget_score,
-        feedback_key="trajectory_subset",
+        feedback_key="trajectory_superset",
     )

@@ -1,5 +1,7 @@
 from __future__ import annotations
-from openevals.evaluators.llm import (
+import json
+
+from openevals.llm import (
     _create_llm_as_judge_scorer,
     _create_async_llm_as_judge_scorer,
     ChatCompletionMessage,
@@ -11,26 +13,36 @@ from openevals.evaluators.llm import (
     Optional,
     Union,
 )
-from openevals.evaluators.utils import (
+from openevals.utils import (
     _chat_completion_messages_to_string,
     _run_evaluator,
     _arun_evaluator,
     _normalize_to_openai_messages_list,
 )
-from agentevals.evaluators.types import EvaluatorResult, FewShotExample
+from agentevals.types import EvaluatorResult, FewShotExample
 
 from langchain_core.language_models.chat_models import BaseChatModel
 
 from typing import TYPE_CHECKING
 
-DEFAULT_PROMPT = """Grade the following agent trajectory:
+DEFAULT_PROMPT = """You are an expert data labeler.
+Your task is to grade the accuracy of an AI agent's internal trajectory.
+
+<Rubric>
+  An accurate trajectory:
+  - Makes logical sense between steps
+  - Shows clear progression
+  - Is relatively efficient, though it does not need to be perfectly efficient
+  - Is semantically equivalent to the provided reference trajectory, if present
+</Rubric>
+
+Grade the following trajectory:
 
 <trajectory>
 {outputs}
 </trajectory>
 {inputs}
 {reference_outputs}
-{rubric}
 """
 
 if TYPE_CHECKING:
@@ -43,12 +55,11 @@ def _format_inputs(
     reference_outputs: Optional[
         Union[list[ChatCompletionMessage], list[BaseMessage], dict]
     ],
-    rubric: Optional[str],
-) -> tuple[str, str, str, str]:
+) -> tuple[str, str, str]:
     outputs = _normalize_to_openai_messages_list(outputs)
     reference_outputs = _normalize_to_openai_messages_list(reference_outputs)
     if reference_outputs:
-        formatted_reference_outputs = f"\nUse the following trajectory as an example reference when grading:\n<reference_trajectory>\n{_chat_completion_messages_to_string(reference_outputs)}\n</reference_trajectory>\n"
+        formatted_reference_outputs = f"\n<reference_trajectory>\n{_chat_completion_messages_to_string(reference_outputs)}\n</reference_trajectory>\n"
     else:
         formatted_reference_outputs = ""
     if inputs:
@@ -56,18 +67,13 @@ def _format_inputs(
     else:
         formatted_inputs = ""
     if isinstance(outputs, dict):
-        formatted_outputs = outputs
+        formatted_outputs = json.dumps(outputs)
     else:
         formatted_outputs = _chat_completion_messages_to_string(outputs)
-    if rubric:
-        formatted_rubric = f"\nGrade the agent trajectory along the following rubric:\n<rubric>\n{rubric}\n</rubric>\n"
-    else:
-        formatted_rubric = ""
     return (
         formatted_outputs,
         formatted_reference_outputs,
         formatted_inputs,
-        formatted_rubric,
     )
 
 
@@ -76,7 +82,7 @@ def create_trajectory_llm_as_judge(
     prompt: str
     | RunnableLike
     | Callable[..., list[ChatCompletionMessage]] = DEFAULT_PROMPT,
-    model: str = "openai:o3-mini",
+    model: Optional[str] = None,
     feedback_key: str = "trajectory_accuracy",
     judge: Optional[
         Union[
@@ -95,12 +101,12 @@ def create_trajectory_llm_as_judge(
         prompt: The evaluation prompt, can be a string template, LangChain prompt template, or callable
             that returns a list of chat messages. Note that the default prompt allows a rubric
             in addition to the typical "inputs", "outputs", and "reference_outputs" parameters.
-        feedback_key: Key used to store the evaluation result, defaults to "score".
-        judge: The LLM used for evaluation. Can be an OpenAI client),
-            or a LangChainLikeModel. If an OpenAI client, must specify "model" as well.
+        feedback_key: Key used to store the evaluation result, defaults to "trajectory_accuracy".
+        judge: The LLM used for evaluation. Can be an OpenAI client
+            or a LangChain chat model. If an OpenAI client, must specify "model" as well.
             If omitted, "model" will be used to instantiate a LangChain model instance
             by model string.
-        model: Model identifier to use. Defaults to "openai:o3-mini". If "judge" is an OpenAI client,
+        model: Model identifier to use. If "judge" is an OpenAI client,
             this argument should be a model name directly. If "judge" is omitted, must be a valid
             LangChain model identifier. See `init_chat_model` docs for more details:
             https://python.langchain.com/docs/how_to/chat_models_universal_init/.
@@ -130,15 +136,20 @@ def create_trajectory_llm_as_judge(
         reference_outputs: Optional[
             Union[list[ChatCompletionMessage], list[BaseMessage], dict]
         ] = None,
-        rubric: Optional[str] = None,
         **kwargs,
     ) -> EvaluatorResult:
-        (
-            formatted_outputs,
-            formatted_reference_outputs,
-            formatted_inputs,
-            formatted_rubric,
-        ) = _format_inputs(inputs, outputs, reference_outputs, rubric)
+        if prompt == DEFAULT_PROMPT:
+            (
+                formatted_outputs,
+                formatted_reference_outputs,
+                formatted_inputs,
+            ) = _format_inputs(inputs, outputs, reference_outputs)
+        else:
+            formatted_outputs = _normalize_to_openai_messages_list(outputs)
+            formatted_reference_outputs = _normalize_to_openai_messages_list(
+                reference_outputs
+            )
+            formatted_inputs = inputs
         return _run_evaluator(
             run_name=f"llm_as_{feedback_key}_judge",
             scorer=scorer,
@@ -146,7 +157,6 @@ def create_trajectory_llm_as_judge(
             outputs=formatted_outputs,
             reference_outputs=formatted_reference_outputs,
             inputs=formatted_inputs,
-            rubric=formatted_rubric,
             **kwargs,
         )
 
@@ -158,7 +168,7 @@ def create_async_trajectory_llm_as_judge(
     prompt: str
     | RunnableLike
     | Callable[..., list[ChatCompletionMessage]] = DEFAULT_PROMPT,
-    model: str = "openai:o3-mini",
+    model: Optional[str] = None,
     feedback_key: str = "trajectory_accuracy",
     judge: Optional[
         Union[
@@ -177,12 +187,12 @@ def create_async_trajectory_llm_as_judge(
         prompt: The evaluation prompt, can be a string template, LangChain prompt template, or callable
             that returns a list of chat messages. Note that the default prompt allows a rubric
             in addition to the typical "inputs", "outputs", and "reference_outputs" parameters.
-        feedback_key: Key used to store the evaluation result, defaults to "score".
-        judge: The LLM used for evaluation. Can be an OpenAI client),
-            or a LangChainLikeModel. If an OpenAI client, must specify "model" as well.
+        feedback_key: Key used to store the evaluation result, defaults to "trajectory_accuracy".
+        judge: The LLM used for evaluation. Can be an OpenAI client
+            or a LangChain chat model. If an OpenAI client, must specify "model" as well.
             If omitted, "model" will be used to instantiate a LangChain model instance
             by model string.
-        model: Model identifier to use. Defaults to "openai:o3-mini". If "judge" is an OpenAI client,
+        model: Model identifier to use. If "judge" is an OpenAI client,
             this argument should be a model name directly. If "judge" is omitted, must be a valid
             LangChain model identifier. See `init_chat_model` docs for more details:
             https://python.langchain.com/docs/how_to/chat_models_universal_init/.
@@ -212,15 +222,20 @@ def create_async_trajectory_llm_as_judge(
         reference_outputs: Optional[
             Union[list[ChatCompletionMessage], list[BaseMessage], dict]
         ] = None,
-        rubric: Optional[str] = None,
         **kwargs,
     ) -> EvaluatorResult:
-        (
-            formatted_outputs,
-            formatted_reference_outputs,
-            formatted_inputs,
-            formatted_rubric,
-        ) = _format_inputs(inputs, outputs, reference_outputs, rubric)
+        if prompt == DEFAULT_PROMPT:
+            (
+                formatted_outputs,
+                formatted_reference_outputs,
+                formatted_inputs,
+            ) = _format_inputs(inputs, outputs, reference_outputs)
+        else:
+            formatted_outputs = _normalize_to_openai_messages_list(outputs)
+            formatted_reference_outputs = _normalize_to_openai_messages_list(
+                reference_outputs
+            )
+            formatted_inputs = inputs
         return await _arun_evaluator(
             run_name=f"llm_as_{feedback_key}_judge",
             scorer=scorer,
@@ -228,7 +243,6 @@ def create_async_trajectory_llm_as_judge(
             outputs=formatted_outputs,
             reference_outputs=formatted_reference_outputs,
             inputs=formatted_inputs,
-            rubric=formatted_rubric,
             **kwargs,
         )
 
