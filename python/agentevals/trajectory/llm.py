@@ -25,7 +25,8 @@ from langchain_core.language_models.chat_models import BaseChatModel
 
 from typing import TYPE_CHECKING
 
-DEFAULT_REF_COMPARE_PROMPT = """You are an expert data labeler.
+
+TRAJECTORY_ACCURACY_PROMPT_WITH_REFERENCE = """You are an expert data labeler.
 Your task is to grade the accuracy of an AI agent's internal trajectory.
 
 <Rubric>
@@ -45,7 +46,7 @@ Grade the following trajectory:
 {reference_outputs}
 """
 
-DEFAULT_NO_REF_PROMPT = """You are an expert data labeler.
+TRAJECTORY_ACCURACY_PROMPT = """You are an expert data labeler.
 Your task is to grade the accuracy of an AI agent's internal trajectory.
 
 <Rubric>
@@ -104,7 +105,9 @@ def create_trajectory_llm_as_judge(
     *,
     prompt: str
     | RunnableLike
-    | Callable[..., list[ChatCompletionMessage]] = DEFAULT_REF_COMPARE_PROMPT,
+    | Callable[
+        ..., list[ChatCompletionMessage]
+    ] = TRAJECTORY_ACCURACY_PROMPT_WITH_REFERENCE,
     model: Optional[str] = None,
     feedback_key: str = "trajectory_accuracy",
     judge: Optional[
@@ -161,20 +164,20 @@ def create_trajectory_llm_as_judge(
         ] = None,
         **kwargs,
     ) -> EvaluatorResult:
-        if prompt == DEFAULT_REF_COMPARE_PROMPT:
+        if prompt == TRAJECTORY_ACCURACY_PROMPT_WITH_REFERENCE:
             if reference_outputs is None:
                 raise ValueError(
-                    "DEFAULT_REF_COMPARE_PROMPT requires reference_outputs to compare against"
+                    "TRAJECTORY_ACCURACY_PROMPT_WITH_REFERENCE requires reference_outputs to compare against"
                 )
             (
                 formatted_outputs,
                 formatted_reference_outputs,
                 formatted_inputs,
             ) = _format_inputs(inputs, outputs, reference_outputs)
-        elif prompt == DEFAULT_NO_REF_PROMPT:
+        elif prompt == TRAJECTORY_ACCURACY_PROMPT:
             if reference_outputs is not None:
                 raise ValueError(
-                    "DEFAULT_NO_REF_PROMPT requires reference_outputs to be None"
+                    "TRAJECTORY_ACCURACY_PROMPT requires reference_outputs to be None"
                 )
             (
                 formatted_outputs,
@@ -204,7 +207,9 @@ def create_async_trajectory_llm_as_judge(
     *,
     prompt: str
     | RunnableLike
-    | Callable[..., list[ChatCompletionMessage]] = DEFAULT_REF_COMPARE_PROMPT,
+    | Callable[
+        ..., list[ChatCompletionMessage]
+    ] = TRAJECTORY_ACCURACY_PROMPT_WITH_REFERENCE,
     model: Optional[str] = None,
     feedback_key: str = "trajectory_accuracy",
     judge: Optional[
@@ -261,20 +266,20 @@ def create_async_trajectory_llm_as_judge(
         ] = None,
         **kwargs,
     ) -> EvaluatorResult:
-        if prompt == DEFAULT_REF_COMPARE_PROMPT:
+        if prompt == TRAJECTORY_ACCURACY_PROMPT_WITH_REFERENCE:
             if reference_outputs is None:
                 raise ValueError(
-                    "DEFAULT_REF_COMPARE_PROMPT requires reference_outputs to compare against"
+                    "TRAJECTORY_ACCURACY_PROMPT_WITH_REFERENCE requires reference_outputs to compare against"
                 )
             (
                 formatted_outputs,
                 formatted_reference_outputs,
                 formatted_inputs,
             ) = _format_inputs(inputs, outputs, reference_outputs)
-        elif prompt == DEFAULT_NO_REF_PROMPT:
+        elif prompt == TRAJECTORY_ACCURACY_PROMPT:
             if reference_outputs is not None:
                 raise ValueError(
-                    "DEFAULT_NO_REF_PROMPT requires reference_outputs to be None"
+                    "TRAJECTORY_ACCURACY_PROMPT requires reference_outputs to be None"
                 )
             (
                 formatted_outputs,

@@ -1,7 +1,7 @@
 from agentevals.trajectory.llm import (
     create_async_trajectory_llm_as_judge,
-    DEFAULT_REF_COMPARE_PROMPT,
-    DEFAULT_NO_REF_PROMPT,
+    TRAJECTORY_ACCURACY_PROMPT_WITH_REFERENCE,
+    TRAJECTORY_ACCURACY_PROMPT,
 )
 
 from agentevals.types import ChatCompletionMessage
@@ -14,7 +14,7 @@ import json
 @pytest.mark.asyncio
 async def test_trajectory_match():
     evaluator = create_async_trajectory_llm_as_judge(
-        prompt=DEFAULT_REF_COMPARE_PROMPT, model="openai:o3-mini"
+        prompt=TRAJECTORY_ACCURACY_PROMPT_WITH_REFERENCE, model="openai:o3-mini"
     )
     inputs = {}
     outputs = [
@@ -62,7 +62,7 @@ async def test_trajectory_match():
 @pytest.mark.asyncio
 async def test_trajectory_no_ref():
     evaluator = create_async_trajectory_llm_as_judge(
-        prompt=DEFAULT_NO_REF_PROMPT, model="openai:o3-mini"
+        prompt=TRAJECTORY_ACCURACY_PROMPT, model="openai:o3-mini"
     )
     outputs = [
         {"role": "user", "content": "What is the weather in SF?"},
@@ -91,7 +91,7 @@ async def test_trajectory_no_ref():
 @pytest.mark.asyncio
 async def test_trajectory_no_ref_bad_trajectory():
     evaluator = create_async_trajectory_llm_as_judge(
-        prompt=DEFAULT_NO_REF_PROMPT, model="openai:o3-mini"
+        prompt=TRAJECTORY_ACCURACY_PROMPT, model="openai:o3-mini"
     )
     outputs = [
         {"role": "user", "content": "What are some good restaurants in SF?"},

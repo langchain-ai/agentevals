@@ -112,7 +112,7 @@ function _formatInputs(params: {
  * @returns A function that evaluates agent trajectories using the configured LLM judge.
  */
 export const createTrajectoryLLMAsJudge = ({
-  prompt = TRAJECTORY_ACCURACY_PROMPT,
+  prompt = TRAJECTORY_ACCURACY_PROMPT_WITH_REFERENCE,
   feedbackKey = "trajectory_accuracy",
   model,
   system,
