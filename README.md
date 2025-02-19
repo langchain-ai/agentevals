@@ -165,12 +165,14 @@ console.log(evalResult);
 
 ```
 {
-    key: 'score',
-    score: false,
+    key: 'trajectory_accuracy',
+    score: true,
     comment: '...'
 }
 ```
 </details>
+
+You can see that despite the small difference in the final response and tool calls, the evaluator still returns a score of `true` since the overall trajectory is the same between the output and reference!
 
 ## Table of Contents
 
