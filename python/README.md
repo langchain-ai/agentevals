@@ -1,10 +1,10 @@
 # 🦾⚖️ AgentEvals
 
-[Agentic applications](https://langchain-ai.github.io/langgraph/concepts/agentic_concepts/) give an LLM freedom over control flow in order to solve a problem. While this freedom
-can lead to more effective solutions when done well, it can be tricky to get right because LLMs are black boxes.
+[Agentic applications](https://langchain-ai.github.io/langgraph/concepts/agentic_concepts/) give an LLM freedom over control flow in order to solve problems. While this freedom
+can be extremely powerful, it can be tricky to get right because LLMs are black boxes.
 This makes effectively evaluating your agent's performance especially important.
 
-This package contains a collection of evaluators and utilities for evaluating the performance of your agents, with a focus on examining an agent's **trajectory**,
+This package contains a collection of evaluators and utilities for evaluating the performance of your agents, with a focus on examining an agent's **trajectory**.
 It is intended to provide a good conceptual starting point for your agent's evals.
 
 If you are looking for more general evaluation tools, please check out the companion package [`openevals`](https://github.com/langchain-ai/openevals).
@@ -41,7 +41,7 @@ Once you've done this, you can run your first trajectory evaluator. We represent
 <summary>Python</summary>
 
 ```python
-from agentevals.llm import create_trajectory_llm_as_judge, DEFAULT_PROMPT
+from agentevals.trajectory.llm import create_trajectory_llm_as_judge, DEFAULT_PROMPT
 
 trajectory_evaluator = create_trajectory_llm_as_judge(
     prompt=DEFAULT_PROMPT,
@@ -165,12 +165,14 @@ console.log(evalResult);
 
 ```
 {
-    key: 'score',
-    score: false,
+    key: 'trajectory_accuracy',
+    score: true,
     comment: '...'
 }
 ```
 </details>
+
+You can see that despite the small difference in the final response and tool calls, the evaluator still returns a score of `true` since the overall trajectory is the same between the output and reference!
 
 ## Table of Contents
 
@@ -185,7 +187,7 @@ console.log(evalResult);
     - [Graph trajectory LLM-as-judge](#graph-trajectory-llm-as-judge)
 - [Python Async Support](#python-async-support)
 - [LangSmith Integration](#langsmith-integration)
-  - [Pytest](#pytest)
+  - [Pytest or Vitest/Jest](#pytest-or-vitestjest)
   - [Evaluate](#evaluate)
 
 ## Installation
@@ -570,7 +572,8 @@ const outputs = [
   },
   { role: "tool", content: "It's 80 degrees and sunny in SF, and 90 degrees and rainy in London." },
   { role: "assistant", content: "The weather in SF is 80 degrees and sunny. In London, it's 90 degrees and rainy."},
-]
+];
+
 const referenceOutputs = [
   { role: "user", content: "What is the weather in SF and London?" },
   {
@@ -943,7 +946,9 @@ res = await evaluator(
 )
 ```
 
-`reference_outputs` should also be passed in as a `GraphTrajectory` object like `outputs`. Just like other LLM-as-judge evaluators, you can pass extra kwargs into the evaluator to format them into the prompt.
+In order to format them properly into the prompt, `reference_outputs` should be passed in as a `GraphTrajectory` object like `outputs`.
+
+Also note that like other LLM-as-judge evaluators, you can pass extra kwargs into the evaluator to format them into the prompt.
 
 #### Graph trajectory strict match
 
@@ -1020,7 +1025,7 @@ All `agentevals` evaluators support Python [asyncio](https://docs.python.org/3/l
 Here's an example of how to use the `create_async_llm_as_judge` evaluator asynchronously:
 
 ```python
-from agentevals.llm import create_async_trajectory_llm_as_judge
+from agentevals.trajectory.llm import create_async_trajectory_llm_as_judge
 
 evaluator = create_async_llm_as_judge(
     prompt="What is the weather in {inputs}?",
@@ -1049,7 +1054,7 @@ For tracking experiments over time, you can log evaluator results to [LangSmith]
 
 LangSmith currently offers two ways to run evals. We'll give a quick example of how to run evals using both.
 
-### Pytest
+### Pytest or Vitest/Jest
 
 First, follow [these instructions](https://docs.smith.langchain.com/evaluation/how_to_guides/pytest) to set up LangSmith's pytest runner,
 setting appropriate environment variables:
@@ -1059,34 +1064,65 @@ export LANGSMITH_API_KEY="your_langsmith_api_key"
 export LANGSMITH_TRACING="true"
 ```
 
+<details open>
+<summary>Python</summary>
+
 Then, set up a file named `test_trajectory.py` with the following contents:
 
 ```python
 import pytest
+import json
 
 from langsmith import testing as t
 
-from openevals.llm import create_llm_as_judge
-from openevals.prompts import CORRECTNESS_PROMPT
+from agentevals.trajectory.llm import create_trajectory_llm_as_judge
 
-correctness_evaluator = create_llm_as_judge(
-    prompt=CORRECTNESS_PROMPT,
-    feedback_key="correctness",
+trajectory_evaluator = create_trajectory_llm_as_judge(
+    model="openai:o3-mini",
 )
 
 @pytest.mark.langsmith
-def test_correctness():
-    inputs = "How much has the price of doodads changed in the past year?"
-    outputs = "Doodads have increased in price by 10% in the past year."
-    reference_outputs = "The price of doodads has decreased by 50% in the past year."
-    t.log_inputs({"question": inputs})
-    t.log_outputs({"answer": outputs})
-    t.log_reference_outputs({"answer": reference_outputs})
+def test_trajectory_accuracy():
+    outputs = [
+        {"role": "user", "content": "What is the weather in SF?"},
+        {
+            "role": "assistant",
+            "tool_calls": [
+                {
+                    "function": {
+                        "name": "get_weather",
+                        "arguments": json.dumps({"city": "SF"}),
+                    }
+                }
+            ],
+        },
+        {"role": "tool", "content": "It's 80 degrees and sunny in SF."},
+        {"role": "assistant", "content": "The weather in SF is 80 degrees and sunny."},
+    ]
+    reference_outputs = [
+        {"role": "user", "content": "What is the weather in SF?"},
+        {
+            "role": "assistant",
+            "tool_calls": [
+                {
+                    "function": {
+                        "name": "get_weather",
+                        "arguments": json.dumps({"city": "San Francisco"}),
+                    }
+                }
+            ],
+        },
+        {"role": "tool", "content": "It's 80 degrees and sunny in San Francisco."},
+        {"role": "assistant", "content": "The weather in SF is 80˚ and sunny."},
+    ]
 
-    correctness_evaluator(
-        inputs=inputs,
-        outputs=outputs,
-        reference_outputs=reference_outputs
+    t.log_inputs({})
+    t.log_outputs({"messages": outputs})
+    t.log_reference_outputs({"messages": reference_outputs})
+
+    trajectory_evaluator(
+      outputs=outputs,
+      reference_outputs=reference_outputs
     )
 ```
 
@@ -1095,31 +1131,113 @@ Note that when creating the evaluator, we've added a `feedback_key` parameter. T
 Now, run the eval with pytest:
 
 ```bash
-pytest test_correctness.py --langsmith-output
+pytest test_trajectory.py --langsmith-output
 ```
+
+</details>
+
+<details>
+<summary>TypeScript</summary>
+
+Then, set up a file named `test_trajectory.eval.ts` with the following contents:
+
+```ts
+import * as ls from "langsmith/vitest";
+// import * as ls from "langsmith/jest";
+
+import { createTrajectoryLLMAsJudge } from "agentevals";
+
+const trajectoryEvaluator = createTrajectoryLLMAsJudge({
+  model: "openai:o3-mini",
+});
+
+ls.describe("trajectory accuracy", () => {
+  ls.test("accurate trajectory", {
+    inputs: {
+      messages: [
+        {
+          role: "user",
+          content: "What is the weather in SF?"
+        }
+      ]
+    },
+    referenceOutputs: {
+      messages: [
+        {"role": "user", "content": "What is the weather in SF?"},
+        {
+            "role": "assistant",
+            "tool_calls": [
+                {
+                    "function": {
+                        "name": "get_weather",
+                        "arguments": JSON.stringify({"city": "San Francisco"}),
+                    }
+                }
+            ],
+        },
+        {"role": "tool", "content": "It's 80 degrees and sunny in San Francisco."},
+        {"role": "assistant", "content": "The weather in SF is 80˚ and sunny."},
+      ],
+    },
+  }, async ({ inputs, referenceOutputs }) => {
+    const outputs = [
+        {"role": "user", "content": "What is the weather in SF?"},
+        {
+            "role": "assistant",
+            "tool_calls": [
+                {
+                    "function": {
+                        "name": "get_weather",
+                        "arguments": JSON.stringify({"city": "SF"}),
+                    }
+                }
+            ],
+        },
+        {"role": "tool", "content": "It's 80 degrees and sunny in SF."},
+        {"role": "assistant", "content": "The weather in SF is 80 degrees and sunny."},
+    ];
+    ls.logOutputs({ messages: outputs });
+
+    await trajectoryEvaluator({
+      inputs,
+      outputs,
+      referenceOutputs,
+    });
+  });
+});
+```
+
+Now, run the eval with your runner of choice:
+
+```bash
+vitest run test_trajectory.eval.ts
+```
+
+</details>
 
 Feedback from the prebuilt evaluator will be automatically logged in LangSmith as a table of results like this in your terminal:
 
-![Terminal results](./static/img/pytest_output.png)
+![Terminal results](/static/img/pytest_output.png)
 
 And you should also see the results in the experiment view in LangSmith:
 
-![LangSmith results](./static/img/langsmith_results.png)
+![LangSmith results](/static/img/langsmith_results.png)
 
 ### Evaluate
 
 Alternatively, you can [create a dataset in LangSmith](https://docs.smith.langchain.com/evaluation/concepts#dataset-curation) and use your created evaluators with LangSmith's [`evaluate`](https://docs.smith.langchain.com/evaluation#8-run-and-view-results) function:
 
+<details open>
+<summary>Python</summary>
+
 ```python
 from langsmith import Client
-from openevals.llm import create_llm_as_judge
-from openevals.prompts import CONCISENESS_PROMPT
+from agentevals.trajectory.llm import create_trajectory_llm_as_judge
 
 client = Client()
 
-conciseness_evaluator = create_llm_as_judge(
-    prompt=CONCISENESS_PROMPT,
-    feedback_key="conciseness",
+trajectory_evaluator = create_trajectory_llm_as_judge(
+    model="openai:o3-mini",
 )
 
 experiment_results = client.evaluate(
@@ -1127,10 +1245,33 @@ experiment_results = client.evaluate(
     lambda inputs: "What color is the sky?",
     data="Sample dataset",
     evaluators=[
-        conciseness_evaluator
+        trajectory_evaluator
     ]
 )
 ```
+
+</details>
+
+<details>
+<summary>TypeScript</summary>
+
+```ts
+import { evaluate } from "langsmith/evaluation";
+import { createTrajectoryLLMAsJudge, DEFAULT_PROMPT } from "agentevals";
+
+const trajectoryEvaluator = createTrajectoryLLMAsJudge({
+  model: "openai:o3-mini",
+});
+
+await evaluate(
+  (inputs) => "What color is the sky?",
+  {
+    data: datasetName,
+    evaluators: [trajectoryEvaluator],
+  }
+);
+```
+</details>
 
 ## Thank you!
 

@@ -4,7 +4,7 @@
 can be extremely powerful, it can be tricky to get right because LLMs are black boxes.
 This makes effectively evaluating your agent's performance especially important.
 
-This package contains a collection of evaluators and utilities for evaluating the performance of your agents, with a focus on examining an agent's **trajectory**,
+This package contains a collection of evaluators and utilities for evaluating the performance of your agents, with a focus on examining an agent's **trajectory**.
 It is intended to provide a good conceptual starting point for your agent's evals.
 
 If you are looking for more general evaluation tools, please check out the companion package [`openevals`](https://github.com/langchain-ai/openevals).
@@ -187,7 +187,7 @@ You can see that despite the small difference in the final response and tool cal
     - [Graph trajectory LLM-as-judge](#graph-trajectory-llm-as-judge)
 - [Python Async Support](#python-async-support)
 - [LangSmith Integration](#langsmith-integration)
-  - [Pytest](#pytest)
+  - [Pytest or Vitest/Jest](#pytest-or-vitestjest)
   - [Evaluate](#evaluate)
 
 ## Installation
@@ -946,7 +946,9 @@ res = await evaluator(
 )
 ```
 
-`reference_outputs` should also be passed in as a `GraphTrajectory` object like `outputs`. Just like other LLM-as-judge evaluators, you can pass extra kwargs into the evaluator to format them into the prompt.
+In order to format them properly into the prompt, `reference_outputs` should be passed in as a `GraphTrajectory` object like `outputs`.
+
+Also note that like other LLM-as-judge evaluators, you can pass extra kwargs into the evaluator to format them into the prompt.
 
 #### Graph trajectory strict match
 
@@ -1052,7 +1054,7 @@ For tracking experiments over time, you can log evaluator results to [LangSmith]
 
 LangSmith currently offers two ways to run evals. We'll give a quick example of how to run evals using both.
 
-### Pytest
+### Pytest or Vitest/Jest
 
 First, follow [these instructions](https://docs.smith.langchain.com/evaluation/how_to_guides/pytest) to set up LangSmith's pytest runner,
 setting appropriate environment variables:
