@@ -1,11 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createTrajectoryLLMAsJudge = exports.DEFAULT_PROMPT = void 0;
-const openevals_1 = require("openevals");
+exports.createTrajectoryLLMAsJudge = exports.DEFAULT_NO_REF_PROMPT = exports.DEFAULT_REF_COMPARE_PROMPT = void 0;
+const llm_1 = require("openevals/llm");
 const utils_js_1 = require("../utils.js");
 const utils_js_2 = require("../utils.js");
 const utils_js_3 = require("./utils.js");
-exports.DEFAULT_PROMPT = `You are an expert data labeler.
+exports.DEFAULT_REF_COMPARE_PROMPT = `You are an expert data labeler.
 Your task is to grade the accuracy of an AI agent's internal trajectory.
 
 <Rubric>
@@ -23,6 +23,28 @@ Grade the following trajectory:
 </trajectory>
 {inputs}
 {reference_outputs}
+`;
+exports.DEFAULT_NO_REF_PROMPT = `You are an expert data labeler.
+Your task is to grade the accuracy of an AI agent's internal trajectory.
+
+<Rubric>
+  An accurate trajectory:
+  - Makes logical sense between steps
+  - Shows clear progression
+  - Is relatively efficient, though it does not need to be perfectly efficient
+</Rubric>
+
+First, try to understand the goal of the trajectory by looking at the input
+(if the input is not present try to infer it from the content of the first message),
+as well as the output of the final message. Once you understand the goal, grade the trajectory
+as it relates to achieving that goal.
+
+Grade the following trajectory:
+
+<trajectory>
+{outputs}
+</trajectory>
+{inputs}
 `;
 function _formatInputs(params) {
     const { inputs, outputs, referenceOutputs } = params;
@@ -66,8 +88,8 @@ function _formatInputs(params) {
  * @param options.fewShotExamples - Optional list of example evaluations to append to the prompt.
  * @returns A function that evaluates agent trajectories using the configured LLM judge.
  */
-const createTrajectoryLLMAsJudge = ({ prompt = exports.DEFAULT_PROMPT, feedbackKey = "trajectory_accuracy", model, system, judge, continuous = false, choices, useReasoning = true, fewShotExamples, }) => {
-    const scorer = (0, openevals_1._createLLMAsJudgeScorer)({
+const createTrajectoryLLMAsJudge = ({ prompt = exports.DEFAULT_REF_COMPARE_PROMPT, feedbackKey = "trajectory_accuracy", model, system, judge, continuous = false, choices, useReasoning = true, fewShotExamples, }) => {
+    const scorer = (0, llm_1._createLLMAsJudgeScorer)({
         prompt,
         judge,
         model,
@@ -78,7 +100,7 @@ const createTrajectoryLLMAsJudge = ({ prompt = exports.DEFAULT_PROMPT, feedbackK
         fewShotExamples,
     });
     const wrappedEvaluator = async ({ inputs, outputs, referenceOutputs, rubric, ...extra }) => {
-        const [formattedOutputs, formattedReferenceOutputs, formattedInputs,] = prompt === exports.DEFAULT_PROMPT ? _formatInputs({ inputs, outputs, referenceOutputs }) : [inputs, (0, utils_js_2._normalizeToOpenAIMessagesList)(outputs), (0, utils_js_2._normalizeToOpenAIMessagesList)(referenceOutputs)];
+        const [formattedOutputs, formattedReferenceOutputs, formattedInputs,] = prompt === exports.DEFAULT_REF_COMPARE_PROMPT || prompt === exports.DEFAULT_NO_REF_PROMPT ? _formatInputs({ inputs, outputs, referenceOutputs }) : [inputs, (0, utils_js_2._normalizeToOpenAIMessagesList)(outputs), (0, utils_js_2._normalizeToOpenAIMessagesList)(referenceOutputs)];
         return (0, utils_js_1._runEvaluator)(`llm_as_${feedbackKey}_judge`, scorer, feedbackKey, {
             outputs: formattedOutputs,
             referenceOutputs: formattedReferenceOutputs,

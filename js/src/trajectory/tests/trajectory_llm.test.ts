@@ -1,7 +1,7 @@
 import * as ls from "langsmith/vitest";
 import { expect } from "vitest";
 
-import { createTrajectoryLLMAsJudge } from "../llm.js";
+import { createTrajectoryLLMAsJudge, DEFAULT_NO_REF_PROMPT } from "../llm.js";
 
 ls.describe("Trajectory LLM", () => {
   ls.test(
@@ -64,6 +64,72 @@ ls.describe("Trajectory LLM", () => {
 
       expect(evalResult.key).toBe("trajectory_accuracy");
       expect(evalResult.score).toBe(true);
+    }
+  );
+
+  ls.test(
+    "trajectory no ref",
+    { inputs: {} },
+    async () => {
+      const evaluator = createTrajectoryLLMAsJudge({
+        prompt: DEFAULT_NO_REF_PROMPT,
+        model: "openai:o3-mini",
+      });
+      const outputs = [
+        { role: "user", content: "What is the weather in SF?" },
+        {
+          role: "assistant",
+          tool_calls: [
+            {
+              function: {
+                name: "get_weather",
+                arguments: JSON.stringify({ city: "SF" }),
+              },
+            },
+          ],
+        },
+        { role: "tool", content: "It's 80 degrees and sunny in SF." },
+        { role: "assistant", content: "The weather in SF is 80 degrees and sunny." },
+      ];
+      const evalResult = await evaluator({
+        outputs,
+      });
+
+      expect(evalResult.key).toBe("trajectory_accuracy");
+      expect(evalResult.score).toBe(true);
+    }
+  );
+
+  ls.test(
+    "trajectory no ref bad trajectory",
+    { inputs: {} },
+    async () => {
+      const evaluator = createTrajectoryLLMAsJudge({
+        prompt: DEFAULT_NO_REF_PROMPT,
+        model: "openai:o3-mini",
+      });
+      const outputs = [
+        { role: "user", content: "What are some good restaurants in SF?" },
+        {
+          role: "assistant",
+          tool_calls: [
+            {
+              function: {
+                name: "get_weather",
+                arguments: JSON.stringify({ city: "SF" }),
+              },
+            },
+          ],
+        },
+        { role: "tool", content: "It's 80 degrees and sunny in SF." },
+        { role: "assistant", content: "The weather in SF is 80 degrees and sunny." },
+      ];
+      const evalResult = await evaluator({
+        outputs,
+      });
+
+      expect(evalResult.key).toBe("trajectory_accuracy");
+      expect(evalResult.score).toBe(false);
     }
   );
 

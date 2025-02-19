@@ -109,11 +109,7 @@ export async function trajectoryStrictMatch(params: {
    * @returns EvaluatorResult containing a score of true if trajectory (including called tools) matches, false otherwise
    */
   function _wrapper() {
-    return _scorer({
-      tool_call_args_exact_match: params.toolCallArgsExactMatch,
-      message_content_exact_match: params.messageContentExactMatch,
-      ...params,
-    });
+    return _scorer(params);
   }
 
   return _runEvaluator(

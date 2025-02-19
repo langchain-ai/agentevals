@@ -19,7 +19,7 @@ from agentevals.types import EvaluatorResult, FewShotExample, GraphTrajectory
 
 from langchain_core.language_models.chat_models import BaseChatModel
 
-DEFAULT_PROMPT = """You are an expert data labeler.
+DEFAULT_REF_COMPARE_PROMPT = """You are an expert data labeler.
 Your task is to grade the accuracy of an AI agent's internal steps in resolving a user queries.
 
 <Rubric>
@@ -88,7 +88,7 @@ def create_graph_trajectory_llm_as_judge(
     *,
     prompt: str
     | RunnableLike
-    | Callable[..., list[ChatCompletionMessage]] = DEFAULT_PROMPT,
+    | Callable[..., list[ChatCompletionMessage]] = DEFAULT_REF_COMPARE_PROMPT,
     model: Optional[str] = None,
     feedback_key: str = "graph_trajectory_accuracy",
     judge: Optional[
@@ -165,7 +165,7 @@ def create_async_graph_trajectory_llm_as_judge(
     *,
     prompt: str
     | RunnableLike
-    | Callable[..., list[ChatCompletionMessage]] = DEFAULT_PROMPT,
+    | Callable[..., list[ChatCompletionMessage]] = DEFAULT_REF_COMPARE_PROMPT,
     model: Optional[str] = None,
     feedback_key: str = "graph_trajectory_accuracy",
     judge: Optional[

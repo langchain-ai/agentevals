@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.trajectoryStrictMatch = void 0;
 const utils_js_1 = require("../utils.js");
 function _scorer(params) {
-    const { outputs, referenceOutputs } = params;
+    const { outputs, referenceOutputs, toolCallArgsExactMatch, messageContentExactMatch } = params;
     const normalizedOutputs = (0, utils_js_1._normalizeToOpenAIMessagesList)(outputs);
     const normalizedReferenceOutputs = (0, utils_js_1._normalizeToOpenAIMessagesList)(referenceOutputs);
     if (!normalizedOutputs || !normalizedReferenceOutputs) {
@@ -37,7 +37,18 @@ function _scorer(params) {
                     exactMatch = false;
                     break;
                 }
+                if (toolCallArgsExactMatch &&
+                    output.tool_calls[j].args !==
+                        referenceOutput.tool_calls[j].args) {
+                    exactMatch = false;
+                    break;
+                }
             }
+        }
+        if (messageContentExactMatch &&
+            output.content !== referenceOutput.content) {
+            exactMatch = false;
+            break;
         }
     }
     return exactMatch;
@@ -51,8 +62,13 @@ async function trajectoryStrictMatch(params) {
      *                 a list of LangChain messages, or a dictionary containing a "messages" key with one of the above.
      * @param referenceOutputs - Ideal reference trajectory the agent should have followed. May be a list of OpenAI messages,
      *                          a list of LangChain messages, or a dictionary containing a "messages" key with one of the above.
+     * @param toolCallArgsExactMatch - Whether to require exact matches for tool call arguments
+     * @param messageContentExactMatch - Whether to require exact matches for message content
      * @returns EvaluatorResult containing a score of true if trajectory (including called tools) matches, false otherwise
      */
-    return (0, utils_js_1._runEvaluator)("trajectory_strict_match", _scorer, "trajectory_strict_match", params);
+    function _wrapper() {
+        return _scorer(params);
+    }
+    return (0, utils_js_1._runEvaluator)("trajectory_strict_match", _wrapper, "trajectory_strict_match", params);
 }
 exports.trajectoryStrictMatch = trajectoryStrictMatch;

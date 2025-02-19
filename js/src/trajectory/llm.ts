@@ -13,7 +13,7 @@ import { _runEvaluator } from "../utils.js";
 import { _normalizeToOpenAIMessagesList } from "../utils.js";
 import { _chatCompletionMessagesToString } from "./utils.js";
 
-export const DEFAULT_PROMPT = `You are an expert data labeler.
+export const DEFAULT_REF_COMPARE_PROMPT = `You are an expert data labeler.
 Your task is to grade the accuracy of an AI agent's internal trajectory.
 
 <Rubric>
@@ -31,6 +31,29 @@ Grade the following trajectory:
 </trajectory>
 {inputs}
 {reference_outputs}
+`;
+
+export const DEFAULT_NO_REF_PROMPT = `You are an expert data labeler.
+Your task is to grade the accuracy of an AI agent's internal trajectory.
+
+<Rubric>
+  An accurate trajectory:
+  - Makes logical sense between steps
+  - Shows clear progression
+  - Is relatively efficient, though it does not need to be perfectly efficient
+</Rubric>
+
+First, try to understand the goal of the trajectory by looking at the input
+(if the input is not present try to infer it from the content of the first message),
+as well as the output of the final message. Once you understand the goal, grade the trajectory
+as it relates to achieving that goal.
+
+Grade the following trajectory:
+
+<trajectory>
+{outputs}
+</trajectory>
+{inputs}
 `;
 
 function _formatInputs(params: {
@@ -94,7 +117,7 @@ function _formatInputs(params: {
  * @returns A function that evaluates agent trajectories using the configured LLM judge.
  */
 export const createTrajectoryLLMAsJudge = ({
-  prompt = DEFAULT_PROMPT,
+  prompt = DEFAULT_REF_COMPARE_PROMPT,
   feedbackKey = "trajectory_accuracy",
   model,
   system,
@@ -152,7 +175,7 @@ export const createTrajectoryLLMAsJudge = ({
       formattedOutputs,
       formattedReferenceOutputs,
       formattedInputs,
-    ] = prompt === DEFAULT_PROMPT ? _formatInputs({ inputs, outputs, referenceOutputs }) : [inputs, _normalizeToOpenAIMessagesList(outputs), _normalizeToOpenAIMessagesList(referenceOutputs)];
+    ] = prompt === DEFAULT_REF_COMPARE_PROMPT || prompt === DEFAULT_NO_REF_PROMPT ? _formatInputs({ inputs, outputs, referenceOutputs }) : [inputs, _normalizeToOpenAIMessagesList(outputs), _normalizeToOpenAIMessagesList(referenceOutputs)];
 
     return _runEvaluator(`llm_as_${feedbackKey}_judge`, scorer, feedbackKey, {
       outputs: formattedOutputs,
