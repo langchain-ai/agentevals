@@ -1,10 +1,10 @@
 # 🦾⚖️ AgentEvals
 
 [Agentic applications](https://langchain-ai.github.io/langgraph/concepts/agentic_concepts/) give an LLM freedom over control flow in order to solve problems. While this freedom
-can be extremely powerful, it can be tricky to get right because LLMs are black boxes.
-This makes effectively evaluating your agent's performance especially important.
+can be extremely powerful, the black box nature of LLMs can make it difficult to understand how changes in one part of your agent will affect others downstream.
+This makes evaluating your agents especially important.
 
-This package contains a collection of evaluators and utilities for evaluating the performance of your agents, with a focus on examining an agent's **trajectory**.
+This package contains a collection of evaluators and utilities for evaluating the performance of your agents, with a focus on **agent trajectory**, or the intermediate steps an agent takes as it runs.
 It is intended to provide a good conceptual starting point for your agent's evals.
 
 If you are looking for more general evaluation tools, please check out the companion package [`openevals`](https://github.com/langchain-ai/openevals).
