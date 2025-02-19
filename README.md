@@ -1,7 +1,7 @@
 # 🦾⚖️ AgentEvals
 
-[Agentic applications](https://langchain-ai.github.io/langgraph/concepts/agentic_concepts/) give an LLM freedom over control flow in order to solve a problem. While this freedom
-can lead to more effective solutions when done well, it can be tricky to get right because LLMs are black boxes.
+[Agentic applications](https://langchain-ai.github.io/langgraph/concepts/agentic_concepts/) give an LLM freedom over control flow in order to solve problems. While this freedom
+can be extremely powerful, it can be tricky to get right because LLMs are black boxes.
 This makes effectively evaluating your agent's performance especially important.
 
 This package contains a collection of evaluators and utilities for evaluating the performance of your agents, with a focus on examining an agent's **trajectory**,
