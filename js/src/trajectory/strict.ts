@@ -14,7 +14,12 @@ function _scorer(params: {
   toolCallArgsExactMatch: boolean;
   messageContentExactMatch: boolean;
 }): boolean {
-  const { outputs, referenceOutputs, toolCallArgsExactMatch, messageContentExactMatch } = params;
+  const {
+    outputs,
+    referenceOutputs,
+    toolCallArgsExactMatch,
+    messageContentExactMatch,
+  } = params;
   const normalizedOutputs = _normalizeToOpenAIMessagesList(outputs);
   const normalizedReferenceOutputs =
     _normalizeToOpenAIMessagesList(referenceOutputs);
@@ -63,8 +68,7 @@ function _scorer(params: {
         }
         if (
           toolCallArgsExactMatch &&
-          output.tool_calls![j].args !==
-          referenceOutput.tool_calls![j].args
+          output.tool_calls![j].args !== referenceOutput.tool_calls![j].args
         ) {
           exactMatch = false;
           break;

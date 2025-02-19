@@ -92,11 +92,12 @@ def trajectory_strict_match(
     Returns:
         EvaluatorResult: Contains a score of True if trajectory (including called tools) matches, False otherwise
     """
+
     def wrapper(**kwargs: Any):
         return _scorer(
             tool_call_args_exact_match=tool_call_args_exact_match,
             message_content_exact_match=message_content_exact_match,
-            **kwargs
+            **kwargs,
         )
 
     return _run_evaluator(
@@ -138,7 +139,7 @@ async def trajectory_strict_match_async(
         return _scorer(
             tool_call_args_exact_match=tool_call_args_exact_match,
             message_content_exact_match=message_content_exact_match,
-            **kwargs
+            **kwargs,
         )
 
     return await _arun_evaluator(
