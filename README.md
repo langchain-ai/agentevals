@@ -185,6 +185,7 @@ You can see that despite the small difference in the final response and tool cal
     - [Trajectory LLM-as-judge](#trajectory-llm-as-judge)
   - [Graph Trajectory](#graph-trajectory)
     - [Graph trajectory LLM-as-judge](#graph-trajectory-llm-as-judge)
+    - [Graph trajectory strict match](#graph-trajectory-strict-match)
 - [Python Async Support](#python-async-support)
 - [LangSmith Integration](#langsmith-integration)
   - [Pytest or Vitest/Jest](#pytest-or-vitestjest)
