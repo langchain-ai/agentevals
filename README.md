@@ -1221,7 +1221,7 @@ console.log(result);
   'score': True,
 }
 ```
-<details>
+</details>
 
 ## Python Async Support
 
