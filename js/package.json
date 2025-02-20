@@ -1,7 +1,7 @@
 {
   "name": "agentevals",
-  "version": "0.0.0",
-  "packageManager": "yarn@4.3.1",
+  "version": "0.0.1-rc.1",
+  "packageManager": "yarn@3.5.1",
   "type": "module",
   "scripts": {
     "build": "yarn lc_build --create-entrypoints --pre --tree-shaking",
@@ -17,7 +17,7 @@
     "@langchain/openai": "^0.4.4",
     "langchain": "^0.3.18",
     "langsmith": "^0.3.10",
-    "openevals": "^0.0.1-rc.6"
+    "openevals": "^0.0.1-rc.8"
   },
   "peerDependencies": {
     "@langchain/core": "^0.3.40",

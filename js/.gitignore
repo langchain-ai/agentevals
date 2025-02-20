@@ -4,5 +4,6 @@ index.d.ts
 index.d.cts
 node_modules
 dist
-.yarn
+.yarn/*
+!.yarn/releases
 dist-cjs
