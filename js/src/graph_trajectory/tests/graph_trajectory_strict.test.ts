@@ -65,7 +65,6 @@ ls.describe(
           graph,
           config
         );
-        console.log(JSON.stringify(trajectory, null, 2));
         const result = await graphTrajectoryStrictMatch({
           outputs: trajectory.outputs,
           referenceOutputs: referenceOutputs!,
