@@ -773,8 +773,10 @@ Where `inputs` is a list of inputs (or a dict with a key named `"inputs"`) to th
 
 #### Graph trajectory LLM-as-judge
 
-This evaluator is similar to the `trajectory_llm_as_judge` evaluator, but it works with graph trajectories instead of message trajectories. Below, we set up a LangGraph agent, extract a trajectory from it using the built-in utils, and pass it to the evaluator:
+This evaluator is similar to the `trajectory_llm_as_judge` evaluator, but it works with graph trajectories instead of message trajectories. Below, we set up a LangGraph agent, extract a trajectory from it using the built-in utils, and pass it to the evaluator. First, let's setup our graph, call it, and then extract the trajectory:
 
+<details open>
+<summary>Python</summary>
 ```python
 from agentevals.graph_trajectory.utils import (
     extract_langgraph_trajectory_from_thread,
@@ -850,6 +852,96 @@ print(extracted_trajectory)
 }
 ```
 
+</details>
+
+<details>
+<summary>TypeScript</summary>
+```ts
+import { tool } from "@langchain/core/tools";
+import { ChatOpenAI } from "@langchain/openai";
+import { createReactAgent } from "@langchain/langgraph/prebuilt";
+import { MemorySaver, interrupt } from "@langchain/langgraph";
+import { z } from "zod";
+import { extractLangGraphTrajectoryFromThread } from "agentevals";
+
+const search = tool((_): string => {
+  const userAnswer = interrupt("Tell me the answer to the question.")
+  return userAnswer;
+}, {
+  name: "search",
+  description: "Call to surf the web.",
+  schema: z.object({
+      query: z.string()
+  })
+})
+
+const tools = [search];
+
+// Create a checkpointer
+const checkpointer = new MemorySaver();
+
+// Create the React agent
+const graph = createReactAgent({
+  llm: new ChatOpenAI({ model: "gpt-4o-mini" }),
+  tools,
+  checkpointer,
+});
+
+// Invoke the graph with initial message
+await graph.invoke(
+  { messages: [{ role: "user", content: "what's the weather in sf?" }] },
+  { configurable: { thread_id: "1" } }
+);
+
+// Resume the agent with a new command (simulating human-in-the-loop)
+await graph.invoke(
+  { messages: [{ role: "user", content: "It is rainy and 70 degrees!" }] },
+  { configurable: { thread_id: "1" } }
+);
+
+const extractedTrajectory = await extractLangGraphTrajectoryFromThread(
+  graph,
+  { configurable: { thread_id: "1" } },
+);
+
+console.log(extractedTrajectory);
+```
+
+```
+{
+  'inputs': [{
+      '__start__': {
+          'messages': [
+              {'role': 'user', 'content': "what's the weather in sf?"}
+          ]}
+      }, 
+      '__resuming__': {
+          'messages': [
+              {'role': 'user', 'content': 'It is rainy and 70 degrees!'}
+          ]}
+      ],
+      'outputs': {
+          'results': [
+            {},
+            {
+                'messages': [
+                    {'role': 'ai', 'content': 'The current weather in San Francisco is rainy, with a temperature of 70 degrees.'}
+                ]
+            }
+        ],
+        'steps': [
+            ['__start__', 'agent', 'tools', '__interrupt__'],
+            ['agent']
+        ]
+    }
+}
+```
+</details>
+
+Now, we can pass the extracted trajectory to the evaluator:
+
+<details open>
+<summary>Python</summary>
 ```python
 graph_trajectory_evaluator = create_graph_trajectory_llm_as_judge(
     model="openai:o3-mini",
@@ -870,9 +962,39 @@ print(res)
   'comment': 'The overall process follows a logical progression: the conversation begins with the user’s request, the agent then processes the request through its own internal steps (including calling tools), interrupts to obtain further input, and finally resumes to provide a natural language answer. Each step is consistent with the intended design in the rubric, and the overall path is relatively efficient and semantically aligns with a typical query resolution trajectory. Thus, the score should be: true.'
 }
 ```
+</details>
+
+<details>
+<summary>TypeScript</summary>
+```ts
+import { createGraphTrajectoryLLMAsJudge } from "agentevals";
+
+const graphTrajectoryEvaluator = createGraphTrajectoryLLMAsJudge({
+    model: "openai:o3-mini",
+})
+
+const res = await graphTrajectoryEvaluator(
+    inputs=extractedTrajectory.inputs,
+    outputs=extractedTrajectory.outputs,
+)
+
+console.log(res);
+```
+
+```
+{
+  'key': 'graph_trajectory_accuracy',
+  'score': True,
+  'comment': 'The overall process follows a logical progression: the conversation begins with the user’s request, the agent then processes the request through its own internal steps (including calling tools), interrupts to obtain further input, and finally resumes to provide a natural language answer. Each step is consistent with the intended design in the rubric, and the overall path is relatively efficient and semantically aligns with a typical query resolution trajectory. Thus, the score should be: true.'
+}
+```
+</details>
 
 Note that though this evaluator takes the typical `inputs`, `outputs`, and `reference_outputs` parameters, it internally combines `inputs` and `outputs` to form a `thread`. Therefore, if you want to customize the prompt, your prompt should also contain a `thread` input variable:
 
+
+<details open>
+<summary>Python</summary>
 ```python
 CUSTOM_PROMPT = """You are an expert data labeler.
 Your task is to grade the accuracy of an AI agent's internal steps in resolving a user queries.
@@ -904,10 +1026,48 @@ evaluator = create_graph_trajectory_llm_as_judge(
 )
 res = await evaluator(
     inputs=extracted_trajectory["inputs"],
-    outputs=extracted_trajectory["outputs"],
-    
+    outputs=extracted_trajectory["outputs"],   
 )
 ```
+</details>
+
+<details>
+<summary>TypeScript</summary>
+```ts
+const CUSTOM_PROMPT = `You are an expert data labeler.
+Your task is to grade the accuracy of an AI agent's internal steps in resolving a user queries.
+
+<Rubric>
+  An accurate trajectory:
+  - Makes logical sense between steps
+  - Shows clear progression
+  - Is perfectly efficient, with no more than one tool call
+  - Is semantically equivalent to the provided reference trajectory, if present
+</Rubric>
+
+<Instructions>
+  Grade the following thread, evaluating whether the agent's overall steps are logical and relatively efficient.
+  For the trajectory, "__start__" denotes an initial entrypoint to the agent, and "__interrupt__" corresponds to the agent
+  interrupting to await additional data from another source ("human-in-the-loop"):
+</Instructions>
+
+<thread>
+{thread}
+</thread>
+
+{reference_outputs}
+`
+
+const graphTrajectoryEvaluator = createGraphTrajectoryLLMAsJudge({
+  prompt: CUSTOM_PROMPT,
+  model: "openai:o3-mini",
+})
+res = await graphTrajectoryEvaluator(
+  inputs=extractedTrajectory.inputs,
+  outputs=extractedTrajectory.outputs,
+)
+```
+</details>
 
 In order to format them properly into the prompt, `reference_outputs` should be passed in as a `GraphTrajectory` object like `outputs`.
 
@@ -917,6 +1077,8 @@ Also note that like other LLM-as-judge evaluators, you can pass extra kwargs int
 
 The `graph_trajectory_strict_match` evaluator is a simple evaluator that checks if the steps in the provided graph trajectory match the reference trajectory exactly.
 
+<details open>
+<summary>Python</summary>
 ```python
 from agentevals.graph_trajectory.utils import (
     extract_langgraph_trajectory_from_thread,
@@ -980,6 +1142,78 @@ print(res)
   'score': True,
 }
 ```
+</details>
+
+<details>
+<summary>TypeScript</summary>
+```ts
+import { tool } from "@langchain/core/tools";
+import { ChatOpenAI } from "@langchain/openai";
+import { createReactAgent } from "@langchain/langgraph/prebuilt";
+import { MemorySaver, interrupt } from "@langchain/langgraph";
+import { z } from "zod";
+import { extractLangGraphTrajectoryFromThread, graphTrajectoryStrictMatch } from "agentevals";
+
+const search = tool((_): string => {
+  const userAnswer = interrupt("Tell me the answer to the question.")
+  return userAnswer;
+}, {
+  name: "search",
+  description: "Call to surf the web.",
+  schema: z.object({
+      query: z.string()
+  })
+})
+
+const tools = [search];
+
+// Create a checkpointer
+const checkpointer = new MemorySaver();
+
+// Create the React agent
+const graph = createReactAgent({
+  llm: new ChatOpenAI({ model: "gpt-4o-mini" }),
+  tools,
+  checkpointer,
+});
+
+// Invoke the graph with initial message
+await graph.invoke(
+  { messages: [{ role: "user", content: "what's the weather in sf?" }] },
+  { configurable: { thread_id: "1" } }
+);
+
+// Resume the agent with a new command (simulating human-in-the-loop)
+await graph.invoke(
+  { messages: [{ role: "user", content: "It is rainy and 70 degrees!" }] },
+  { configurable: { thread_id: "1" } }
+);
+
+const extractedTrajectory = await extractLangGraphTrajectoryFromThread(
+  graph,
+  { configurable: { thread_id: "1" } },
+);
+
+const referenceTrajectory = {
+  results: [],
+  steps: [["__start__", "agent", "tools", "__interrupt__"], ["agent"]],
+}
+
+const result = await graphTrajectoryStrictMatch({
+  outputs: trajectory.outputs,
+  referenceOutputs: referenceOutputs!,
+});
+
+console.log(result);
+```
+
+```
+{
+  'key': 'graph_trajectory_strict_match',
+  'score': True,
+}
+```
+<details>
 
 ## Python Async Support
 
