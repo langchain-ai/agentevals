@@ -106,7 +106,7 @@ npm install openai
 ```
 
 It is also helpful to be familiar with some [evaluation concepts](https://docs.smith.langchain.com/evaluation/concepts) and
-LangSmith's pytest integration for running evals, which is documented [here](https://docs.smith.langchain.com/evaluation/how_to_guides/pytest).
+LangSmith's Vitest/Jest integration for running evals, which is documented [here](https://docs.smith.langchain.com/evaluation/how_to_guides/pytest).
 
 ## Evaluators
 
@@ -634,7 +634,7 @@ LangSmith currently offers two ways to run evals. We'll give a quick example of 
 
 ### Pytest or Vitest/Jest
 
-First, follow [these instructions](https://docs.smith.langchain.com/evaluation/how_to_guides/vitest_jest) to set up LangSmith's pytest runner,
+First, follow [these instructions](https://docs.smith.langchain.com/evaluation/how_to_guides/vitest_jest) to set up LangSmith's Vitest/Jest runner,
 setting appropriate environment variables:
 
 ```bash
