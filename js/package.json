@@ -1,6 +1,6 @@
 {
   "name": "agentevals",
-  "version": "0.0.1-rc.1",
+  "version": "0.0.1-rc.3",
   "packageManager": "yarn@3.5.1",
   "type": "module",
   "scripts": {
