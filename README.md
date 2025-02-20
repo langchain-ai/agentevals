@@ -777,6 +777,7 @@ This evaluator is similar to the `trajectory_llm_as_judge` evaluator, but it wor
 
 <details open>
 <summary>Python</summary>
+
 ```python
 from agentevals.graph_trajectory.utils import (
     extract_langgraph_trajectory_from_thread,
@@ -808,13 +809,13 @@ graph.invoke(
     {"messages": [{"role": "user", "content": "what's the weather in sf?"}]},
     config={"configurable": {"thread_id": "1"}},
 )
-\# Resume the agent with a new command, simulating a human-in-the-loop workflow
+# Resume the agent with a new command, simulating a human-in-the-loop workflow
 graph.invoke(
     Command(resume="It is rainy and 70 degrees!"),
     config={"configurable": {"thread_id": "1"}},
 )
 
-\# Extract the trajectory from the first two thread runs
+# Extract the trajectory from the first two thread runs
 extracted_trajectory = extract_langgraph_trajectory_from_thread(
     graph, {"configurable": {"thread_id": "1"}}
 )
@@ -825,12 +826,12 @@ print(extracted_trajectory)
 ```
 {
   'inputs': [{
-      '\__start__': {
+      '__start__': {
           'messages': [
               {'role': 'user', 'content': "what's the weather in sf?"}
           ]}
       }, 
-      '\__resuming__': {
+      '__resuming__': {
           'messages': [
               {'role': 'user', 'content': 'It is rainy and 70 degrees!'}
           ]}
@@ -845,7 +846,7 @@ print(extracted_trajectory)
             }
         ],
         'steps': [
-            ['\__start__', 'agent', 'tools', '\__interrupt__'],
+            ['__start__', 'agent', 'tools', '__interrupt__'],
             ['agent']
         ]
     }
@@ -856,6 +857,7 @@ print(extracted_trajectory)
 
 <details>
 <summary>TypeScript</summary>
+
 ```ts
 import { tool } from "@langchain/core/tools";
 import { ChatOpenAI } from "@langchain/openai";
@@ -942,6 +944,7 @@ Now, we can pass the extracted trajectory to the evaluator:
 
 <details open>
 <summary>Python</summary>
+
 ```python
 graph_trajectory_evaluator = create_graph_trajectory_llm_as_judge(
     model="openai:o3-mini",
@@ -966,6 +969,7 @@ print(res)
 
 <details>
 <summary>TypeScript</summary>
+
 ```ts
 import { createGraphTrajectoryLLMAsJudge } from "agentevals";
 
@@ -995,6 +999,7 @@ Note that though this evaluator takes the typical `inputs`, `outputs`, and `refe
 
 <details open>
 <summary>Python</summary>
+
 ```python
 CUSTOM_PROMPT = """You are an expert data labeler.
 Your task is to grade the accuracy of an AI agent's internal steps in resolving a user queries.
@@ -1033,6 +1038,7 @@ res = await evaluator(
 
 <details>
 <summary>TypeScript</summary>
+
 ```ts
 const CUSTOM_PROMPT = `You are an expert data labeler.
 Your task is to grade the accuracy of an AI agent's internal steps in resolving a user queries.
@@ -1079,6 +1085,7 @@ The `graph_trajectory_strict_match` evaluator is a simple evaluator that checks 
 
 <details open>
 <summary>Python</summary>
+
 ```python
 from agentevals.graph_trajectory.utils import (
     extract_langgraph_trajectory_from_thread,
@@ -1146,6 +1153,7 @@ print(res)
 
 <details>
 <summary>TypeScript</summary>
+
 ```ts
 import { tool } from "@langchain/core/tools";
 import { ChatOpenAI } from "@langchain/openai";
