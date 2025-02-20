@@ -17,8 +17,8 @@ function _scorer(params: {
   const {
     outputs,
     referenceOutputs,
-    toolCallArgsExactMatch,
-    messageContentExactMatch,
+    toolCallArgsExactMatch = true,
+    messageContentExactMatch = false,
   } = params;
   const normalizedOutputs = _normalizeToOpenAIMessagesList(outputs);
   const normalizedReferenceOutputs =
@@ -68,7 +68,8 @@ function _scorer(params: {
         }
         if (
           toolCallArgsExactMatch &&
-          output.tool_calls![j].args !== referenceOutput.tool_calls![j].args
+          output.tool_calls![j].function.arguments !==
+            referenceOutput.tool_calls![j].function.arguments
         ) {
           exactMatch = false;
           break;

@@ -47,7 +47,6 @@ def test_sensible_trajectory():
         inputs=extracted_trajectory["inputs"],
         outputs=extracted_trajectory["outputs"],
     )
-    print(res)
     assert res["key"] == "graph_trajectory_accuracy"
     assert res["score"]
 

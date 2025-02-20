@@ -88,7 +88,9 @@ ls.describe("trajectory", () => {
     });
     expect(result).toBeDefined();
     expect(result.key).toBe(feedbackKey);
-    expect(result.score).toBe(true);
+    expect(result.score).toBe(
+      feedbackKey === "trajectory_strict_match" ? false : true
+    );
     expect(result.comment).toBeUndefined();
   });
 
@@ -194,7 +196,9 @@ ls.describe("trajectory", () => {
     });
     expect(result).toBeDefined();
     expect(result.key).toBe(feedbackKey);
-    expect(result.score).toBe(true);
+    expect(result.score).toBe(
+      feedbackKey === "trajectory_strict_match" ? false : true
+    );
     expect(result.comment).toBeUndefined();
   });
 
@@ -505,7 +509,7 @@ ls.describe("trajectory", () => {
     expect(result.comment).toBeUndefined();
   });
 
-  ls.test.only.each([
+  ls.test.each([
     {
       inputs: {},
       evaluator: trajectoryStrictMatch,
@@ -675,7 +679,9 @@ ls.describe("trajectory", () => {
       });
       expect(result).toBeDefined();
       expect(result.key).toBe(feedbackKey);
-      expect(result.score).toBe(true);
+      expect(result.score).toBe(
+        feedbackKey === "trajectory_strict_match" ? false : true
+      );
       expect(result.comment).toBeUndefined();
     }
   );
@@ -828,7 +834,7 @@ ls.describe("trajectory", () => {
       expect(result).toEqual({
         key: "trajectory_strict_match",
         score,
-        comment: null,
+        comment: undefined,
       });
     }
   );
