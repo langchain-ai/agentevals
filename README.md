@@ -754,6 +754,9 @@ For frameworks like [LangGraph](https://github.com/langchain-ai/langgraph) that 
 
 The below examples will use LangGraph with the built-in formatting utility, but graph evaluators accept input in the following general format:
 
+<details open>
+<summary>Python</summary>
+
 ```python
 class GraphTrajectory(TypedDict):
     # Only set when specifying reference_outputs
@@ -768,6 +771,28 @@ def evaluator(
     reference_outputs: Optional[GraphTrajectory] = None,
 ) -> ...
 ```
+</details>
+
+<details>
+<summary>TypeScript</summary>
+
+```ts
+export type GraphTrajectory = {
+  inputs?: (Record<string, unknown> | null)[];
+  results: Record<string, unknown>[];
+  steps: string[][];
+};
+
+const evaluator: ({ inputs, outputs, referenceOutputs, ...extra }: {
+    inputs: (string | Record<string, unknown> | null)[] | {
+        inputs: (string | Record<string, unknown> | null)[];
+    };
+    outputs: GraphTrajectory;
+    referenceOutputs?: GraphTrajectory;
+    [key: string]: unknown;
+}) => ...
+```
+</details>
 
 Where `inputs` is a list of inputs (or a dict with a key named `"inputs"`) to the graph whose items each represent the start of a new invocation in a thread, `results` representing the final output from each turn in the thread, and `steps` representing the internal steps taken for each turn.
 
@@ -1462,14 +1487,30 @@ experiment_results = client.evaluate(
 
 ```ts
 import { evaluate } from "langsmith/evaluation";
-import { createTrajectoryLLMAsJudge, TRAJECTORY_ACCURACY_PROMPT_WITH_REFERENCE } from "agentevals";
+import { createTrajectoryLLMAsJudge, TRAJECTORY_ACCURACY_PROMPT } from "agentevals";
 
 const trajectoryEvaluator = createTrajectoryLLMAsJudge({
   model: "openai:o3-mini",
+  prompt: TRAJECTORY_ACCURACY_PROMPT
 });
 
 await evaluate(
-  (inputs) => "What color is the sky?",
+  (inputs) => [
+        {role: "user", content: "What is the weather in SF?"},
+        {
+            role: "assistant",
+            tool_calls: [
+                {
+                    function: {
+                        name: "get_weather",
+                        arguments: json.dumps({"city": "SF"}),
+                    }
+                }
+            ],
+        },
+        {role: "tool", content: "It's 80 degrees and sunny in SF."},
+        {role: "assistant", content: "The weather in SF is 80 degrees and sunny."},
+    ],
   {
     data: datasetName,
     evaluators: [trajectoryEvaluator],

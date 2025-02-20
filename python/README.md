@@ -13,21 +13,9 @@ If you are looking for more general evaluation tools, please check out the compa
 
 To get started, install `agentevals`:
 
-<details open>
-<summary>Python</summary>
-
 ```bash
 pip install agentevals
 ```
-</details>
-
-<details>
-<summary>TypeScript</summary>
-
-```bash
-npm install agentevals @langchain/core
-```
-</details>
 
 This quickstart will use an evaluator powered by OpenAI's `o3-mini` model to judge your results, so you'll need to set your OpenAI API key as an environment variable:
 
@@ -36,9 +24,6 @@ export OPENAI_API_KEY="your_openai_api_key"
 ```
 
 Once you've done this, you can run your first trajectory evaluator. We represent the agent's trajectory as a list of OpenAI-style messages:
-
-<details open>
-<summary>Python</summary>
 
 ```python
 from agentevals.trajectory.llm import create_trajectory_llm_as_judge, TRAJECTORY_ACCURACY_PROMPT_WITH_REFERENCE
@@ -80,58 +65,6 @@ print(eval_result)
   'score': true
 }
 ```
-</details>
-
-<details>
-<summary>TypeScript</summary>
-
-```ts
-import {
-  createTrajectoryLLMAsJudge,
-  TRAJECTORY_ACCURACY_PROMPT,
-} from "agentevals";
-
-const trajectoryEvaluator = createTrajectoryLLMAsJudge({
-  prompt: TRAJECTORY_ACCURACY_PROMPT,
-  model: "openai:o3-mini",
-});
-
-const outputs = [
-  { role: "user", content: "What is the weather in SF?" },
-  {
-    role: "assistant",
-    content: "",
-    tool_calls: [
-      {
-        function: {
-          name: "get_weather",
-          arguments: JSON.stringify({ city: "SF" }),
-        },
-      },
-    ],
-  },
-  { role: "tool", content: "It's 80 degrees and sunny in SF." },
-  {
-    role: "assistant",
-    content: "The weather in SF is 80 degrees and sunny.",
-  },
-];
-
-const evalResult = await trajectoryEvaluator({
-  outputs,
-});
-
-console.log(evalResult);
-```
-
-```
-{
-    key: 'trajectory_accuracy',
-    score: true,
-    comment: '...'
-}
-```
-</details>
 
 You can see that despite the small difference in the final response and tool calls, the evaluator still returns a score of `true` since the overall trajectory is the same between the output and reference!
 
@@ -156,39 +89,15 @@ You can see that despite the small difference in the final response and tool cal
 
 You can install `agentevals` like this:
 
-<details open>
-<summary>Python</summary>
-
 ```bash
 pip install agentevals
 ```
-</details>
-
-<details>
-<summary>TypeScript</summary>
-
-```bash
-npm install agentevals @langchain/core
-```
-</details>
 
 For LLM-as-judge evaluators, you will also need an LLM client. By default, `agentevals` will use [LangChain chat model integrations](https://python.langchain.com/docs/integrations/chat/) and comes with `langchain_openai` installed by default. However, if you prefer, you may use the OpenAI client directly:
-
-<details open>
-<summary>Python</summary>
 
 ```bash
 pip install openai
 ```
-</details>
-
-<details>
-<summary>TypeScript</summary>
-
-```bash
-npm install openai
-```
-</details>
 
 It is also helpful to be familiar with some [evaluation concepts](https://docs.smith.langchain.com/evaluation/concepts) and
 LangSmith's pytest integration for running evals, which is documented [here](https://docs.smith.langchain.com/evaluation/how_to_guides/pytest).
@@ -206,9 +115,6 @@ under the hood.
 The `trajectory_strict_match` evaluator, compares two trajectories and ensures that they contain the same messages
 in the same order with the same tool calls. It allows for differences in message content and tool call arguments,
 but requires that the selected tools at each step are the same.
-
-<details open>
-<summary>Python</summary>
 
 ```python
 import json
@@ -260,54 +166,10 @@ print(result)
     'comment': None,
 }
 ```
-</details>
-
-<details>
-<summary>TypeScript</summary>
-
-```ts
-import { trajectoryStrictMatch } from "agentevals";
-
-const outputs = [
-    { role: "user", content: "What is the weather in SF?" },
-    {
-      role: "assistant",
-      tool_calls: [{
-        function: { name: "get_weather", arguments: JSON.stringify({ city: "SF" }) }
-      }]
-    },
-    { role: "tool", content: "It's 80 degrees and sunny in SF." },
-    { role: "assistant", content: "The weather in SF is 80 degrees and sunny." },
-];
-
-const referenceOutputs = [
-    { role: "user", content: "What is the weather in San Francisco?" },
-    { role: "assistant", tool_calls: [{ function: { name: "get_weather", arguments: JSON.stringify({ city: "San Francisco" }) } }] },
-    { role: "tool", content: "It's 80 degrees and sunny in San Francisco." },
-];
-
-const result = await trajectoryStrictMatch({
-  outputs,
-  referenceOutputs,
-});
-
-console.log(result);
-```
-
-```
-{
-    'key': 'trajectory_accuracy',
-    'score': true,
-}
-```
-</details>
 
 #### Unordered match
 
 The `trajectory_unordered_match` evaluator, compares two trajectories and ensures that they contain the same number of tool calls in any order. This is useful if you want to allow flexibility in how an agent obtains the proper information, but still do care that all information was retrieved.
-
-<details open>
-<summary>Python</summary>
 
 ```python
 import json
@@ -375,85 +237,10 @@ print(result)
     'comment': None,
 }
 ```
-</details>
-
-<details>
-<summary>TypeScript</summary>
-
-```ts
-import { trajectoryUnorderedMatch } from "agentevals";
-
-const outputs = [
-  { role: "user", content: "What is the weather in SF and is there anything fun happening?" },
-  {
-    role: "assistant",
-    tool_calls: [{
-      function: {
-        name: "get_weather",
-        arguments: JSON.stringify({ city: "SF" }),
-      }
-    }],
-  },
-  { role: "tool", content: "It's 80 degrees and sunny in SF." },
-  {
-    role: "assistant",
-    tool_calls: [{
-      function: {
-        name: "get_fun_activities",
-        arguments: JSON.stringify({ city: "SF" }),
-      }
-    }],
-  },
-  { role: "tool", content: "Nothing fun is happening, you should stay indoors and read!" },
-  { role: "assistant", content: "The weather in SF is 80 degrees and sunny, but there is nothing fun happening." },
-];
-
-const referenceOutputs = [
-  { role: "user", content: "What is the weather in SF and is there anything fun happening?" },
-  {
-    role: "assistant",
-    tool_calls: [
-      {
-        function: {
-          name: "get_fun_activities",
-          arguments: JSON.stringify({ city: "San Francisco" }),
-        }
-      },
-      {
-        function: {
-          name: "get_weather",
-          arguments: JSON.stringify({ city: "San Francisco" }),
-        }
-      },
-    ],
-  },
-  { role: "tool", content: "Nothing fun is happening, you should stay indoors and read!" },
-  { role: "tool", content: "It's 80 degrees and sunny in SF." },
-  { role: "assistant", content: "In SF, it's 80˚ and sunny, but there is nothing fun happening." },
-];
-
-const result = await trajectoryUnorderedMatch({
-  outputs,
-  referenceOutputs,
-});
-
-console.log(result)
-```
-
-```
-{
-    'key': 'trajectory_unordered_match',
-    'score': true,
-}
-```
-</details>
 
 #### Subset and superset match
 
 There are other evaluators for checking partial trajectory matches (ensuring that a trajectory contains a subset and superset of tool calls compared to a reference trajectory).
-
-<details open>
-<summary>Python</summary>
 
 ```python
 import json
@@ -512,78 +299,12 @@ print(result)
     'comment': None,
 }
 ```
-</details>
-
-<details>
-<summary>TypeScript</summary>
-
-```ts
-import { trajectorySubset } from "agentevals";
-// import { trajectorySuperset } from "agentevals";
-
-const outputs = [
-  { role: "user", content: "What is the weather in SF and London?" },
-  {
-    role: "assistant",
-    tool_calls: [{
-      function: {
-        name: "get_weather",
-        arguments: JSON.stringify({ city: "SF and London" }),
-      }
-    }],
-  },
-  { role: "tool", content: "It's 80 degrees and sunny in SF, and 90 degrees and rainy in London." },
-  { role: "assistant", content: "The weather in SF is 80 degrees and sunny. In London, it's 90 degrees and rainy."},
-];
-
-const referenceOutputs = [
-  { role: "user", content: "What is the weather in SF and London?" },
-  {
-    role: "assistant",
-    tool_calls: [
-      {
-        function: {
-          name: "get_weather",
-          arguments: JSON.stringify({ city: "San Francisco" }),
-        }
-      },
-      {
-        function: {
-          name: "get_weather",
-          arguments: JSON.stringify({ city: "London" }),
-        }
-      },
-    ],
-  },
-  { role: "tool", content: "It's 80 degrees and sunny in San Francisco." },
-  { role: "tool", content: "It's 90 degrees and rainy in London." },
-  { role: "assistant", content: "The weather in SF is 80˚ and sunny. In London, it's 90˚ and rainy." },
-];
-
-const result = await trajectorySubset({
-  outputs,
-  referenceOutputs,
-});
-
-console.log(result)
-```
-
-```
-{
-    'key': 'trajectory_subset',
-    'score': true,
-}
-```
-</details>
 
 #### Trajectory LLM-as-judge
 
 The LLM-as-judge trajectory evaluator that uses an LLM to evaluate the trajectory. Unlike the other trajectory evaluators, it doesn't require a reference trajectory,
 and supports 
 This allows for more flexibility in the trajectory comparison:
-
-<details open>
-<summary>Python</summary>
 
 ```python
 import json
@@ -640,71 +361,6 @@ print(eval_result)
     'comment': 'The provided agent trajectory is consistent with the reference. Both trajectories start with the same user query and then correctly invoke a weather lookup through a tool call. Although the reference uses "San Francisco" while the provided trajectory uses "SF" and there is a minor formatting difference (degrees vs. ˚), these differences do not affect the correctness or essential steps of the process. Thus, the score should be: true.'
 }
 ```
-</details>
-
-<details>
-<summary>TypeScript</summary>
-
-```ts
-import {
-  createTrajectoryLLMAsJudge,
-  TRAJECTORY_ACCURACY_PROMPT_WITH_REFERENCE
-} from "agentevals";
-
-const evaluator = createTrajectoryLLMAsJudge({
-  prompt: TRAJECTORY_ACCURACY_PROMPT_WITH_REFERENCE,
-  model: "openai:o3-mini",
-});
-
-const outputs = [
-  {role: "user", content: "What is the weather in SF?"},
-  {
-    role: "assistant",
-    tool_calls: [
-      {
-        function: {
-          name: "get_weather",
-          arguments: JSON.stringify({ city: "SF" }),
-        }
-      }
-    ],
-  },
-  {role: "tool", content: "It's 80 degrees and sunny in SF."},
-  {role: "assistant", content: "The weather in SF is 80 degrees and sunny."},
-]
-const referenceOutputs = [
-  {role: "user", content: "What is the weather in SF?"},
-  {
-    role: "assistant",
-    tool_calls: [
-      {
-        function: {
-          name: "get_weather",
-          arguments: JSON.stringify({ city: "San Francisco" }),
-        }
-      }
-    ],
-  },
-  {role: "tool", content: "It's 80 degrees and sunny in San Francisco."},
-  {role: "assistant", content: "The weather in SF is 80˚ and sunny."},
-]
-
-const result = await evaluator({
-  outputs,
-  referenceOutputs,
-});
-
-console.log(result)
-```
-
-```
-{
-    'key': 'trajectory_accuracy',
-    'score': true,
-    'comment': 'The provided agent trajectory is consistent with the reference. Both trajectories start with the same user query and then correctly invoke a weather lookup through a tool call. Although the reference uses "San Francisco" while the provided trajectory uses "SF" and there is a minor formatting difference (degrees vs. ˚), these differences do not affect the correctness or essential steps of the process. Thus, the score should be: true.'
-}
-```
-</details>
 
 `create_trajectory_llm_as_judge` takes the same parameters as [`create_llm_as_judge`](https://github.com/langchain-ai/openevals?tab=readme-ov-file#llm-as-judge) in `openevals`, so you can customize the prompt and scoring output as needed.
 
@@ -714,9 +370,6 @@ In addition to `prompt` and `model`, the following parameters are also available
 - `choices`: a list of floats that sets the possible scores for the evaluator.
 - `system`: a string that sets a system prompt for the judge model by adding a system message before other parts of the prompt.
 - `few_shot_examples`: a list of example dicts that are appended to the end of the prompt. This is useful for providing the judge model with examples of good and bad outputs. The required structure looks like this:
-
-<details open>
-<summary>Python</summary>
 
 ```python
 few_shot_examples = [
@@ -728,23 +381,6 @@ few_shot_examples = [
     }
 ]
 ```
-
-</details>
-
-<details>
-<summary>TypeScript</summary>
-
-```ts
-const fewShotExamples = [
-  {
-    inputs: "What color is the sky?",
-    outputs: "The sky is red.",
-    reasoning: "The sky is red because it is early evening.",
-    score: 1,
-  }
-];
-```
-</details>
 
 See the [`openevals`](https://github.com/langchain-ai/openevals?tab=readme-ov-file#llm-as-judge) repo for a fully up to date list of parameters.
 
@@ -1017,7 +653,7 @@ For tracking experiments over time, you can log evaluator results to [LangSmith]
 
 LangSmith currently offers two ways to run evals. We'll give a quick example of how to run evals using both.
 
-### Pytest or Vitest/Jest
+### Pytest
 
 First, follow [these instructions](https://docs.smith.langchain.com/evaluation/how_to_guides/pytest) to set up LangSmith's pytest runner,
 setting appropriate environment variables:
@@ -1026,9 +662,6 @@ setting appropriate environment variables:
 export LANGSMITH_API_KEY="your_langsmith_api_key"
 export LANGSMITH_TRACING="true"
 ```
-
-<details open>
-<summary>Python</summary>
 
 Then, set up a file named `test_trajectory.py` with the following contents:
 
@@ -1097,87 +730,6 @@ Now, run the eval with pytest:
 pytest test_trajectory.py --langsmith-output
 ```
 
-</details>
-
-<details>
-<summary>TypeScript</summary>
-
-Then, set up a file named `test_trajectory.eval.ts` with the following contents:
-
-```ts
-import * as ls from "langsmith/vitest";
-// import * as ls from "langsmith/jest";
-
-import { createTrajectoryLLMAsJudge } from "agentevals";
-
-const trajectoryEvaluator = createTrajectoryLLMAsJudge({
-  model: "openai:o3-mini",
-});
-
-ls.describe("trajectory accuracy", () => {
-  ls.test("accurate trajectory", {
-    inputs: {
-      messages: [
-        {
-          role: "user",
-          content: "What is the weather in SF?"
-        }
-      ]
-    },
-    referenceOutputs: {
-      messages: [
-        {"role": "user", "content": "What is the weather in SF?"},
-        {
-            "role": "assistant",
-            "tool_calls": [
-                {
-                    "function": {
-                        "name": "get_weather",
-                        "arguments": JSON.stringify({"city": "San Francisco"}),
-                    }
-                }
-            ],
-        },
-        {"role": "tool", "content": "It's 80 degrees and sunny in San Francisco."},
-        {"role": "assistant", "content": "The weather in SF is 80˚ and sunny."},
-      ],
-    },
-  }, async ({ inputs, referenceOutputs }) => {
-    const outputs = [
-        {"role": "user", "content": "What is the weather in SF?"},
-        {
-            "role": "assistant",
-            "tool_calls": [
-                {
-                    "function": {
-                        "name": "get_weather",
-                        "arguments": JSON.stringify({"city": "SF"}),
-                    }
-                }
-            ],
-        },
-        {"role": "tool", "content": "It's 80 degrees and sunny in SF."},
-        {"role": "assistant", "content": "The weather in SF is 80 degrees and sunny."},
-    ];
-    ls.logOutputs({ messages: outputs });
-
-    await trajectoryEvaluator({
-      inputs,
-      outputs,
-      referenceOutputs,
-    });
-  });
-});
-```
-
-Now, run the eval with your runner of choice:
-
-```bash
-vitest run test_trajectory.eval.ts
-```
-
-</details>
-
 Feedback from the prebuilt evaluator will be automatically logged in LangSmith as a table of results like this in your terminal:
 
 ![Terminal results](/static/img/pytest_output.png)
@@ -1190,51 +742,41 @@ And you should also see the results in the experiment view in LangSmith:
 
 Alternatively, you can [create a dataset in LangSmith](https://docs.smith.langchain.com/evaluation/concepts#dataset-curation) and use your created evaluators with LangSmith's [`evaluate`](https://docs.smith.langchain.com/evaluation#8-run-and-view-results) function:
 
-<details open>
-<summary>Python</summary>
-
 ```python
 from langsmith import Client
-from agentevals.trajectory.llm import create_trajectory_llm_as_judge
+from agentevals.trajectory.llm import create_trajectory_llm_as_judge, TRAJECTORY_ACCURACY_PROMPT
 
 client = Client()
 
 trajectory_evaluator = create_trajectory_llm_as_judge(
     model="openai:o3-mini",
+    prompt=TRAJECTORY_ACCURACY_PROMPT
 )
 
 experiment_results = client.evaluate(
     # This is a dummy target function, replace with your actual LLM-based system
-    lambda inputs: "What color is the sky?",
+    lambda inputs: [
+        {"role": "user", "content": "What is the weather in SF?"},
+        {
+            "role": "assistant",
+            "tool_calls": [
+                {
+                    "function": {
+                        "name": "get_weather",
+                        "arguments": json.dumps({"city": "SF"}),
+                    }
+                }
+            ],
+        },
+        {"role": "tool", "content": "It's 80 degrees and sunny in SF."},
+        {"role": "assistant", "content": "The weather in SF is 80 degrees and sunny."},
+    ],
     data="Sample dataset",
     evaluators=[
         trajectory_evaluator
     ]
 )
 ```
-
-</details>
-
-<details>
-<summary>TypeScript</summary>
-
-```ts
-import { evaluate } from "langsmith/evaluation";
-import { createTrajectoryLLMAsJudge, TRAJECTORY_ACCURACY_PROMPT_WITH_REFERENCE } from "agentevals";
-
-const trajectoryEvaluator = createTrajectoryLLMAsJudge({
-  model: "openai:o3-mini",
-});
-
-await evaluate(
-  (inputs) => "What color is the sky?",
-  {
-    data: datasetName,
-    evaluators: [trajectoryEvaluator],
-  }
-);
-```
-</details>
 
 ## Thank you!
 
