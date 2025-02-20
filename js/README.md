@@ -44,7 +44,7 @@ Once you've done this, you can run your first trajectory evaluator. We represent
 from agentevals.trajectory.llm import create_trajectory_llm_as_judge, TRAJECTORY_ACCURACY_PROMPT_WITH_REFERENCE
 
 trajectory_evaluator = create_trajectory_llm_as_judge(
-    prompt=TRAJECTORY_ACCURACY_PROMPT_WITH_REFERENCE,
+    prompt=TRAJECTORY_ACCURACY_PROMPT,
     model="openai:o3-mini",
 )
 
@@ -65,26 +65,9 @@ outputs = [
     {"role": "tool", "content": "It's 80 degrees and sunny in SF."},
     {"role": "assistant", "content": "The weather in SF is 80 degrees and sunny."},
 ]
-reference_outputs = [
-    {"role": "user", "content": "What is the weather in SF?"},
-    {
-        "role": "assistant",
-        "tool_calls": [
-            {
-                "function": {
-                    "name": "get_weather",
-                    "arguments": json.dumps({"city": "San Francisco"}),
-                }
-            }
-        ],
-    },
-    {"role": "tool", "content": "It's 80 degrees and sunny in San Francisco."},
-    {"role": "assistant", "content": "The weather in SF is 80˚ and sunny."},
-]
 
 eval_result = trajectory_evaluator(
   outputs=outputs,
-  reference_outputs=reference_outputs
 )
 
 print(eval_result)
@@ -93,7 +76,7 @@ print(eval_result)
 ```
 {
   'key': 'trajectory_accuracy',
-  'reasoning': 'The trajectory accurately follows the intended steps from the reference trajectory. Both trajectories begin with the same user query and include a tool call to retrieve the weather data. Although the given trajectory uses "SF" rather than the expanded "San Francisco" for the tool call and the final response, this difference is minor and does not affect the correctness of the information provided. Thus, the score should be: true.',
+  'reasoning': 'The trajectory accurately follows the user's request for weather information in SF. Initially, the assistant recognizes the goal (providing weather details), then it efficiently makes a tool call to get the weather, and finally it communicates the result clearly. All steps demonstrate logical progression and efficiency. Thus, the score should be: true.',
   'score': true
 }
 ```
@@ -105,11 +88,11 @@ print(eval_result)
 ```ts
 import {
   createTrajectoryLLMAsJudge,
-  TRAJECTORY_ACCURACY_PROMPT_WITH_REFERENCE
+  TRAJECTORY_ACCURACY_PROMPT,
 } from "agentevals";
 
 const trajectoryEvaluator = createTrajectoryLLMAsJudge({
-  prompt: TRAJECTORY_ACCURACY_PROMPT_WITH_REFERENCE,
+  prompt: TRAJECTORY_ACCURACY_PROMPT,
   model: "openai:o3-mini",
 });
 
@@ -134,30 +117,8 @@ const outputs = [
   },
 ];
 
-const referenceOutputs = [
-  { role: "user", content: "What is the weather in SF?" },
-  {
-    role: "assistant",
-    content: "",
-    tool_calls: [
-      {
-        function: {
-          name: "get_weather",
-          arguments: JSON.stringify({ city: "San Francisco" }),
-        },
-      },
-    ],
-  },
-  {
-    role: "tool",
-    content: "It's 80 degrees and sunny in San Francisco.",
-  },
-  { role: "assistant", content: "The weather in SF is 80˚ and sunny." },
-];
-
 const evalResult = await trajectoryEvaluator({
   outputs,
-  referenceOutputs,
 });
 
 console.log(evalResult);
@@ -319,7 +280,7 @@ const outputs = [
     { role: "assistant", content: "The weather in SF is 80 degrees and sunny." },
 ];
 
-const reference_outputs = [
+const referenceOutputs = [
     { role: "user", content: "What is the weather in San Francisco?" },
     { role: "assistant", tool_calls: [{ function: { name: "get_weather", arguments: JSON.stringify({ city: "San Francisco" }) } }] },
     { role: "tool", content: "It's 80 degrees and sunny in San Francisco." },
@@ -447,7 +408,7 @@ const outputs = [
   { role: "assistant", content: "The weather in SF is 80 degrees and sunny, but there is nothing fun happening." },
 ];
 
-const reference_outputs = [
+const referenceOutputs = [
   { role: "user", content: "What is the weather in SF and is there anything fun happening?" },
   {
     role: "assistant",
@@ -862,30 +823,31 @@ print(extracted_trajectory)
 ```
 {
   'inputs': [{
-    '__start__': {
-      'messages': [
-        {'role': 'user', 'content': "what's the weather in sf?"}
-      ]}
-    }, 
-    '__resuming__': {
-      'messages': [
-        {'role': 'user', 'content': 'It is rainy and 70 degrees!'}
-      ]}
-    ],
-    'outputs': {
-      'results': [
-        {},
-        {
+      '__start__': {
           'messages': [
-            {'role': 'ai', 'content': 'The current weather in San Francisco is rainy, with a temperature of 70 degrees.'}
-          ]
-        }
+              {'role': 'user', 'content': "what's the weather in sf?"}
+          ]}
+      }, 
+      '__resuming__': {
+          'messages': [
+              {'role': 'user', 'content': 'It is rainy and 70 degrees!'}
+          ]}
       ],
-      'steps': [
-        ['__start__', 'agent', 'tools', '__interrupt__'],
-        ['agent']
-      ]
+      'outputs': {
+          'results': [
+            {},
+            {
+                'messages': [
+                    {'role': 'ai', 'content': 'The current weather in San Francisco is rainy, with a temperature of 70 degrees.'}
+                ]
+            }
+        ],
+        'steps': [
+            ['__start__', 'agent', 'tools', '__interrupt__'],
+            ['agent']
+        ]
     }
+}
 ```
 
 ```python

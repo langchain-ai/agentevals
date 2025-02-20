@@ -88,7 +88,7 @@ print(eval_result)
 ```ts
 import {
   createTrajectoryLLMAsJudge,
-  TRAJECTORY_ACCURACY_PROMPT
+  TRAJECTORY_ACCURACY_PROMPT,
 } from "agentevals";
 
 const trajectoryEvaluator = createTrajectoryLLMAsJudge({
@@ -119,7 +119,6 @@ const outputs = [
 
 const evalResult = await trajectoryEvaluator({
   outputs,
-  referenceOutputs,
 });
 
 console.log(evalResult);
@@ -281,7 +280,7 @@ const outputs = [
     { role: "assistant", content: "The weather in SF is 80 degrees and sunny." },
 ];
 
-const reference_outputs = [
+const referenceOutputs = [
     { role: "user", content: "What is the weather in San Francisco?" },
     { role: "assistant", tool_calls: [{ function: { name: "get_weather", arguments: JSON.stringify({ city: "San Francisco" }) } }] },
     { role: "tool", content: "It's 80 degrees and sunny in San Francisco." },
@@ -409,7 +408,7 @@ const outputs = [
   { role: "assistant", content: "The weather in SF is 80 degrees and sunny, but there is nothing fun happening." },
 ];
 
-const reference_outputs = [
+const referenceOutputs = [
   { role: "user", content: "What is the weather in SF and is there anything fun happening?" },
   {
     role: "assistant",
@@ -824,30 +823,31 @@ print(extracted_trajectory)
 ```
 {
   'inputs': [{
-    '__start__': {
-      'messages': [
-        {'role': 'user', 'content': "what's the weather in sf?"}
-      ]}
-    }, 
-    '__resuming__': {
-      'messages': [
-        {'role': 'user', 'content': 'It is rainy and 70 degrees!'}
-      ]}
-    ],
-    'outputs': {
-      'results': [
-        {},
-        {
+      '__start__': {
           'messages': [
-            {'role': 'ai', 'content': 'The current weather in San Francisco is rainy, with a temperature of 70 degrees.'}
-          ]
-        }
+              {'role': 'user', 'content': "what's the weather in sf?"}
+          ]}
+      }, 
+      '__resuming__': {
+          'messages': [
+              {'role': 'user', 'content': 'It is rainy and 70 degrees!'}
+          ]}
       ],
-      'steps': [
-        ['__start__', 'agent', 'tools', '__interrupt__'],
-        ['agent']
-      ]
+      'outputs': {
+          'results': [
+            {},
+            {
+                'messages': [
+                    {'role': 'ai', 'content': 'The current weather in San Francisco is rainy, with a temperature of 70 degrees.'}
+                ]
+            }
+        ],
+        'steps': [
+            ['__start__', 'agent', 'tools', '__interrupt__'],
+            ['agent']
+        ]
     }
+}
 ```
 
 ```python
