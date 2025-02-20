@@ -808,13 +808,13 @@ graph.invoke(
     {"messages": [{"role": "user", "content": "what's the weather in sf?"}]},
     config={"configurable": {"thread_id": "1"}},
 )
-# Resume the agent with a new command, simulating a human-in-the-loop workflow
+\# Resume the agent with a new command, simulating a human-in-the-loop workflow
 graph.invoke(
     Command(resume="It is rainy and 70 degrees!"),
     config={"configurable": {"thread_id": "1"}},
 )
 
-# Extract the trajectory from the first two thread runs
+\# Extract the trajectory from the first two thread runs
 extracted_trajectory = extract_langgraph_trajectory_from_thread(
     graph, {"configurable": {"thread_id": "1"}}
 )
@@ -825,12 +825,12 @@ print(extracted_trajectory)
 ```
 {
   'inputs': [{
-      '__start__': {
+      '\__start__': {
           'messages': [
               {'role': 'user', 'content': "what's the weather in sf?"}
           ]}
       }, 
-      '__resuming__': {
+      '\__resuming__': {
           'messages': [
               {'role': 'user', 'content': 'It is rainy and 70 degrees!'}
           ]}
@@ -845,7 +845,7 @@ print(extracted_trajectory)
             }
         ],
         'steps': [
-            ['__start__', 'agent', 'tools', '__interrupt__'],
+            ['\__start__', 'agent', 'tools', '\__interrupt__'],
             ['agent']
         ]
     }
