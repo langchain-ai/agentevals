@@ -14,6 +14,7 @@ from langgraph.graph import StateGraph
 from langgraph.checkpoint.memory import MemorySaver
 
 
+@pytest.mark.langsmith
 def test_trajectory_match():
     checkpointer = MemorySaver()
 
@@ -98,6 +99,7 @@ def test_trajectory_match():
 
 
 @pytest.mark.asyncio
+@pytest.mark.langsmith
 async def test_trajectory_match_async():
     checkpointer = MemorySaver()
 
