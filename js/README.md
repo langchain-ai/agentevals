@@ -559,17 +559,6 @@ Also note that like other LLM-as-judge evaluators, you can pass extra kwargs int
 
 The `graphTrajectoryStrictMatch` evaluator is a simple evaluator that checks if the steps in the provided graph trajectory match the reference trajectory exactly.
 
-```
-{
-  'key': 'graph_trajectory_strict_match',
-  'score': True,
-}
-```
-</details>
-
-<details>
-<summary>TypeScript</summary>
-
 ```ts
 import { tool } from "@langchain/core/tools";
 import { ChatOpenAI } from "@langchain/openai";
