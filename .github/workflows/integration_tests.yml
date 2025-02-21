@@ -56,8 +56,10 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv install .
-          uv install --group dev
+          uv venv
+          source .venv/bin/activate
+          uv sync
+          uv sync --group dev
         shell: bash
         working-directory: python
           
