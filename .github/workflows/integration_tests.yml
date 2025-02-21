@@ -66,10 +66,14 @@ jobs:
       - name: Run integration tests
         env:
           LANGSMITH_TRACING: "true"
-          LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY_PROD }}
+          LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          echo $LANGSMITH_API_KEY
+          if [ -z "$LANGSMITH_API_KEY" ]; then
+            echo "LANGSMITH_API_KEY is empty or not set"
+          else
+            echo "LANGSMITH_API_KEY is set and not empty"
+          fi
           uv run pytest tests
         shell: bash
         working-directory: python
