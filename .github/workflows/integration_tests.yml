@@ -68,17 +68,45 @@ jobs:
           LANGSMITH_TRACING: "true"
           LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY_PROD }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: |
-          if [ -z "$LANGSMITH_API_KEY" ]; then
-            echo "LANGSMITH_API_KEY is empty or not set"
-          else
-            echo "LANGSMITH_API_KEY is set and not empty"
-          fi
-          if [ -z "$OPENAI_API_KEY" ]; then
-            echo "OPENAI_API_KEY is empty or not set"
-          else
-            echo "OPENAI_API_KEY is set and not empty"
-          fi
-          uv run pytest tests
+        run: uv run pytest tests
         shell: bash
         working-directory: python
+
+  js_integration_test:
+    name: JS Integration Test
+    needs: changed_files
+    if: >
+      (github.event_name == 'push') ||
+      (github.event_name == 'pull_request' && (
+        contains(github.event.pull_request.labels.*.name, 'release') ||
+        needs.changed_files.outputs.js_changed == 'true'
+      )) ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.run-js-tests == 'true')
+    runs-on: ubuntu-20.04
+    defaults:
+      run:
+        working-directory: js
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20.x
+          cache: "yarn"
+          cache-dependency-path: "js/yarn.lock"
+
+      - name: Install Yarn dependencies
+        run: yarn install
+        shell: bash
+        working-directory: js
+
+
+      - name: Run JS integration tests
+        env:
+          LANGSMITH_TRACING: "true"
+          LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY_PROD }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: yarn test src/trajectory/tests src/graph_trajectory/tests
+        shell: bash
+        working-directory: js
