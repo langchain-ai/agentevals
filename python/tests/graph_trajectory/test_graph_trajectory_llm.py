@@ -7,6 +7,7 @@ from langgraph.prebuilt import create_react_agent
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.types import Command, interrupt
 from langchain_core.tools import tool
+from langchain import hub
 
 import pytest
 
@@ -20,6 +21,36 @@ def search(query: str):
 
 tools = [search]
 
+
+@pytest.mark.langsmith
+def test_use_prompt_hub_prompt():
+    checkpointer = MemorySaver()
+    graph = create_react_agent(
+        model="gpt-4o-mini",
+        checkpointer=checkpointer,
+        tools=[search],
+    )
+    graph.invoke(
+        {"messages": [{"role": "user", "content": "what's the weather in sf?"}]},
+        config={"configurable": {"thread_id": "1"}},
+    )
+    graph.invoke(
+        Command(resume="It is rainy and 70 degrees!"),
+        config={"configurable": {"thread_id": "1"}},
+    )
+    extracted_trajectory = extract_langgraph_trajectory_from_thread(
+        graph, {"configurable": {"thread_id": "1"}}
+    )
+    evaluator = create_graph_trajectory_llm_as_judge(
+        model="openai:o3-mini",
+        prompt=hub.pull("langchain-ai/test-trajectory")
+    )
+    res = evaluator(
+        inputs=extracted_trajectory["inputs"],
+        outputs=extracted_trajectory["outputs"],
+    )
+    assert res["key"] == "graph_trajectory_accuracy"
+    assert res["score"]
 
 @pytest.mark.langsmith
 def test_sensible_trajectory():

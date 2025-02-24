@@ -5,9 +5,35 @@ from agentevals.trajectory.llm import (
 )
 
 from agentevals.types import ChatCompletionMessage
+from langchain import hub
 
 import pytest
 import json
+
+@pytest.mark.langsmith
+def test_use_prompt_hub_prompt():
+    evaluator = create_trajectory_llm_as_judge(
+        prompt=hub.pull("langchain-ai/test-trajectory"), model="openai:o3-mini"
+    )
+    outputs = [
+        {"role": "user", "content": "What is the weather in SF?"},
+        {
+            "role": "assistant",
+            "tool_calls": [
+                {
+                    "function": {
+                        "name": "get_weather",
+                        "arguments": json.dumps({"city": "SF"}),
+                    }
+                }
+            ],
+        },
+    ]
+    eval_result = evaluator(
+        outputs=outputs,
+    )
+    assert eval_result["key"] == "trajectory_accuracy"
+    assert eval_result["score"]
 
 
 @pytest.mark.langsmith
