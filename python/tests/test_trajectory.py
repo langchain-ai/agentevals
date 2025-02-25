@@ -63,7 +63,11 @@ def test_trajectory_match(evaluator, feedback_key):
     ]
     assert evaluator(
         inputs=inputs, outputs=outputs, reference_outputs=reference_outputs
-    ) == EvaluatorResult(key=feedback_key, score=False if feedback_key == "trajectory_strict_match" else True, comment=None)
+    ) == EvaluatorResult(
+        key=feedback_key,
+        score=False if feedback_key == "trajectory_strict_match" else True,
+        comment=None,
+    )
 
 
 @pytest.mark.langsmith
@@ -140,7 +144,11 @@ def test_trajectory_with_different_tool_message_order(evaluator, feedback_key):
     ]
     assert evaluator(
         inputs=inputs, outputs=outputs, reference_outputs=reference_outputs
-    ) == EvaluatorResult(key=feedback_key, score=False if feedback_key == "trajectory_strict_match" else True, comment=None)
+    ) == EvaluatorResult(
+        key=feedback_key,
+        score=False if feedback_key == "trajectory_strict_match" else True,
+        comment=None,
+    )
 
 
 @pytest.mark.langsmith
@@ -542,7 +550,11 @@ def test_trajectory_match_with_langchain_messages(evaluator, feedback_key):
     ]
     assert evaluator(
         inputs=inputs, outputs=outputs, reference_outputs=reference_outputs
-    ) == EvaluatorResult(key=feedback_key, score=False if feedback_key == "trajectory_strict_match" else True, comment=None)
+    ) == EvaluatorResult(
+        key=feedback_key,
+        score=False if feedback_key == "trajectory_strict_match" else True,
+        comment=None,
+    )
 
 
 @pytest.mark.langsmith
