@@ -1146,9 +1146,9 @@ __metadata:
     eslint-plugin-no-instanceof: ^1.0.1
     eslint-plugin-prettier: ^4.2.1
     langchain: ^0.3.18
-    langsmith: ^0.3.10
+    langsmith: ^0.3.11
     openai: ^4.85.1
-    openevals: ^0.0.1-rc.8
+    openevals: ^0.0.1
     prettier: ^3.5.1
     typescript: ~5.1.6
     vitest: ^3.0.5
@@ -3383,9 +3383,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"langsmith@npm:^0.3.10":
-  version: 0.3.10
-  resolution: "langsmith@npm:0.3.10"
+"langsmith@npm:^0.3.11":
+  version: 0.3.11
+  resolution: "langsmith@npm:0.3.11"
   dependencies:
     "@types/uuid": "npm:^10.0.0"
     chalk: "npm:^4.1.2"
@@ -3399,7 +3399,7 @@ __metadata:
   peerDependenciesMeta:
     openai:
       optional: true
-  checksum: ea51ca52b615c9d5caac56a6d4ed53389eb4a1f36129853581c3961207fdd9751f34d2bdb3a278ac7d73d9f51686c17d15d85625ccce6b8303f2e95d364f7e09
+  checksum: bb0a25515dea3b5cb17ef88bb243e4ec91769e9dde8e172b378ae7b5d6a64b80c9ccc9332073a7bc14833c49d443af11d8ecaf1c228b554d204d18fd34d8791f
   languageName: node
   linkType: hard
 
@@ -3861,16 +3861,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"openevals@npm:^0.0.1-rc.8":
-  version: 0.0.1-rc.8
-  resolution: "openevals@npm:0.0.1-rc.8"
+"openevals@npm:^0.0.1":
+  version: 0.0.1
+  resolution: "openevals@npm:0.0.1"
   dependencies:
-    "@langchain/openai": ^0.4.4
-    langchain: ^0.3.18
-    langsmith: ^0.3.10
+    "@langchain/openai": "npm:^0.4.4"
+    langchain: "npm:^0.3.18"
+    langsmith: "npm:^0.3.11"
   peerDependencies:
     "@langchain/core": ^0.3.40
-  checksum: d5cbcb42aea61ee2b38ef216bfeb22779518216f618fae4b6784ba880b188825ca8b69996dd3ce4a11747ba6050b17777670046d053fff3f18414582899590a4
+  checksum: 2dacf8acc0053b2a81d0a9be8ca38a61fdaecc37a7d59a0c72ea51ad7e9dcf0d99b522417d637d6e39fa0dbf4e8d0c2d656410415dfbb8ec228ffe1cf13dbe89
   languageName: node
   linkType: hard
 

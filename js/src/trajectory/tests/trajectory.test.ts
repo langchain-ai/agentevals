@@ -88,9 +88,7 @@ ls.describe("trajectory", () => {
     });
     expect(result).toBeDefined();
     expect(result.key).toBe(feedbackKey);
-    expect(result.score).toBe(
-      feedbackKey === "trajectory_strict_match" ? false : true
-    );
+    expect(result.score).toBe(feedbackKey !== "trajectory_strict_match");
     expect(result.comment).toBeUndefined();
   });
 
@@ -196,9 +194,7 @@ ls.describe("trajectory", () => {
     });
     expect(result).toBeDefined();
     expect(result.key).toBe(feedbackKey);
-    expect(result.score).toBe(
-      feedbackKey === "trajectory_strict_match" ? false : true
-    );
+    expect(result.score).toBe(feedbackKey !== "trajectory_strict_match");
     expect(result.comment).toBeUndefined();
   });
 
@@ -679,9 +675,7 @@ ls.describe("trajectory", () => {
       });
       expect(result).toBeDefined();
       expect(result.key).toBe(feedbackKey);
-      expect(result.score).toBe(
-        feedbackKey === "trajectory_strict_match" ? false : true
-      );
+      expect(result.score).toBe(feedbackKey !== "trajectory_strict_match");
       expect(result.comment).toBeUndefined();
     }
   );
