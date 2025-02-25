@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 from openevals.utils import (
-    _run_evaluator,
-    _arun_evaluator,
     _normalize_to_openai_messages_list,
 )
 from agentevals.types import ChatCompletionMessage, EvaluatorResult
+from agentevals.utils import _run_evaluator, _arun_evaluator
 
 from typing import Any, Union, TYPE_CHECKING
 

@@ -11,11 +11,9 @@ from openevals.llm import (
     Optional,
     Union,
 )
-from openevals.utils import (
-    _run_evaluator,
-    _arun_evaluator,
-)
+
 from agentevals.types import EvaluatorResult, FewShotExample, GraphTrajectory
+from agentevals.utils import _run_evaluator, _arun_evaluator
 
 from langchain_core.language_models.chat_models import BaseChatModel
 

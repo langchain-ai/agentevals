@@ -1,10 +1,9 @@
 import { BaseMessage, isBaseMessage } from "@langchain/core/messages";
 import { _convertMessagesToOpenAIParams } from "@langchain/openai";
 import {
-  wrapEvaluator,
-  isInTestContext,
-  SimpleEvaluationResult,
-} from "langsmith/utils/jestlike";
+  _runEvaluator as baseRunEvaluator,
+  EvaluationResultType,
+} from "openevals/utils";
 import {
   ChatCompletionMessage,
   MultiResultScorerReturnType,
@@ -70,10 +69,6 @@ export const processScore = (
   return [value] as const;
 };
 
-export type EvaluationResultType<O> = O extends MultiResultScorerReturnType
-  ? SimpleEvaluationResult[]
-  : SimpleEvaluationResult;
-
 export const _runEvaluator = async <
   T extends Record<string, unknown>,
   O extends
@@ -86,37 +81,5 @@ export const _runEvaluator = async <
   feedbackKey: string,
   extra?: T
 ): Promise<EvaluationResultType<O>> => {
-  const runScorer = async (params: T) => {
-    let score = await scorer(params);
-    let reasoning;
-
-    const results = [];
-    if (!Array.isArray(score) && typeof score === "object") {
-      for (const [key, value] of Object.entries(score)) {
-        const [keyScore, reasoning] = processScore(key, value);
-        results.push({ key, score: keyScore, comment: reasoning });
-      }
-    } else {
-      if (Array.isArray(score)) {
-        reasoning = score[1];
-        score = score[0] as Awaited<O>;
-      }
-      results.push({ key: feedbackKey, score, comment: reasoning });
-    }
-    if (results.length === 1) {
-      return results[0] as SimpleEvaluationResult;
-    } else {
-      return results as SimpleEvaluationResult[];
-    }
-  };
-
-  if (isInTestContext()) {
-    const res = await wrapEvaluator(runScorer)(extra ?? ({} as T), {
-      name: runName,
-    });
-    return res as EvaluationResultType<O>;
-  } else {
-    const res = await runScorer(extra ?? ({} as T));
-    return res as EvaluationResultType<O>;
-  }
+  return baseRunEvaluator(runName, scorer, feedbackKey, extra, "agentevals");
 };
