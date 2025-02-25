@@ -1148,7 +1148,7 @@ __metadata:
     langchain: ^0.3.18
     langsmith: ^0.3.11
     openai: ^4.85.1
-    openevals: ^0.0.1
+    openevals: ^0.0.3
     prettier: ^3.5.1
     typescript: ~5.1.6
     vitest: ^3.0.5
@@ -3861,16 +3861,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"openevals@npm:^0.0.1":
-  version: 0.0.1
-  resolution: "openevals@npm:0.0.1"
+"openevals@npm:^0.0.3":
+  version: 0.0.3
+  resolution: "openevals@npm:0.0.3"
   dependencies:
-    "@langchain/openai": "npm:^0.4.4"
-    langchain: "npm:^0.3.18"
-    langsmith: "npm:^0.3.11"
+    "@langchain/openai": ^0.4.4
+    langchain: ^0.3.18
+    langsmith: ^0.3.11
   peerDependencies:
     "@langchain/core": ^0.3.40
-  checksum: 2dacf8acc0053b2a81d0a9be8ca38a61fdaecc37a7d59a0c72ea51ad7e9dcf0d99b522417d637d6e39fa0dbf4e8d0c2d656410415dfbb8ec228ffe1cf13dbe89
+  checksum: 241ff323bea8bf81eb4fade2cd3c2544fa393f9979ccb6472435f999964db0f370ec63c79b23272a3740935726bc7fd18893a1a94607dbf6c0f33aacd8ea0cbb
   languageName: node
   linkType: hard
 

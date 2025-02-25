@@ -1,10 +1,7 @@
 from __future__ import annotations
 
-from openevals.utils import (
-    _run_evaluator,
-    _arun_evaluator,
-)
 from agentevals.types import EvaluatorResult, GraphTrajectory
+from agentevals.utils import _run_evaluator, _arun_evaluator
 
 from typing import Any
 
