@@ -308,7 +308,7 @@ This allows for more flexibility in the trajectory comparison:
 
 ```python
 import json
-from openevals.trajectory.llm import create_trajectory_llm_as_judge, TRAJECTORY_ACCURACY_PROMPT_WITH_REFERENCE
+from agentevals.trajectory.llm import create_trajectory_llm_as_judge, TRAJECTORY_ACCURACY_PROMPT_WITH_REFERENCE
 
 evaluator = create_trajectory_llm_as_judge(
   prompt=TRAJECTORY_ACCURACY_PROMPT_WITH_REFERENCE,
