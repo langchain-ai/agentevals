@@ -244,8 +244,8 @@ There are other evaluators for checking partial trajectory matches (ensuring tha
 
 ```python
 import json
-from openevals.trajectory.subset import trajectory_subset
-# from openevals.trajectory.superset import trajectory_superset
+from agentevals.trajectory.subset import trajectory_subset
+# from agentevals.trajectory.superset import trajectory_superset
 
 outputs = [
     {"role": "user", "content": "What is the weather in SF and London?"},
