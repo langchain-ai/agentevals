@@ -244,8 +244,8 @@ There are other evaluators for checking partial trajectory matches (ensuring tha
 
 ```python
 import json
-from openevals.trajectory.subset import trajectory_subset
-# from openevals.trajectory.superset import trajectory_superset
+from agentevals.trajectory.subset import trajectory_subset
+# from agentevals.trajectory.superset import trajectory_superset
 
 outputs = [
     {"role": "user", "content": "What is the weather in SF and London?"},
@@ -308,7 +308,7 @@ This allows for more flexibility in the trajectory comparison:
 
 ```python
 import json
-from openevals.trajectory.llm import create_trajectory_llm_as_judge, TRAJECTORY_ACCURACY_PROMPT_WITH_REFERENCE
+from agentevals.trajectory.llm import create_trajectory_llm_as_judge, TRAJECTORY_ACCURACY_PROMPT_WITH_REFERENCE
 
 evaluator = create_trajectory_llm_as_judge(
   prompt=TRAJECTORY_ACCURACY_PROMPT_WITH_REFERENCE,
