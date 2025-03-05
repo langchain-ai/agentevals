@@ -1248,6 +1248,119 @@ console.log(result);
 ```
 </details>
 
+## LangGraph prebuilts
+
+The `agentevals` package also includes LangGraph prebuilts that demonstrate more "in-the-loop" style evaluation, where the evaluator runs *as part* of your agent and shapes its trajectory and response.
+
+### Reflection
+
+The `wrap_graph_with_reflection` function wraps a LangGraph agent with a reflection loop. When the agent finishes running, it passes its result and trajectory to an evaluator. If the evaluator fails, it adds a user message detailing the failure and prompts the agent to fix its mistakes and try again. Otherwise, it returns as normal.
+
+You can pass your own evaluator into `wrap_graph_with_reflection`, but if you don't the wrapper will automatically generate criteria for success based on the input and use an LLM-as-judge evaluator to grade the agent's trajectory and output (as shown in the example below):
+
+```python
+import math
+
+from agentevals.langgraph.wrappers.reflection import wrap_graph_with_reflection
+
+from langchain.chat_models import init_chat_model
+from langchain_core.tools import tool
+
+from langgraph.prebuilt import create_react_agent
+
+
+@tool
+def add(a: float, b: float) -> float:
+    """Add two numbers together."""
+    return a + b
+
+
+@tool
+def multiply(a: float, b: float) -> float:
+    """Multiply two numbers together."""
+    return a * b
+
+
+@tool
+def divide(a: float, b: float) -> float:
+    """Divide two numbers."""
+    return a / b
+
+
+@tool
+def subtract(a: float, b: float) -> float:
+    """Subtract two numbers."""
+    return a - b
+
+
+@tool
+def sin(a: float) -> float:
+    """Take the sine of a number."""
+    return math.sin(a)
+
+
+@tool
+def cos(a: float) -> float:
+    """Take the cosine of a number."""
+    return math.cos(a)
+
+
+@tool
+def radians(a: float) -> float:
+    """Convert degrees to radians."""
+    return math.radians(a)
+
+
+@tool
+def exponentiation(a: float, b: float) -> float:
+    """Raise one number to the power of another."""
+    return a**b
+
+
+@tool
+def sqrt(a: float) -> float:
+    """Take the square root of a number."""
+    return math.sqrt(a)
+
+
+@tool
+def ceil(a: float) -> float:
+    """Round a number up to the nearest integer."""
+    return math.ceil(a)
+
+# Initialize agent
+llm = init_chat_model("openai:gpt-4o-mini", temperature=0.1)
+tools = [
+    sin,
+    cos,
+    radians,
+    ceil,
+    exponentiation,
+    sqrt,
+    add,
+    multiply,
+    divide,
+    subtract,
+]
+
+agent = wrap_graph_with_reflection(graph=create_react_agent(llm, tools))
+
+query = (
+    "A batter hits a baseball at 45.847 m/s at an angle of "
+    "23.474° above the horizontal. The outfielder, who starts facing the batter, picks up the baseball as it lands, "
+    "then throws it back towards the batter at 24.12 m/s at an angle of 39.12 degrees. "
+    "How far is the baseball from where the batter originally hit it? "
+    "Assume zero air resistance."
+)
+
+for step in agent.stream(
+    {"messages": query}, stream_mode="updates", config={"recursion_limit": 50}
+):
+    for _, update in step.items():
+        for message in update.get("messages", []):
+            message.pretty_print()
+```
+
 ## Python Async Support
 
 All `agentevals` evaluators support Python [asyncio](https://docs.python.org/3/library/asyncio.html). As a convention, evaluators that use a factory function will have `async` put immediately after `create_` in the function name (for example, `create_async_trajectory_llm_as_judge`), and evaluators used directly will end in `async` (e.g. `trajectory_strict_match_async`).

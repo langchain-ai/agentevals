@@ -1,7 +1,7 @@
 import math
 import pytest
 
-from agentevals.wrappers.reflection import wrap_graph_with_reflection
+from agentevals.langgraph.wrappers.reflection import wrap_graph_with_reflection
 
 from langchain.chat_models import init_chat_model
 from langchain_core.tools import tool
@@ -70,7 +70,7 @@ def ceil(a: float) -> float:
 
 
 @pytest.mark.langsmith
-# @pytest.mark.skip(reason="Long running and expensive")
+@pytest.mark.skip(reason="Long running and expensive")
 def test_trajectory_match():
     # Initialize agent
     llm = init_chat_model("openai:gpt-4o-mini", temperature=0.1)
