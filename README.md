@@ -41,7 +41,7 @@ Once you've done this, you can run your first trajectory evaluator. We represent
 <summary>Python</summary>
 
 ```python
-from agentevals.trajectory.llm import create_trajectory_llm_as_judge, TRAJECTORY_ACCURACY_PROMPT_WITH_REFERENCE
+from agentevals.trajectory.llm import create_trajectory_llm_as_judge, TRAJECTORY_ACCURACY_PROMPT
 
 trajectory_evaluator = create_trajectory_llm_as_judge(
     prompt=TRAJECTORY_ACCURACY_PROMPT,
@@ -256,7 +256,7 @@ print(result)
 ```
 {
     'key': 'trajectory_accuracy',
-    'score': True,
+    'score': False,
     'comment': None,
 }
 ```
