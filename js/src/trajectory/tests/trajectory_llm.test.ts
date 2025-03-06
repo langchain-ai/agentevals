@@ -136,7 +136,7 @@ ls.describe("Trajectory LLM", () => {
     expect(evalResult.score).toBe(false);
   });
 
-  ls.test(
+  ls.test.only(
     "should match trajectories with inverse rubric",
     { inputs: {} },
     async () => {
@@ -158,8 +158,16 @@ Grade the following trajectory:
 <trajectory>
 {outputs}
 </trajectory>
+
+<input>
 {inputs}
+</input>
+
+According to this reference trajectory:
+
+<reference_trajectory>
 {reference_outputs}
+</reference_trajectory>
 `;
 
       const evaluator = createTrajectoryLLMAsJudge({

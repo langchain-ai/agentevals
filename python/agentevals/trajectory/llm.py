@@ -1,5 +1,4 @@
 from __future__ import annotations
-import json
 
 from openevals.llm import (
     _create_llm_as_judge_scorer,
@@ -36,13 +35,17 @@ Your task is to grade the accuracy of an AI agent's internal trajectory.
   - Is semantically equivalent to the provided reference trajectory
 </Rubric>
 
-Grade the following trajectory:
+Based on the following reference trajectory:
+
+<reference_trajectory>
+{reference_outputs}
+</reference_trajectory>
+
+Grade this actual trajectory:
 
 <trajectory>
 {outputs}
 </trajectory>
-{inputs}
-{reference_outputs}
 """
 
 TRAJECTORY_ACCURACY_PROMPT = """You are an expert data labeler.
@@ -65,7 +68,6 @@ Grade the following trajectory:
 <trajectory>
 {outputs}
 </trajectory>
-{inputs}
 """
 
 if TYPE_CHECKING:
@@ -73,30 +75,23 @@ if TYPE_CHECKING:
 
 
 def _format_inputs(
-    inputs: Optional[dict],
     outputs: Union[list[ChatCompletionMessage], list[BaseMessage], dict],
     reference_outputs: Optional[
         Union[list[ChatCompletionMessage], list[BaseMessage], dict]
     ],
-) -> tuple[str, str, str]:
+) -> tuple[str, str]:
     outputs = _normalize_to_openai_messages_list(outputs)
     reference_outputs = _normalize_to_openai_messages_list(reference_outputs)
     if reference_outputs:
-        formatted_reference_outputs = f"\n<reference_trajectory>\n{_chat_completion_messages_to_string(reference_outputs)}\n</reference_trajectory>\n"
+        formatted_reference_outputs = _chat_completion_messages_to_string(
+            reference_outputs
+        )
     else:
         formatted_reference_outputs = ""
-    if inputs:
-        formatted_inputs = f"\nThe agent generated the trajectory from the following input:\n<input>\n{inputs}\n</input>\n"
-    else:
-        formatted_inputs = ""
-    if isinstance(outputs, dict):
-        formatted_outputs = json.dumps(outputs)
-    else:
-        formatted_outputs = _chat_completion_messages_to_string(outputs)
+    formatted_outputs = _chat_completion_messages_to_string(outputs)
     return (
         formatted_outputs,
         formatted_reference_outputs,
-        formatted_inputs,
     )
 
 
@@ -156,46 +151,22 @@ def create_trajectory_llm_as_judge(
 
     def _wrapped_evaluator(
         *,
-        inputs: Optional[dict] = None,
         outputs: Union[list[ChatCompletionMessage], list[BaseMessage], dict],
         reference_outputs: Optional[
             Union[list[ChatCompletionMessage], list[BaseMessage], dict]
         ] = None,
         **kwargs,
     ) -> EvaluatorResult:
-        if prompt == TRAJECTORY_ACCURACY_PROMPT_WITH_REFERENCE:
-            if reference_outputs is None:
-                raise ValueError(
-                    "TRAJECTORY_ACCURACY_PROMPT_WITH_REFERENCE requires reference_outputs to compare against"
-                )
-            (
-                formatted_outputs,
-                formatted_reference_outputs,
-                formatted_inputs,
-            ) = _format_inputs(inputs, outputs, reference_outputs)
-        elif prompt == TRAJECTORY_ACCURACY_PROMPT:
-            if reference_outputs is not None:
-                raise ValueError(
-                    "TRAJECTORY_ACCURACY_PROMPT requires reference_outputs to be None"
-                )
-            (
-                formatted_outputs,
-                formatted_reference_outputs,
-                formatted_inputs,
-            ) = _format_inputs(inputs, outputs, reference_outputs)
-        else:
-            formatted_outputs = _normalize_to_openai_messages_list(outputs)
-            formatted_reference_outputs = _normalize_to_openai_messages_list(
-                reference_outputs
-            )
-            formatted_inputs = inputs
+        (
+            formatted_outputs,
+            formatted_reference_outputs,
+        ) = _format_inputs(outputs, reference_outputs)
         return _run_evaluator(
             run_name=f"llm_as_{feedback_key}_judge",
             scorer=scorer,
             feedback_key=feedback_key,
             outputs=formatted_outputs,
             reference_outputs=formatted_reference_outputs,
-            inputs=formatted_inputs,
             **kwargs,
         )
 
@@ -258,46 +229,22 @@ def create_async_trajectory_llm_as_judge(
 
     async def _wrapped_evaluator(
         *,
-        inputs: Optional[dict] = None,
         outputs: Union[list[ChatCompletionMessage], list[BaseMessage], dict],
         reference_outputs: Optional[
             Union[list[ChatCompletionMessage], list[BaseMessage], dict]
         ] = None,
         **kwargs,
     ) -> EvaluatorResult:
-        if prompt == TRAJECTORY_ACCURACY_PROMPT_WITH_REFERENCE:
-            if reference_outputs is None:
-                raise ValueError(
-                    "TRAJECTORY_ACCURACY_PROMPT_WITH_REFERENCE requires reference_outputs to compare against"
-                )
-            (
-                formatted_outputs,
-                formatted_reference_outputs,
-                formatted_inputs,
-            ) = _format_inputs(inputs, outputs, reference_outputs)
-        elif prompt == TRAJECTORY_ACCURACY_PROMPT:
-            if reference_outputs is not None:
-                raise ValueError(
-                    "TRAJECTORY_ACCURACY_PROMPT requires reference_outputs to be None"
-                )
-            (
-                formatted_outputs,
-                formatted_reference_outputs,
-                formatted_inputs,
-            ) = _format_inputs(inputs, outputs, reference_outputs)
-        else:
-            formatted_outputs = _normalize_to_openai_messages_list(outputs)
-            formatted_reference_outputs = _normalize_to_openai_messages_list(
-                reference_outputs
-            )
-            formatted_inputs = inputs
+        (
+            formatted_outputs,
+            formatted_reference_outputs,
+        ) = _format_inputs(outputs, reference_outputs)
         return await _arun_evaluator(
             run_name=f"llm_as_{feedback_key}_judge",
             scorer=scorer,
             feedback_key=feedback_key,
             outputs=formatted_outputs,
             reference_outputs=formatted_reference_outputs,
-            inputs=formatted_inputs,
             **kwargs,
         )
 
