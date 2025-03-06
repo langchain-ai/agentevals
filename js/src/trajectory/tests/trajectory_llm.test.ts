@@ -158,8 +158,16 @@ Grade the following trajectory:
 <trajectory>
 {outputs}
 </trajectory>
+
+<input>
 {inputs}
+</input>
+
+According to this reference trajectory:
+
+<reference_trajectory>
 {reference_outputs}
+</reference_trajectory>
 `;
 
       const evaluator = createTrajectoryLLMAsJudge({

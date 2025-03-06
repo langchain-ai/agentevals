@@ -131,8 +131,16 @@ Grade the following trajectory:
 <trajectory>
 {outputs}
 </trajectory>
+
+<input>
 {inputs}
+</input>
+
+According to this reference trajectory:
+
+<reference_trajectory>
 {reference_outputs}
+</reference_trajectory>
 """
     evaluator = create_trajectory_llm_as_judge(
         prompt=REVERSE_PROMPT, model="openai:o3-mini"
@@ -176,6 +184,7 @@ Grade the following trajectory:
         ),
     ]
     eval_result = evaluator(
+        inputs="What is the weather in SF?",
         outputs=outputs,
         reference_outputs=reference_outputs,
     )

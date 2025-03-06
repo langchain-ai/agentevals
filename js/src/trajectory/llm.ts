@@ -17,16 +17,20 @@ Your task is to grade the accuracy of an AI agent's internal trajectory.
   - Makes logical sense between steps
   - Shows clear progression
   - Is relatively efficient, though it does not need to be perfectly efficient
-  - Is semantically equivalent to the provided reference trajectory, if present
+  - Is semantically equivalent to the provided reference trajectory
 </Rubric>
 
-Grade the following trajectory:
+Based on the following reference trajectory:
+
+<reference_trajectory>
+{reference_outputs}
+</reference_trajectory>
+
+Grade this actual trajectory:
 
 <trajectory>
 {outputs}
 </trajectory>
-{inputs}
-{reference_outputs}
 `;
 
 export const TRAJECTORY_ACCURACY_PROMPT = `You are an expert data labeler.
@@ -48,13 +52,9 @@ Grade the following trajectory:
 
 <trajectory>
 {outputs}
-</trajectory>
-{inputs}
-`;
+</trajectory>`;
 
 function _formatInputs(params: {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  inputs?: Record<string, any>;
   outputs:
     | ChatCompletionMessage[]
     | BaseMessage[]
@@ -63,31 +63,20 @@ function _formatInputs(params: {
     | ChatCompletionMessage[]
     | BaseMessage[]
     | { messages: (BaseMessage | ChatCompletionMessage)[] };
-}): [string, string, string] {
-  const { inputs, outputs, referenceOutputs } = params;
+}): [string, string] {
+  const { outputs, referenceOutputs } = params;
   const normalizedOutputs = _normalizeToOpenAIMessagesList(outputs);
   const normalizedReferenceOutputs = _normalizeToOpenAIMessagesList(
     referenceOutputs ?? []
   );
 
   const formattedReferenceOutputs = normalizedReferenceOutputs
-    ? `\nUse the following trajectory as an example reference when grading:\n<reference_trajectory>\n${_chatCompletionMessagesToString(normalizedReferenceOutputs)}\n</reference_trajectory>\n`
+    ? _chatCompletionMessagesToString(normalizedReferenceOutputs)
     : "";
 
-  const formattedInputs = inputs
-    ? `\nThe agent generated the trajectory from the following input:\n<input>\n${JSON.stringify(inputs)}\n</input>\n`
-    : "";
+  const formattedOutputs = _chatCompletionMessagesToString(normalizedOutputs);
 
-  const formattedOutputs =
-    typeof outputs === "object" && !Array.isArray(outputs)
-      ? outputs
-      : _chatCompletionMessagesToString(normalizedOutputs);
-
-  return [
-    formattedOutputs as string,
-    formattedReferenceOutputs,
-    formattedInputs,
-  ];
+  return [formattedOutputs, formattedReferenceOutputs];
 }
 
 /**
@@ -139,8 +128,6 @@ export const createTrajectoryLLMAsJudge = ({
     referenceOutputs,
     ...extra
   }: {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    inputs?: Record<string, any>;
     outputs:
       | ChatCompletionMessage[]
       | BaseMessage[]
@@ -151,24 +138,15 @@ export const createTrajectoryLLMAsJudge = ({
       | { messages: (BaseMessage | ChatCompletionMessage)[] };
     [key: string]: unknown;
   }): Promise<EvaluatorResult> => {
-    const [formattedOutputs, formattedReferenceOutputs, formattedInputs] =
-      prompt === TRAJECTORY_ACCURACY_PROMPT ||
-      prompt === TRAJECTORY_ACCURACY_PROMPT_WITH_REFERENCE
-        ? _formatInputs({ inputs, outputs, referenceOutputs })
-        : [
-            inputs ? JSON.stringify(inputs) : "",
-            _chatCompletionMessagesToString(
-              _normalizeToOpenAIMessagesList(outputs)
-            ),
-            _chatCompletionMessagesToString(
-              _normalizeToOpenAIMessagesList(referenceOutputs)
-            ),
-          ];
+    const [formattedOutputs, formattedReferenceOutputs] = _formatInputs({
+      outputs,
+      referenceOutputs,
+    });
 
     return _runEvaluator(`llm_as_${feedbackKey}_judge`, scorer, feedbackKey, {
+      inputs,
       outputs: formattedOutputs,
       referenceOutputs: formattedReferenceOutputs,
-      inputs: formattedInputs,
       ...extra,
     });
   };

@@ -143,7 +143,7 @@ Grade the following trajectory:
     evaluator = create_async_trajectory_llm_as_judge(
         prompt=REVERSE_PROMPT, model="openai:o3-mini"
     )
-    inputs = {}
+    inputs = "What is the weather in SF?"
     outputs = [
         ChatCompletionMessage(role="user", content="What is the weather in SF?"),
         ChatCompletionMessage(
