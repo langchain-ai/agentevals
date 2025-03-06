@@ -1,15 +1,22 @@
 from langgraph.graph import StateGraph
 from langgraph.graph.state import CompiledStateGraph
+from langgraph.graph.message import MessagesState
 
 from langchain_core.messages import HumanMessage
-from langchain_core.messages.utils import MessageLikeRepresentation, _convert_to_message
+from langchain_core.messages.utils import MessageLikeRepresentation
+from langchain_core.runnables import Runnable, RunnableLambda
 
 from langchain.chat_models import init_chat_model
 
 from agentevals.trajectory.llm import create_trajectory_llm_as_judge
+
+from openevals.utils import (
+    _chat_completion_messages_to_string,
+    _normalize_to_openai_messages_list,
+)
 from openevals.types import ChatCompletionMessage, EvaluatorResult, SimpleEvaluator
 
-from typing import Callable, Literal, Optional
+from typing import Callable, Literal, Optional, Union
 
 
 def _generate_default_trajectory_prompt(criteria: str) -> str:
@@ -57,9 +64,11 @@ Stop and reflect on the original task again, and think of a revised plan to fix 
     )
 
 
-def _default_criteria_generator(message: MessageLikeRepresentation) -> str:
+def _default_criteria_generator(messages: list[MessageLikeRepresentation]) -> str:
     llm = init_chat_model("openai:o3-mini")
-    msg = _convert_to_message(message)
+    task = _chat_completion_messages_to_string(
+        _normalize_to_openai_messages_list(messages)
+    )
     res = llm.invoke(
         [
             {
@@ -79,7 +88,7 @@ The criteria you choose:
 Respond with only the criteria and nothing else.
 
 <task>
-{msg.content}
+{task}
 </task>
 """,
             },
@@ -90,32 +99,41 @@ Respond with only the criteria and nothing else.
 
 def wrap_agent_with_reflection(
     *,
-    agent: CompiledStateGraph,
+    agent: Union[CompiledStateGraph, Callable[[dict], dict]],
     evaluators: list[Optional[SimpleEvaluator]] = None,
-    evaluator_type: Literal["trajectory", "final_output"] = "trajectory",
-    criteria_generator: Optional[Callable] = None,
+    evaluator_type: Union[
+        Literal["trajectory", "final_output"],
+        list[Literal["trajectory", "final_output"]],
+    ] = "trajectory",
+    criteria_generator: Optional[
+        Callable[[list[MessageLikeRepresentation]], str]
+    ] = None,
     reflection_response_formatter: Optional[
         Callable[[EvaluatorResult], ChatCompletionMessage]
     ] = None,
     max_reflections: int = 5,
     max_reflections_strategy: Literal["raise", "return"] = "raise",
     evaluator_score_threshold: float = 0.5,
-) -> CompiledStateGraph:
+) -> Runnable:
     if criteria_generator is not None and evaluators:
         raise ValueError("Cannot provide both a criteria generator and an evaluator")
 
-    class ReflectionAgentState(agent.builder.schema):
-        agentevals_evaluation_criteria: str
-        reflection_attempts: int
+    class ReflectionAgentState(
+        agent.builder.schema if isinstance(agent, CompiledStateGraph) else MessagesState
+    ):
+        agentevals_evaluation_criteria: Optional[str]
+        reflection_attempts: Optional[int]
+        original_input_messages: Optional[list]
+        nested_agent_call_params: Optional[dict]
 
     def generate_evaluation_criteria(
         state: ReflectionAgentState,
     ) -> ReflectionAgentState:
         nonlocal evaluators
         if criteria_generator is None:
-            criteria = _default_criteria_generator(state["messages"][-1])
+            criteria = _default_criteria_generator(state["original_input_messages"])
         else:
-            criteria = criteria_generator(state["messages"][-1])
+            criteria = criteria_generator(state["original_input_messages"])
         if not evaluators:
             evaluators = [
                 create_trajectory_llm_as_judge(
@@ -126,13 +144,18 @@ def wrap_agent_with_reflection(
         return ReflectionAgentState(agentevals_evaluation_criteria=criteria)
 
     def reflect(state: ReflectionAgentState) -> ReflectionAgentState:
-        inputs = state["messages"][0].content
-        outputs = (
-            state["messages"]
-            if evaluator_type == "trajectory"
-            else [state["messages"][-1]]
-        )
-        for evaluator in evaluators:
+        inputs = state["original_input_messages"]
+        for i, evaluator in enumerate(evaluators):
+            current_evaluator_type = (
+                evaluator_type[i]
+                if isinstance(evaluator_type, list)
+                else evaluator_type
+            )
+            outputs = (
+                state["messages"]
+                if current_evaluator_type == "trajectory"
+                else [state["messages"][-1]]
+            )
             eval_result = evaluator(
                 inputs=inputs,
                 outputs=outputs,
@@ -166,7 +189,19 @@ def wrap_agent_with_reflection(
         return "agent" if state["messages"][-1].type == "human" else "__end__"
 
     reflection_graph = StateGraph(ReflectionAgentState)
-    reflection_graph.add_node("agent", agent)
+    reflection_graph.add_node(
+        "store_original_messages",
+        lambda state: ReflectionAgentState(original_input_messages=state["messages"]),
+    )
+    reflection_graph.add_node(
+        "agent",
+        agent
+        if isinstance(agent, CompiledStateGraph)
+        else lambda state: agent(
+            {"messages": state["messages"], **state["nested_agent_call_params"]}
+        ),
+    )
+    reflection_graph.add_edge("__start__", "store_original_messages")
     reflection_graph.add_node("reflect", reflect)
     reflection_graph.add_edge("agent", "reflect")
     reflection_graph.add_conditional_edges(
@@ -177,8 +212,17 @@ def wrap_agent_with_reflection(
         reflection_graph.add_node(
             "generate_evaluation_criteria", generate_evaluation_criteria
         )
-        reflection_graph.add_edge("__start__", "generate_evaluation_criteria")
+        reflection_graph.add_edge(
+            "store_original_messages", "generate_evaluation_criteria"
+        )
         reflection_graph.add_edge("generate_evaluation_criteria", "agent")
     else:
-        reflection_graph.add_edge("__start__", "agent")
-    return reflection_graph.compile()
+        reflection_graph.add_edge("store_original_messages", "agent")
+    wrapped_agent = reflection_graph.compile()
+    if isinstance(agent, CompiledStateGraph):
+        return wrapped_agent
+    else:
+        return (
+            RunnableLambda(lambda params: {**params, "nested_agent_call_params": params})
+            | wrapped_agent
+        )

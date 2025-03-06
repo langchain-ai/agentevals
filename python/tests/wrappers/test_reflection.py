@@ -123,7 +123,6 @@ def test_reflection(question):
         prompt=CONCISENESS_PROMPT, feedback_key="conciseness", model="openai:o3-mini"
     )
     llm = init_chat_model("openai:gpt-4o-mini")
-    config = {"configurable": {"model": "mini", "do_eval": False}}
     workflow = StateGraph(MessagesState)
     workflow.add_node(
         "agent", lambda state: {"messages": [llm.invoke(state["messages"])]}
@@ -133,9 +132,37 @@ def test_reflection(question):
     graph_with_reflection = wrap_agent_with_reflection(
         agent=agent, evaluators=[conciseness_evaluator], evaluator_type="final_output"
     )
-    normal_answer = llm.invoke(question, config=config).content
-    answer_with_reflection = graph_with_reflection.invoke(
-        {"messages": [question]}, config=config
-    )["messages"][-1].content
+    normal_answer = llm.invoke(question).content
+    answer_with_reflection = graph_with_reflection.invoke({"messages": [question]})[
+        "messages"
+    ][-1].content
+
+    assert len(answer_with_reflection) <= len(normal_answer)
+
+
+@pytest.mark.langsmith()
+# @pytest.mark.skip(reason="Long running and expensive")
+@pytest.mark.parametrize(
+    "question",
+    [
+        (
+            "What was the approximate ratio of Soviet to German military deaths on the Eastern Front?"
+        )
+    ],
+)
+def test_reflection_non_langgraph(question):
+    conciseness_evaluator = create_llm_as_judge(
+        prompt=CONCISENESS_PROMPT, feedback_key="conciseness", model="openai:o3-mini"
+    )
+    llm = init_chat_model("openai:gpt-4o-mini")
+    graph_with_reflection = wrap_agent_with_reflection(
+        agent=lambda state: {"messages": [llm.invoke(state["messages"])]},
+        evaluators=[conciseness_evaluator],
+        evaluator_type="final_output",
+    )
+    normal_answer = llm.invoke(question).content
+    answer_with_reflection = graph_with_reflection.invoke({"messages": [question]})[
+        "messages"
+    ][-1].content
 
     assert len(answer_with_reflection) <= len(normal_answer)
