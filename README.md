@@ -1261,7 +1261,7 @@ You can pass your own evaluator into `wrap_graph_with_reflection`, but if you do
 ```python
 import math
 
-from agentevals.langgraph.wrappers.reflection import wrap_graph_with_reflection
+from agentevals.wrappers.reflection import wrap_graph_with_reflection
 
 from langchain.chat_models import init_chat_model
 from langchain_core.tools import tool
@@ -1343,7 +1343,7 @@ tools = [
     subtract,
 ]
 
-agent = wrap_graph_with_reflection(graph=create_react_agent(llm, tools))
+agent = wrap_agent_with_reflection(graph=create_react_agent(llm, tools))
 
 query = (
     "A batter hits a baseball at 45.847 m/s at an angle of "
