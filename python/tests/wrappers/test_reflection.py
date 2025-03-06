@@ -141,7 +141,7 @@ def test_reflection(question):
 
 
 @pytest.mark.langsmith()
-# @pytest.mark.skip(reason="Long running and expensive")
+@pytest.mark.skip(reason="Long running and expensive")
 @pytest.mark.parametrize(
     "question",
     [
