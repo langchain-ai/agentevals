@@ -81,7 +81,7 @@ def test_trajectory_match():
         subtract,
     ]
 
-    agent = wrap_agent_with_reflection(graph=create_react_agent(llm, tools))
+    agent = wrap_agent_with_reflection(agent=create_react_agent(llm, tools))
 
     query = {
         "role": "human",
@@ -131,7 +131,7 @@ def test_reflection(question):
     workflow.add_edge("__start__", "agent")
     agent = workflow.compile()
     graph_with_reflection = wrap_agent_with_reflection(
-        graph=agent, evaluator=conciseness_evaluator, evaluator_type="final_output"
+        agent=agent, evaluators=[conciseness_evaluator], evaluator_type="final_output"
     )
     normal_answer = llm.invoke(question, config=config).content
     answer_with_reflection = graph_with_reflection.invoke(

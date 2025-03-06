@@ -1248,20 +1248,20 @@ console.log(result);
 ```
 </details>
 
-## LangGraph prebuilts
+## Agent wrappers
 
-The `agentevals` package also includes LangGraph prebuilts that demonstrate more "in-the-loop" style evaluation, where the evaluator runs *as part* of your agent and shapes its trajectory and response.
+The `agentevals` package also includes agent wrappers that help implement "in-the-loop" style evaluation, where the evaluator runs *as part* of your agent and shapes its trajectory and response.
 
 ### Reflection
 
-The `wrap_graph_with_reflection` function wraps a LangGraph agent with a reflection loop. When the agent finishes running, it passes its result and trajectory to an evaluator. If the evaluator fails, it adds a user message detailing the failure and prompts the agent to fix its mistakes and try again. Otherwise, it returns as normal.
+The `wrap_agent_with_reflection` function wraps a LangGraph agent with a reflection loop. When the agent finishes running, it passes its result and trajectory to an evaluator. If the evaluator fails, it adds a user message detailing the failure and prompts the agent to fix its mistakes and try again. Otherwise, it returns as normal.
 
-You can pass your own evaluator into `wrap_graph_with_reflection`, but if you don't the wrapper will automatically generate criteria for success based on the input and use an LLM-as-judge evaluator to grade the agent's trajectory and output (as shown in the example below):
+You can pass your own evaluator into `wrap_agent_with_reflection`, but if you don't the wrapper will automatically generate criteria for success based on the input and use an LLM-as-judge evaluator to grade the agent's trajectory and output (as shown in the example below):
 
 ```python
 import math
 
-from agentevals.wrappers.reflection import wrap_graph_with_reflection
+from agentevals.wrappers.reflection import wrap_agent_with_reflection
 
 from langchain.chat_models import init_chat_model
 from langchain_core.tools import tool
@@ -1329,7 +1329,7 @@ def ceil(a: float) -> float:
     return math.ceil(a)
 
 # Initialize agent
-llm = init_chat_model("openai:gpt-4o-mini", temperature=0.1)
+llm = init_chat_model("openai:gpt-4o", temperature=0.1)
 tools = [
     sin,
     cos,
@@ -1343,7 +1343,7 @@ tools = [
     subtract,
 ]
 
-agent = wrap_agent_with_reflection(graph=create_react_agent(llm, tools))
+agent = wrap_agent_with_reflection(agent=create_react_agent(llm, tools))
 
 query = (
     "A batter hits a baseball at 45.847 m/s at an angle of "

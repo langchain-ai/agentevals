@@ -46,7 +46,7 @@ gave your response a score of:
 {eval_result["score"]}
 </score>
 
-This did not meet the required threshold. Here's a critique:
+This did not meet the required threshold.
 
 <critique>
 {eval_result["comment"]}
@@ -90,8 +90,8 @@ Respond with only the criteria and nothing else.
 
 def wrap_agent_with_reflection(
     *,
-    graph: CompiledStateGraph,
-    evaluator: Optional[SimpleEvaluator] = None,
+    agent: CompiledStateGraph,
+    evaluators: list[Optional[SimpleEvaluator]] = None,
     evaluator_type: Literal["trajectory", "final_output"] = "trajectory",
     criteria_generator: Optional[Callable] = None,
     reflection_response_formatter: Optional[
@@ -101,67 +101,62 @@ def wrap_agent_with_reflection(
     max_reflections_strategy: Literal["raise", "return"] = "raise",
     evaluator_score_threshold: float = 0.5,
 ) -> CompiledStateGraph:
-    if criteria_generator is not None and evaluator is not None:
+    if criteria_generator is not None and evaluators:
         raise ValueError("Cannot provide both a criteria generator and an evaluator")
 
-    class ReflectionAgentState(graph.builder.schema):
+    class ReflectionAgentState(agent.builder.schema):
         agentevals_evaluation_criteria: str
         reflection_attempts: int
 
     def generate_evaluation_criteria(
         state: ReflectionAgentState,
     ) -> ReflectionAgentState:
-        nonlocal criteria_generator
+        nonlocal evaluators
         if criteria_generator is None:
             criteria = _default_criteria_generator(state["messages"][-1])
         else:
             criteria = criteria_generator(state["messages"][-1])
+        if not evaluators:
+            evaluators = [
+                create_trajectory_llm_as_judge(
+                    model="openai:o3-mini",
+                    prompt=_generate_default_trajectory_prompt(criteria),
+                )
+            ]
         return ReflectionAgentState(agentevals_evaluation_criteria=criteria)
 
     def reflect(state: ReflectionAgentState) -> ReflectionAgentState:
-        nonlocal \
-            evaluator, \
-            reflection_response_formatter, \
-            evaluator_type, \
-            max_reflections, \
-            max_reflections_strategy
         inputs = state["messages"][0].content
         outputs = (
             state["messages"]
             if evaluator_type == "trajectory"
             else [state["messages"][-1]]
         )
-        if evaluator is None:
-            evaluator = create_trajectory_llm_as_judge(
-                model="openai:o3-mini",
-                prompt=_generate_default_trajectory_prompt(
-                    state.get("agentevals_evaluation_criteria", "")
-                ),
+        for evaluator in evaluators:
+            eval_result = evaluator(
+                inputs=inputs,
+                outputs=outputs,
+                criteria=state.get("agentevals_evaluation_criteria", ""),
             )
-        eval_result = evaluator(
-            inputs=inputs,
-            outputs=outputs,
-            criteria=state.get("agentevals_evaluation_criteria", ""),
-        )
-        if eval_result["score"] < evaluator_score_threshold:
-            if state.get("reflection_attempts", 0) > max_reflections:
-                if max_reflections_strategy == "raise":
-                    raise ValueError(
-                        f"Could not generate a suitable response in {max_reflections} reflections."
-                    )
+            if eval_result["score"] < evaluator_score_threshold:
+                if state.get("reflection_attempts", 0) > max_reflections:
+                    if max_reflections_strategy == "raise":
+                        raise ValueError(
+                            f"Could not generate a suitable response in {max_reflections} reflections."
+                        )
+                    else:
+                        return ReflectionAgentState(
+                            messages=[],
+                            reflection_attempts=state.get("reflection_attempts", 0) + 1,
+                        )
+                if reflection_response_formatter is None:
+                    message = _default_reflection_response_formatter(eval_result)
                 else:
-                    return ReflectionAgentState(
-                        messages=[],
-                        reflection_attempts=state.get("reflection_attempts", 0) + 1,
-                    )
-            if reflection_response_formatter is None:
-                message = _default_reflection_response_formatter(eval_result)
-            else:
-                message = reflection_response_formatter(eval_result)
-            return ReflectionAgentState(
-                messages=[message],
-                reflection_attempts=state.get("reflection_attempts", 0) + 1,
-            )
+                    message = reflection_response_formatter(eval_result)
+                return ReflectionAgentState(
+                    messages=[message],
+                    reflection_attempts=state.get("reflection_attempts", 0) + 1,
+                )
         return ReflectionAgentState(
             messages=[],
             reflection_attempts=state.get("reflection_attempts", 0) + 1,
@@ -171,12 +166,14 @@ def wrap_agent_with_reflection(
         return "agent" if state["messages"][-1].type == "human" else "__end__"
 
     reflection_graph = StateGraph(ReflectionAgentState)
-    reflection_graph.add_node("agent", graph)
+    reflection_graph.add_node("agent", agent)
     reflection_graph.add_node("reflect", reflect)
     reflection_graph.add_edge("agent", "reflect")
-    reflection_graph.add_conditional_edges("reflect", restart_or_end)
+    reflection_graph.add_conditional_edges(
+        "reflect", restart_or_end, ["agent", "__end__"]
+    )
 
-    if evaluator is None or criteria_generator is not None:
+    if not evaluators or criteria_generator is not None:
         reflection_graph.add_node(
             "generate_evaluation_criteria", generate_evaluation_criteria
         )
