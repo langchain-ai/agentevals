@@ -204,8 +204,9 @@ under the hood.
 #### Strict match
 
 The `trajectory_strict_match` evaluator, compares two trajectories and ensures that they contain the same messages
-in the same order with the same tool calls. It allows for differences in message content and tool call arguments,
-but requires that the selected tools at each step are the same.
+in the same order with the same tool calls. By default, it allows for differences in message content,
+but requires that the selected tools at each step are the same and that their arguments are the same.
+You can configure this behavior by setting the `tool_call_args_exact_match` and `message_content_exact_match` params.
 
 <details open>
 <summary>Python</summary>
@@ -297,7 +298,7 @@ console.log(result);
 ```
 {
     'key': 'trajectory_accuracy',
-    'score': true,
+    'score': false,
 }
 ```
 </details>
