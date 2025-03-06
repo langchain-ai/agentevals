@@ -136,7 +136,7 @@ ls.describe("Trajectory LLM", () => {
     expect(evalResult.score).toBe(false);
   });
 
-  ls.test.only(
+  ls.test(
     "should match trajectories with inverse rubric",
     { inputs: {} },
     async () => {
