@@ -580,8 +580,7 @@ console.log(result)
 #### Trajectory LLM-as-judge
 
 The LLM-as-judge trajectory evaluator that uses an LLM to evaluate the trajectory. Unlike the other trajectory evaluators, it doesn't require a reference trajectory,
-and supports 
-This allows for more flexibility in the trajectory comparison:
+and supports. This allows for more flexibility in the trajectory comparison:
 
 <details open>
 <summary>Python</summary>
