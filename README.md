@@ -215,14 +215,14 @@ ToolArgsMatchMode = Literal["exact", "ignore"]
 ToolArgsMatchOverrides = dict[str, Union[ToolArgsMatchMode, list[str],  Callable[[dict, dict], bool]]]
 ```
 
-Here's an example:
+Here's an example that allows for case sensitivity in tool call args:
 
 <details open>
 <summary>Python</summary>
 
 ```python
 import json
-from agentevals.trajectory.strict import trajectory_strict_match
+from agentevals.trajectory.match import create_trajectory_match_evaluator
 
 outputs = [
     {"role": "user", "content": "What is the weather in SF?"},
@@ -232,7 +232,7 @@ outputs = [
             {
                 "function": {
                     "name": "get_weather",
-                    "arguments": json.dumps({"city": "SF"}),
+                    "arguments": json.dumps({"city": "san francisco"}),
                 }
             }
         ],
@@ -256,7 +256,15 @@ reference_outputs = [
     {"role": "tool", "content": "It's 80 degrees and sunny in San Francisco."},
     {"role": "assistant", "content": "The weather in SF is 80˚ and sunny."},
 ]
-result = trajectory_strict_match(
+
+evaluator = create_trajectory_match_evaluator(
+    trajectory_match_mode="strict",
+    tool_args_match_overrides={
+        "get_weather": lambda x, y: x["city"].lower() == y["city"].lower()
+    }
+)
+
+result = evaluator(
     outputs=outputs, reference_outputs=reference_outputs
 )
 
@@ -265,7 +273,7 @@ print(result)
 
 ```
 {
-    'key': 'trajectory_accuracy',
+    'key': 'trajectory_strict_match',
     'score': False,
     'comment': None,
 }
@@ -293,7 +301,13 @@ outputs = [
             {
                 "function": {
                     "name": "get_weather",
-                    "arguments": json.dumps({"city": "SF"}),
+                    "arguments": json.dumps({"city": "San Francisco"}),
+                }
+            },
+            {
+                "function": {
+                    "name": "accuweather_forecast",
+                    "arguments": json.dumps({"city": "San Francisco"}),
                 }
             }
         ],
@@ -552,6 +566,11 @@ outputs = [
             "function": {
                 "name": "get_weather",
                 "arguments": json.dumps({"city": "SF and London"}),
+            },
+        }, {
+            "function": {
+                "name": "accuweather_forecast",
+                "arguments": json.dumps({"city": "SF and London"}),
             }
         }],
     },
@@ -569,12 +588,6 @@ reference_outputs = [
                     "arguments": json.dumps({"city": "SF and London"}),
                 }
             },
-            {
-                "function": {
-                    "name": "accuweather_forecast",
-                    "arguments": json.dumps({"city": "SF and London"}),
-                }
-            },
         ],
     },
     {"role": "tool", "content": "It's 80 degrees and sunny in San Francisco, and 90 degrees and rainy in London."},
@@ -583,7 +596,7 @@ reference_outputs = [
 ]
 
 evaluator = create_trajectory_match_evaluator(
-    trajectory_match_mode="subset", # or "superset"
+    trajectory_match_mode="superset", # or "subset"
     
 )
 
@@ -596,7 +609,7 @@ print(result)
 
 ```
 {
-    'key': 'trajectory_subset_match',
+    'key': 'trajectory_superset_match',
     'score': True,
     'comment': None,
 }
