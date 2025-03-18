@@ -201,12 +201,21 @@ Agent trajectory evaluators are used to judge the trajectory of an agent's execu
 These evaluators expect you to format your agent's trajectory as a list of OpenAI format dicts or as a list of LangChain `BaseMessage` classes, and handle message formatting
 under the hood.
 
-#### Strict match
+AgentEvals offers the `create_trajectory_match_evaluator` and `create_async_trajectory_match_evaluator` methods for this task.
 
-The `trajectory_strict_match` evaluator, compares two trajectories and ensures that they contain the same messages
-in the same order with the same tool calls. By default, it allows for differences in message content,
-but requires that the selected tools at each step are the same and that their arguments are the same.
-You can configure this behavior by setting the `tool_call_args_exact_match` and `message_content_exact_match` params.
+#### Checking tool call equality
+
+When checking equality between tool calls, these matchers will require that all tool call arguments are the same. You can configure this behavior to ignore tool call arguments by setting `tool_args_match_mode="ignore"`, or by only checking specific properties within the call using the `tool_args_match_overrides` param.
+
+`tool_args_match_overrides` takes a dict whose keys are tool names and whose values are either `"exact"`, `"ignore"`, a list of tool call fields to match exactly, or a comparator function that takes two arguments and returns whether they are equal:
+
+```python
+ToolArgsMatchMode = Literal["exact", "ignore"]
+
+ToolArgsMatchOverrides = dict[str, Union[ToolArgsMatchMode, list[str],  Callable[[dict, dict], bool]]]
+```
+
+Here's an example:
 
 <details open>
 <summary>Python</summary>
@@ -261,6 +270,72 @@ print(result)
     'comment': None,
 }
 ```
+
+</details>
+
+#### Strict match
+
+The strict match evaluator compares two trajectories and ensures that they contain the same messages
+in the same order with the same tool calls. Note that it does allow for differences in message content:
+
+<details open>
+<summary>Python</summary>
+
+```python
+import json
+from agentevals.trajectory.match import create_trajectory_match_evaluator
+
+outputs = [
+    {"role": "user", "content": "What is the weather in SF?"},
+    {
+        "role": "assistant",
+        "tool_calls": [
+            {
+                "function": {
+                    "name": "get_weather",
+                    "arguments": json.dumps({"city": "SF"}),
+                }
+            }
+        ],
+    },
+    {"role": "tool", "content": "It's 80 degrees and sunny in SF."},
+    {"role": "assistant", "content": "The weather in SF is 80 degrees and sunny."},
+]
+reference_outputs = [
+    {"role": "user", "content": "What is the weather in San Francisco?"},
+    {
+        "role": "assistant",
+        "tool_calls": [
+            {
+                "function": {
+                    "name": "get_weather",
+                    "arguments": json.dumps({"city": "San Francisco"}),
+                }
+            }
+        ],
+    },
+    {"role": "tool", "content": "It's 80 degrees and sunny in San Francisco."},
+    {"role": "assistant", "content": "The weather in SF is 80˚ and sunny."},
+]
+
+evaluator = create_trajectory_match_evaluator(
+    trajectory_match_mode="strict"
+)
+
+result = evaluator(
+    outputs=outputs, reference_outputs=reference_outputs
+)
+
+print(result)
+```
+
+```
+{
+    'key': 'trajectory_strict_match',
+    'score': False,
+    'comment': None,
+}
+```
 </details>
 
 <details>
@@ -297,11 +372,13 @@ console.log(result);
 
 ```
 {
-    'key': 'trajectory_accuracy',
+    'key': 'trajectory_strict_match',
     'score': false,
 }
 ```
 </details>
+
+If you would like to configure the way this evaluator checks for tool call equality, see [this section](#checking-tool-call-equality).
 
 #### Unordered match
 
@@ -312,7 +389,7 @@ The `trajectory_unordered_match` evaluator, compares two trajectories and ensure
 
 ```python
 import json
-from agentevals.trajectory.unordered import trajectory_unordered_match
+from agentevals.trajectory.match import create_trajectory_match_evaluator
 
 inputs = {}
 outputs = [
@@ -322,7 +399,7 @@ outputs = [
         "tool_calls": [{
             "function": {
                 "name": "get_weather",
-                "arguments": json.dumps({"city": "SF"}),
+                "arguments": json.dumps({"city": "San Francisco"}),
             }
         }],
     },
@@ -332,7 +409,7 @@ outputs = [
         "tool_calls": [{
             "function": {
                 "name": "get_fun_activities",
-                "arguments": json.dumps({"city": "SF"}),
+                "arguments": json.dumps({"city": "San Francisco"}),
             }
         }],
     },
@@ -362,7 +439,12 @@ reference_outputs = [
     {"role": "tool", "content": "It's 80 degrees and sunny in SF."},
     {"role": "assistant", "content": "In SF, it's 80˚ and sunny, but there is nothing fun happening."},
 ]
-result = trajectory_unordered_match(
+
+evaluator = create_trajectory_match_evaluator(
+    trajectory_match_mode="unordered"
+)
+
+result = evaluator(
     outputs=outputs, reference_outputs=reference_outputs
 )
 
@@ -449,6 +531,8 @@ console.log(result)
 ```
 </details>
 
+If you would like to configure the way this evaluator checks for tool call equality, see [this section](#checking-tool-call-equality).
+
 #### Subset and superset match
 
 There are other evaluators for checking partial trajectory matches (ensuring that a trajectory contains a subset and superset of tool calls compared to a reference trajectory).
@@ -458,8 +542,7 @@ There are other evaluators for checking partial trajectory matches (ensuring tha
 
 ```python
 import json
-from agentevals.trajectory.subset import trajectory_subset
-# from agentevals.trajectory.superset import trajectory_superset
+from agentevals.trajectory.match import create_trajectory_match_evaluator
 
 outputs = [
     {"role": "user", "content": "What is the weather in SF and London?"},
@@ -483,23 +566,28 @@ reference_outputs = [
             {
                 "function": {
                     "name": "get_weather",
-                    "arguments": json.dumps({"city": "San Francisco"}),
+                    "arguments": json.dumps({"city": "SF and London"}),
                 }
             },
             {
                 "function": {
-                    "name": "get_weather",
-                    "arguments": json.dumps({"city": "London"}),
+                    "name": "accuweather_forecast",
+                    "arguments": json.dumps({"city": "SF and London"}),
                 }
             },
         ],
     },
-    {"role": "tool", "content": "It's 80 degrees and sunny in San Francisco."},
-    {"role": "tool", "content": "It's 90 degrees and rainy in London."},
+    {"role": "tool", "content": "It's 80 degrees and sunny in San Francisco, and 90 degrees and rainy in London."},
+    {"role": "tool", "content": "Unknown."},
     {"role": "assistant", "content": "The weather in SF is 80˚ and sunny. In London, it's 90˚ and rainy."},
 ]
 
-result = trajectory_subset(
+evaluator = create_trajectory_match_evaluator(
+    trajectory_match_mode="subset", # or "superset"
+    
+)
+
+result = evaluator(
     outputs=outputs, reference_outputs=reference_outputs
 )
 
@@ -508,7 +596,7 @@ print(result)
 
 ```
 {
-    'key': 'trajectory_subset',
+    'key': 'trajectory_subset_match',
     'score': True,
     'comment': None,
 }
@@ -571,11 +659,13 @@ console.log(result)
 
 ```
 {
-    'key': 'trajectory_subset',
+    'key': 'trajectory_subset_match',
     'score': true,
 }
 ```
 </details>
+
+If you would like to configure the way this evaluator checks for tool call equality, see [this section](#checking-tool-call-equality).
 
 #### Trajectory LLM-as-judge
 
@@ -1095,8 +1185,8 @@ const graphTrajectoryEvaluator = createGraphTrajectoryLLMAsJudge({
   model: "openai:o3-mini",
 })
 res = await graphTrajectoryEvaluator(
-  inputs=extractedTrajectory.inputs,
-  outputs=extractedTrajectory.outputs,
+  inputs: extractedTrajectory.inputs,
+  outputs: extractedTrajectory.outputs,
 )
 ```
 </details>

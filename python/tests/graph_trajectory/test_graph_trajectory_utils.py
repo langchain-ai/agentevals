@@ -6,7 +6,8 @@ from agentevals.graph_trajectory.utils import (
 )
 from openevals.exact import exact_match
 
-from typing import Annotated, TypedDict
+from typing import Annotated
+from typing_extensions import TypedDict
 import operator
 import time
 
