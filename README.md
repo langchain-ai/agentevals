@@ -207,7 +207,7 @@ AgentEvals offers the `create_trajectory_match_evaluator` and `create_async_traj
 
 When checking equality between tool calls, these matchers will require that all tool call arguments are the same. You can configure this behavior to ignore tool call arguments by setting `tool_args_match_mode="ignore"`, or by only checking specific properties within the call using the `tool_args_match_overrides` param.
 
-`tool_args_match_overrides` takes a dict whose keys are tool names and whose values are either `"exact"`, `"ignore"`, a list of tool call fields to match exactly, or a comparator function that takes two arguments and returns whether they are equal:
+`tool_args_match_overrides` takes a dict whose keys are tool names and whose values are either `"exact"`, `"ignore"`, a list of fields within the tool call that must match exactly, or a comparator function that takes two arguments and returns whether they are equal:
 
 ```python
 ToolArgsMatchMode = Literal["exact", "ignore"]
@@ -215,7 +215,7 @@ ToolArgsMatchMode = Literal["exact", "ignore"]
 ToolArgsMatchOverrides = dict[str, Union[ToolArgsMatchMode, list[str],  Callable[[dict, dict], bool]]]
 ```
 
-Here's an example that allows for case sensitivity in tool call args:
+Here's an example that allows case insensitivity for the arguments to a tool named `get_weather`:
 
 <details open>
 <summary>Python</summary>
