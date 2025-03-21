@@ -46,6 +46,10 @@ def _scorer(
             return False
         elif "tool_calls" in output and output["tool_calls"] is not None:
             # Both have tool calls, compare them
+            if not isinstance(output["tool_calls"], list) or not isinstance(
+                reference_output["tool_calls"], list
+            ):
+                return False
             if len(output["tool_calls"]) != len(reference_output["tool_calls"]):
                 return False
             # Create a copy of reference tool calls to track matches

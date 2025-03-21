@@ -28,9 +28,11 @@ def _extract_tool_calls(messages: list[ChatCompletionMessage]) -> list[dict]:
     tool_calls: list[dict] = []
     for message in messages:
         if "tool_calls" in message:
-            tool_calls.extend(
-                _normalize_tool_call(tool_call) for tool_call in message["tool_calls"]
-            )
+            normalized_tool_calls = [
+                _normalize_tool_call(tool_call)
+                for tool_call in message["tool_calls"] or []
+            ]
+            tool_calls.extend(normalized_tool_calls)
     return tool_calls
 
 
@@ -104,7 +106,7 @@ def _get_partial_matcher_on_keys(keys: list[str]) -> Callable[[dict, dict], bool
         for part in key_path.split("."):
             if not isinstance(current, dict):
                 return None
-            current = current.get(part)
+            current = current.get(part)  # type: ignore
             if current is None:
                 return None
         return current
