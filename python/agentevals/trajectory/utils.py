@@ -102,7 +102,11 @@ def _get_partial_matcher_on_keys(keys: list[str]) -> Callable[[dict, dict], bool
     def get_nested_value(d: dict, key_path: str):
         current = d
         for part in key_path.split("."):
-            current = current[part]
+            if not isinstance(current, dict):
+                return None
+            current = current.get(part)
+            if current is None:
+                return None
         return current
 
     def matcher(output_call: dict, reference_call: dict) -> bool:

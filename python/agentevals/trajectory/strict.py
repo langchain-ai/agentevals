@@ -49,11 +49,11 @@ def _scorer(
             if len(output["tool_calls"]) != len(reference_output["tool_calls"]):
                 return False
             # Create a copy of reference tool calls to track matches
-            remaining_reference_calls = reference_output["tool_calls"].copy()
+            seen = [False] * len(reference_output["tool_calls"])
             for output_call in output["tool_calls"]:
                 found_match = False
-                for reference_call in remaining_reference_calls:
-                    if (
+                for i, reference_call in enumerate(reference_output["tool_calls"]):
+                    if not seen[i] and (
                         output_call["function"]["name"]
                         == reference_call["function"]["name"]
                     ):
@@ -67,7 +67,7 @@ def _scorer(
                             json.loads(reference_call["function"]["arguments"]),
                         ):
                             found_match = True
-                            remaining_reference_calls.remove(reference_call)
+                            seen[i] = True
                             break
                 if not found_match:
                     return False

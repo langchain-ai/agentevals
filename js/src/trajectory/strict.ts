@@ -59,12 +59,17 @@ export function _scorer(params: {
       if (output.tool_calls!.length !== referenceOutput.tool_calls!.length) {
         return false;
       }
+      const referenceCalls = referenceOutput.tool_calls ?? [];
+      const seen = new Array(referenceCalls.length).fill(false);
 
-      let remainingReferenceCalls = [...(referenceOutput.tool_calls ?? [])];
       for (const outputCall of output.tool_calls ?? []) {
         let foundMatch = false;
-        for (const referenceCall of remainingReferenceCalls) {
-          if (outputCall.function?.name === referenceCall.function?.name) {
+        for (let i = 0; i < referenceCalls.length; i++) {
+          const referenceCall = referenceCalls[i];
+          if (
+            !seen[i] &&
+            outputCall.function?.name === referenceCall.function?.name
+          ) {
             const matcher = _getMatcherForToolName(
               outputCall.function?.name ?? "",
               toolArgsMatchMode,
@@ -77,9 +82,7 @@ export function _scorer(params: {
               )
             ) {
               foundMatch = true;
-              remainingReferenceCalls = remainingReferenceCalls.filter(
-                (call) => call !== referenceCall
-              );
+              seen[i] = true;
               break;
             }
           }
