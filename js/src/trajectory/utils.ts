@@ -1,4 +1,3 @@
-import { exactMatch } from "openevals";
 import {
   ChatCompletionMessage,
   ToolArgsMatchMode,
@@ -92,29 +91,40 @@ export async function _isTrajectorySuperset(
   return true;
 }
 
-function _sortAndStringify(obj: Record<string, unknown>): string {
-  const ordered: Record<string, unknown> = {};
-  Object.keys(obj)
-    .sort()
-    .forEach((key) => {
-      const value = obj[key];
-      ordered[key] =
-        value && typeof value === "object"
-          ? _sortAndStringify(value as Record<string, unknown>)
-          : value;
-    });
-  return JSON.stringify(ordered);
-}
-
-async function _exactMatch(
+function _exactMatch(
   toolCall: Record<string, unknown>,
   referenceToolCall: Record<string, unknown>
-): Promise<boolean> {
-  const res = await exactMatch({
-    outputs: toolCall,
-    referenceOutputs: referenceToolCall,
-  });
-  return !!res.score;
+): boolean {
+  // Deep equality check function
+  function deepEqual(a: unknown, b: unknown): boolean {
+    if (a == null && b == null) return true;
+    if (a === b) return true;
+    if (typeof a !== "object" || typeof b !== "object" || !a || !b)
+      return false;
+
+    if (Array.isArray(a) && Array.isArray(b)) {
+      if (a.length !== b.length) return false;
+      return a.every((val, index) => deepEqual(val, b[index]));
+    }
+
+    const keysA = Object.keys(a);
+    const keysB = Object.keys(b);
+
+    if (keysA.length !== keysB.length) return false;
+
+    return (
+      keysA.every((key) => keysB.includes(key)) &&
+      keysB.every((key) => keysA.includes(key)) &&
+      keysA.every((key) =>
+        deepEqual(
+          (a as Record<string, unknown>)[key],
+          (b as Record<string, unknown>)[key]
+        )
+      )
+    );
+  }
+
+  return deepEqual(toolCall, referenceToolCall);
 }
 
 function _ignoreMatch(
