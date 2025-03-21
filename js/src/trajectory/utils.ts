@@ -2,6 +2,7 @@ import {
   ChatCompletionMessage,
   ToolArgsMatchMode,
   ToolArgsMatchOverrides,
+  ToolArgsMatcher,
 } from "../types.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -91,40 +92,39 @@ export async function _isTrajectorySuperset(
   return true;
 }
 
+// Deep equality check function
+function _deepEqual(a: unknown, b: unknown): boolean {
+  if (a == null && b == null) return true;
+  if (a === b) return true;
+  if (typeof a !== "object" || typeof b !== "object" || !a || !b) return false;
+
+  if (Array.isArray(a) && Array.isArray(b)) {
+    if (a.length !== b.length) return false;
+    return a.every((val, index) => _deepEqual(val, b[index]));
+  }
+
+  const keysA = Object.keys(a);
+  const keysB = Object.keys(b);
+
+  if (keysA.length !== keysB.length) return false;
+
+  return (
+    keysA.every((key) => keysB.includes(key)) &&
+    keysB.every((key) => keysA.includes(key)) &&
+    keysA.every((key) =>
+      _deepEqual(
+        (a as Record<string, unknown>)[key],
+        (b as Record<string, unknown>)[key]
+      )
+    )
+  );
+}
+
 function _exactMatch(
   toolCall: Record<string, unknown>,
   referenceToolCall: Record<string, unknown>
 ): boolean {
-  // Deep equality check function
-  function deepEqual(a: unknown, b: unknown): boolean {
-    if (a == null && b == null) return true;
-    if (a === b) return true;
-    if (typeof a !== "object" || typeof b !== "object" || !a || !b)
-      return false;
-
-    if (Array.isArray(a) && Array.isArray(b)) {
-      if (a.length !== b.length) return false;
-      return a.every((val, index) => deepEqual(val, b[index]));
-    }
-
-    const keysA = Object.keys(a);
-    const keysB = Object.keys(b);
-
-    if (keysA.length !== keysB.length) return false;
-
-    return (
-      keysA.every((key) => keysB.includes(key)) &&
-      keysB.every((key) => keysA.includes(key)) &&
-      keysA.every((key) =>
-        deepEqual(
-          (a as Record<string, unknown>)[key],
-          (b as Record<string, unknown>)[key]
-        )
-      )
-    );
-  }
-
-  return deepEqual(toolCall, referenceToolCall);
+  return _deepEqual(toolCall, referenceToolCall);
 }
 
 function _ignoreMatch(
@@ -136,7 +136,7 @@ function _ignoreMatch(
 
 function _getMatcherForComparisonMode(
   mode: ToolArgsMatchMode
-): MatcherFunction {
+): ToolArgsMatcher {
   if (mode === "exact") {
     return _exactMatch;
   } else {
@@ -144,7 +144,7 @@ function _getMatcherForComparisonMode(
   }
 }
 
-function _getPartialMatcherOnKeys(keys: string[]): MatcherFunction {
+function _getPartialMatcherOnKeys(keys: string[]): ToolArgsMatcher {
   const getNestedValue = (
     d: Record<string, unknown>,
     keyPath: string
@@ -167,30 +167,16 @@ function _getPartialMatcherOnKeys(keys: string[]): MatcherFunction {
     return keys.every((key) => {
       const nestedOutputValue = getNestedValue(outputCall, key);
       const nestedReferenceValue = getNestedValue(referenceCall, key);
-      if (typeof nestedOutputValue !== typeof nestedReferenceValue) {
-        return false;
-      }
-      if (typeof nestedOutputValue === "object" && nestedOutputValue != null) {
-        return (
-          _sortAndStringify(nestedOutputValue as Record<string, unknown>) ===
-          _sortAndStringify(nestedReferenceValue as Record<string, unknown>)
-        );
-      }
-      return nestedOutputValue === nestedReferenceValue;
+      return _deepEqual(nestedOutputValue, nestedReferenceValue);
     });
   };
 }
-
-type MatcherFunction = (
-  toolCall: Record<string, unknown>,
-  referenceToolCall: Record<string, unknown>
-) => boolean | Promise<boolean>;
 
 export function _getMatcherForToolName(
   toolCallName: string,
   toolArgsMatchMode: ToolArgsMatchMode,
   toolArgsMatchOverrides?: ToolArgsMatchOverrides
-): MatcherFunction {
+): ToolArgsMatcher {
   let matcher = _getMatcherForComparisonMode(toolArgsMatchMode);
 
   if (toolArgsMatchOverrides && toolCallName in toolArgsMatchOverrides) {

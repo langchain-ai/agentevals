@@ -22,9 +22,12 @@ export type TrajectoryLLMAsJudgeParams = Omit<
 
 export type ToolArgsMatchMode = "exact" | "ignore";
 
+export type ToolArgsMatcher = (
+  toolCall: Record<string, unknown>,
+  referenceToolCall: Record<string, unknown>
+) => boolean | Promise<boolean>;
+
 export type ToolArgsMatchOverrides = Record<
   string,
-  | ToolArgsMatchMode
-  | string[]
-  | ((a: Record<string, unknown>, b: Record<string, unknown>) => boolean)
+  ToolArgsMatchMode | string[] | ToolArgsMatcher
 >;
