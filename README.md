@@ -590,6 +590,7 @@ outputs = [
         }],
     },
     {"role": "tool", "content": "It's 80 degrees and sunny in SF, and 90 degrees and rainy in London."},
+    {"role": "tool", "content": "Unknown."},
     {"role": "assistant", "content": "The weather in SF is 80 degrees and sunny. In London, it's 90 degrees and rainy."},
 ]
 reference_outputs = [
@@ -606,7 +607,6 @@ reference_outputs = [
         ],
     },
     {"role": "tool", "content": "It's 80 degrees and sunny in San Francisco, and 90 degrees and rainy in London."},
-    {"role": "tool", "content": "Unknown."},
     {"role": "assistant", "content": "The weather in SF is 80˚ and sunny. In London, it's 90˚ and rainy."},
 ]
 
@@ -646,9 +646,15 @@ const outputs = [
         name: "get_weather",
         arguments: JSON.stringify({ city: "SF and London" }),
       }
+    }, {
+      "function": {
+        name: "accuweather_forecast",
+        arguments: JSON.stringify({"city": "SF and London"}),
+      }
     }],
   },
   { role: "tool", content: "It's 80 degrees and sunny in SF, and 90 degrees and rainy in London." },
+  { role: "tool", content: "Unknown." },
   { role: "assistant", content: "The weather in SF is 80 degrees and sunny. In London, it's 90 degrees and rainy."},
 ];
 
@@ -663,16 +669,9 @@ const referenceOutputs = [
           arguments: JSON.stringify({ city: "SF and London" }),
         }
       },
-      {
-        "function": {
-          name: "accuweather_forecast",
-          arguments: JSON.stringify({"city": "SF and London"}),
-        }
-      },
     ],
   },
   { role: "tool", content: "It's 80 degrees and sunny in San Francisco, and 90 degrees and rainy in London." },
-  { role: "tool", content: "Unknown." },
   { role: "assistant", content: "The weather in SF is 80˚ and sunny. In London, it's 90˚ and rainy." },
 ];
 
