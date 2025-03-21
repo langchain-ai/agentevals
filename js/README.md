@@ -86,7 +86,6 @@ You can see that despite the small difference in the final response and tool cal
   - [Graph Trajectory](#graph-trajectory)
     - [Graph trajectory LLM-as-judge](#graph-trajectory-llm-as-judge)
     - [Graph trajectory strict match](#graph-trajectory-strict-match)
-- [Python Async Support](#python-async-support)
 - [LangSmith Integration](#langsmith-integration)
   - [Pytest or Vitest/Jest](#pytest-or-vitestjest)
   - [Evaluate](#evaluate)
@@ -106,7 +105,7 @@ npm install openai
 ```
 
 It is also helpful to be familiar with some [evaluation concepts](https://docs.smith.langchain.com/evaluation/concepts) and
-LangSmith's Vitest/Jest integration for running evals, which is documented [here](https://docs.smith.langchain.com/evaluation/how_to_guides/pytest).
+LangSmith's pytest integration for running evals, which is documented [here](https://docs.smith.langchain.com/evaluation/how_to_guides/pytest).
 
 ## Evaluators
 
@@ -116,21 +115,105 @@ Agent trajectory evaluators are used to judge the trajectory of an agent's execu
 These evaluators expect you to format your agent's trajectory as a list of OpenAI format dicts or as a list of LangChain `BaseMessage` classes, and handle message formatting
 under the hood.
 
-#### Strict match
+AgentEvals offers the `create_trajectory_match_evaluator`/`createTrajectoryMatchEvaluator` and `create_async_trajectory_match_evaluator` methods for this task.
 
-The `trajectory_strict_match` evaluator, compares two trajectories and ensures that they contain the same messages
-in the same order with the same tool calls. It allows for differences in message content and tool call arguments,
-but requires that the selected tools at each step are the same.
+#### Checking tool call equality
+
+When checking equality between tool calls, these matchers will require that all tool call arguments are the same. You can configure this behavior to ignore tool call arguments by setting `tool_args_match_mode="ignore"` (Python) or `toolArgsMatchMode: "ignore"` (JS), or by only checking specific properties within the call using the `tool_args_match_overrides`/`toolArgsMatchOverrides` param.
+
+`tool_args_match_overrides`/`toolArgsMatchOverrides` takes a dictionary whose keys are tool names and whose values are either `"exact"`, `"ignore"`, a list of fields within the tool call that must match exactly, or a comparator function that takes two arguments and returns whether they are equal:
+
+```python
+ToolArgsMatchMode = Literal["exact", "ignore"]
+
+ToolArgsMatchOverrides = dict[str, Union[ToolArgsMatchMode, list[str],  Callable[[dict, dict], bool]]]
+```
+
+Here's an example that allows case insensitivity for the arguments to a tool named `get_weather`:
 
 ```ts
-import { trajectoryStrictMatch } from "agentevals";
+import { createTrajectoryMatchEvaluator } from "agentevals";
 
 const outputs = [
     { role: "user", content: "What is the weather in SF?" },
     {
       role: "assistant",
       tool_calls: [{
-        function: { name: "get_weather", arguments: JSON.stringify({ city: "SF" }) }
+        function: {
+          name: "get_weather",
+          arguments: JSON.stringify({ city: "san francisco" })
+        },
+      }]
+    },
+    { role: "tool", content: "It's 80 degrees and sunny in SF." },
+    { role: "assistant", content: "The weather in SF is 80 degrees and sunny." },
+];
+
+const referenceOutputs = [
+    { role: "user", content: "What is the weather in San Francisco?" },
+    {
+      role: "assistant",
+      tool_calls: [{
+        function: {
+          name: "get_weather",
+          arguments: JSON.stringify({ city: "San Francisco" })
+        }
+      }]
+    },
+    { role: "tool", content: "It's 80 degrees and sunny in San Francisco." },
+];
+
+const evaluator = createTrajectoryMatchEvaluator({
+  trajectoryMatchMode: "strict",
+  toolArgsMatchMode: "exact",  // Default value
+  toolArgsMatchOverrides: {
+    get_weather: (x, y) => {
+      return typeof x.city === "string" &&
+        typeof y.city === "string" &&
+        x.city.toLowerCase() === y.city.toLowerCase();
+    },
+  }
+});
+
+const result = await evaluator({
+  outputs,
+  referenceOutputs,
+});
+
+console.log(result);
+```
+
+```
+{
+  'key': 'trajectory_strict_match',
+  'score': true,
+}
+```
+
+This flexibility allows you to handle cases where you want looser equality for LLM generated arguments (`"san francisco"` to equal `"San Francisco"`) for only specific tool calls.
+
+#### Strict match
+
+The `"strict"` `trajectory_match_mode` compares two trajectories and ensures that they contain the same messages
+in the same order with the same tool calls. Note that it does allow for differences in message content:
+
+```ts
+import { createTrajectoryMatchEvaluator } from "agentevals";
+
+const outputs = [
+    { role: "user", content: "What is the weather in SF?" },
+    {
+      role: "assistant",
+      tool_calls: [{
+        function: {
+          name: "get_weather",
+          arguments: JSON.stringify({ city: "San Francisco" })
+        },
+      }, {
+        function: {
+          name: "accuweather_forecast",
+          arguments: JSON.stringify({"city": "San Francisco"}),
+        },
       }]
     },
     { role: "tool", content: "It's 80 degrees and sunny in SF." },
@@ -143,7 +226,11 @@ const referenceOutputs = [
     { role: "tool", content: "It's 80 degrees and sunny in San Francisco." },
 ];
 
-const result = await trajectoryStrictMatch({
+const evaluator = createTrajectoryMatchEvaluator({
+  trajectoryMatchMode: "strict",
+})
+
+const result = await evaluator({
   outputs,
   referenceOutputs,
 });
@@ -153,17 +240,21 @@ console.log(result);
 
 ```
 {
-    'key': 'trajectory_accuracy',
-    'score': true,
+    'key': 'trajectory_strict_match',
+    'score': false,
 }
 ```
 
+`"strict"` is useful is if you want to ensure that tools are always called in the same order for a given query (e.g. a company policy lookup tool before a tool that requests vacation time for an employee).
+
+**Note:** If you would like to configure the way this evaluator checks for tool call equality, see [this section](#checking-tool-call-equality).
+
 #### Unordered match
 
-The `trajectory_unordered_match` evaluator, compares two trajectories and ensures that they contain the same number of tool calls in any order. This is useful if you want to allow flexibility in how an agent obtains the proper information, but still do care that all information was retrieved.
+The `"unordered"` `trajectory_match_mode` compares two trajectories and ensures that they contain the same tool calls in any order. This is useful if you want to allow flexibility in how an agent obtains the proper information, but still do care that all information was retrieved.
 
 ```ts
-import { trajectoryUnorderedMatch } from "agentevals";
+import { createTrajectoryMatchEvaluator } from "agentevals";
 
 const outputs = [
   { role: "user", content: "What is the weather in SF and is there anything fun happening?" },
@@ -214,7 +305,11 @@ const referenceOutputs = [
   { role: "assistant", content: "In SF, it's 80˚ and sunny, but there is nothing fun happening." },
 ];
 
-const result = await trajectoryUnorderedMatch({
+const evaluator = createTrajectoryMatchEvaluator({
+  trajectoryMatchMode: "unordered",
+});
+
+const result = await evaluator({
   outputs,
   referenceOutputs,
 });
@@ -229,13 +324,16 @@ console.log(result)
 }
 ```
 
+`"unordered"` is useful is if you want to ensure that specific tools are called at some point in the trajectory, but you don't necessarily need them to be in message order (e.g. the agent called a company policy retrieval tool at an arbitrary point in an interaction before authorizing spend for a pizza party).
+
+**Note:** If you would like to configure the way this evaluator checks for tool call equality, see [this section](#checking-tool-call-equality).
+
 #### Subset and superset match
 
-There are other evaluators for checking partial trajectory matches (ensuring that a trajectory contains a subset and superset of tool calls compared to a reference trajectory).
+The `"subset"` and `"superset"` modes match partial trajectories (ensuring that a trajectory contains a subset/superset of tool calls contained in a reference trajectory).
 
 ```ts
-import { trajectorySubset } from "agentevals";
-// import { trajectorySuperset } from "agentevals";
+import { createTrajectoryMatchEvaluator } from "agentevals";
 
 const outputs = [
   { role: "user", content: "What is the weather in SF and London?" },
@@ -246,9 +344,15 @@ const outputs = [
         name: "get_weather",
         arguments: JSON.stringify({ city: "SF and London" }),
       }
+    }, {
+      "function": {
+        name: "accuweather_forecast",
+        arguments: JSON.stringify({"city": "SF and London"}),
+      }
     }],
   },
   { role: "tool", content: "It's 80 degrees and sunny in SF, and 90 degrees and rainy in London." },
+  { role: "tool", content: "Unknown." },
   { role: "assistant", content: "The weather in SF is 80 degrees and sunny. In London, it's 90 degrees and rainy."},
 ];
 
@@ -260,23 +364,20 @@ const referenceOutputs = [
       {
         function: {
           name: "get_weather",
-          arguments: JSON.stringify({ city: "San Francisco" }),
-        }
-      },
-      {
-        function: {
-          name: "get_weather",
-          arguments: JSON.stringify({ city: "London" }),
+          arguments: JSON.stringify({ city: "SF and London" }),
         }
       },
     ],
   },
-  { role: "tool", content: "It's 80 degrees and sunny in San Francisco." },
-  { role: "tool", content: "It's 90 degrees and rainy in London." },
+  { role: "tool", content: "It's 80 degrees and sunny in San Francisco, and 90 degrees and rainy in London." },
   { role: "assistant", content: "The weather in SF is 80˚ and sunny. In London, it's 90˚ and rainy." },
 ];
 
-const result = await trajectorySubset({
+const evaluator = createTrajectoryMatchEvaluator({
+  trajectoryMatchMode: "superset", // or "subset"
+});
+
+const result = await evaluator({
   outputs,
   referenceOutputs,
 });
@@ -286,10 +387,14 @@ console.log(result)
 
 ```
 {
-    'key': 'trajectory_subset',
+    'key': 'trajectory_superset_match',
     'score': true,
 }
 ```
+
+`"superset"` is useful if you want to ensure that some key tools were called at some point in the trajectory, but an agent calling extra tools is still acceptable. `"subset"` is the inverse and is useful if you want to ensure that the agent did not call any tools beyond the expected ones.
+
+**Note:** If you would like to configure the way this evaluator checks for tool call equality, see [this section](#checking-tool-call-equality).
 
 #### Trajectory LLM-as-judge
 
@@ -514,7 +619,7 @@ console.log(res);
 }
 ```
 
-Note that though this evaluator takes the typical `inputs`, `outputs`, and `referenceOutputs` parameters, it internally combines `inputs` and `outputs` to form a `thread`. Therefore, if you want to customize the prompt, your prompt should also contain a `thread` input variable:
+Note that though this evaluator takes the typical `inputs`, `outputs`, and `reference_outputs` parameters, it internally combines `inputs` and `outputs` to form a `thread`. Therefore, if you want to customize the prompt, your prompt should also contain a `thread` input variable:
 
 ```ts
 const CUSTOM_PROMPT = `You are an expert data labeler.
@@ -546,18 +651,18 @@ const graphTrajectoryEvaluator = createGraphTrajectoryLLMAsJudge({
   model: "openai:o3-mini",
 })
 res = await graphTrajectoryEvaluator(
-  inputs=extractedTrajectory.inputs,
-  outputs=extractedTrajectory.outputs,
+  inputs: extractedTrajectory.inputs,
+  outputs: extractedTrajectory.outputs,
 )
 ```
 
-In order to format them properly into the prompt, `referenceOutputs` should be passed in as a `GraphTrajectory` object like `outputs`.
+In order to format them properly into the prompt, `reference_outputs` should be passed in as a `GraphTrajectory` object like `outputs`.
 
 Also note that like other LLM-as-judge evaluators, you can pass extra kwargs into the evaluator to format them into the prompt.
 
 #### Graph trajectory strict match
 
-The `graphTrajectoryStrictMatch` evaluator is a simple evaluator that checks if the steps in the provided graph trajectory match the reference trajectory exactly.
+The `graph_trajectory_strict_match` evaluator is a simple evaluator that checks if the steps in the provided graph trajectory match the reference trajectory exactly.
 
 ```ts
 import { tool } from "@langchain/core/tools";
@@ -626,22 +731,23 @@ console.log(result);
   'score': True,
 }
 ```
+
 ## LangSmith Integration
 
 For tracking experiments over time, you can log evaluator results to [LangSmith](https://smith.langchain.com/), a platform for building production-grade LLM applications that includes tracing, evaluation, and experimentation tools.
 
-LangSmith currently offers two ways to run evals. We'll give a quick example of how to run evals using both.
+LangSmith currently offers two ways to run evals: a [pytest](https://docs.smith.langchain.com/evaluation/how_to_guides/pytest) (Python) or [Vitest/Jest](https://docs.smith.langchain.com/evaluation/how_to_guides/vitest_jest) integration and the `evaluate` function. We'll give a quick example of how to run evals using both.
 
 ### Pytest or Vitest/Jest
 
-First, follow [these instructions](https://docs.smith.langchain.com/evaluation/how_to_guides/vitest_jest) to set up LangSmith's Vitest/Jest runner,
+First, follow [these instructions](https://docs.smith.langchain.com/evaluation/how_to_guides/pytest) to set up LangSmith's pytest runner, or these to set up [Vitest or Jest](https://docs.smith.langchain.com/evaluation/how_to_guides/vitest_jest),
 setting appropriate environment variables:
+
 
 ```bash
 export LANGSMITH_API_KEY="your_langsmith_api_key"
 export LANGSMITH_TRACING="true"
 ```
-
 
 Then, set up a file named `test_trajectory.eval.ts` with the following contents:
 
@@ -716,7 +822,6 @@ Now, run the eval with your runner of choice:
 ```bash
 vitest run test_trajectory.eval.ts
 ```
-
 
 Feedback from the prebuilt evaluator will be automatically logged in LangSmith as a table of results like this in your terminal:
 
