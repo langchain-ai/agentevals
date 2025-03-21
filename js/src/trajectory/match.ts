@@ -16,6 +16,51 @@ export type TrajectoryMatchMode =
   | "subset"
   | "superset";
 
+/**
+ * Creates an evaluator that compares trajectories between model outputs and reference outputs.
+ *
+ * @param options - The configuration options
+ * @param options.trajectoryMatchMode - The mode for matching trajectories:
+ *   - `"strict"`: Requires exact match in order and content
+ *   - `"unordered"`: Allows matching in any order
+ *   - `"subset"`: Accepts if output trajectory is a subset of reference
+ *   - `"superset"`: Accepts if output trajectory is a superset of reference
+ * @param options.toolArgsMatchMode - Mode for matching tool arguments ("exact" by default, can be "ignore")
+ * @param options.toolArgsMatchOverrides - Object containing custom overrides for tool argument matching.
+ *   Each key should be a tool name, and each value should be either a match mode or a matcher function.
+ *   Matchers should be a function that takes two sets of tool call args and returns whether they are equal.
+ *
+ * @returns An async function that evaluates trajectory matches between outputs and references.
+ *   The returned evaluator accepts:
+ *   - outputs: List of messages or dict representing the model output trajectory
+ *   - referenceOutputs: List of messages or dict representing the reference trajectory
+ *   - Additional arguments passed to the underlying evaluator
+ *
+ * @example
+ * ```typescript
+ * const matcher = (
+ *   outputToolCallArgs: Record<string, any>,
+ *   referenceToolCallArgs: Record<string, any>
+ * ): boolean => {
+ *   const outputArgs = (outputToolCallArgs.query ?? "").toLowerCase();
+ *   const referenceArgs = (referenceToolCallArgs.query ?? "").toLowerCase();
+ *   return outputArgs === referenceArgs;
+ * };
+ *
+ * const evaluator = createAsyncTrajectoryMatchEvaluator({
+ *   trajectoryMatchMode: "strict",
+ *   toolArgsMatchMode: "exact",
+ *   toolArgsMatchOverrides: {
+ *     myToolName: matcher,
+ *   },
+ * });
+ *
+ * const result = await evaluator({
+ *   outputs: [...],
+ *   referenceOutputs: [...],
+ * });
+ * ```
+ */
 export function createTrajectoryMatchEvaluator({
   trajectoryMatchMode = "strict",
   toolArgsMatchMode = "exact",
