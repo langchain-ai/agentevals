@@ -1,9 +1,30 @@
 import { BaseMessage } from "@langchain/core/messages";
-import { ChatCompletionMessage, EvaluatorResult } from "../types.js";
+import {
+  ChatCompletionMessage,
+  EvaluatorResult,
+  ToolArgsMatchMode,
+  ToolArgsMatchOverrides,
+} from "../types.js";
 import { _normalizeToOpenAIMessagesList, _runEvaluator } from "../utils.js";
 import { _isTrajectorySuperset } from "./utils.js";
 
+export const _scorer = async (params: {
+  outputs: ChatCompletionMessage[];
+  referenceOutputs: ChatCompletionMessage[];
+  toolArgsMatchMode: ToolArgsMatchMode;
+  toolArgsMatchOverrides?: ToolArgsMatchOverrides;
+}): Promise<boolean> => {
+  const isSuperset = await _isTrajectorySuperset(
+    params.outputs,
+    params.referenceOutputs,
+    params.toolArgsMatchMode,
+    params.toolArgsMatchOverrides
+  );
+  return isSuperset;
+};
+
 /**
+ * @deprecated Use `createTrajectoryMatchEvaluator` with `trajectoryMatchMode: "superset"` instead.
  * Evaluate whether an agent trajectory and called tools is a superset of a reference trajectory and called tools.
  * This means the agent called a superset of the tools specified in the reference trajectory.
  *
@@ -30,19 +51,10 @@ export async function trajectorySuperset(params: {
   const outputsList = _normalizeToOpenAIMessagesList(outputs);
   const referenceOutputsList = _normalizeToOpenAIMessagesList(referenceOutputs);
 
-  const getScore = async () => {
-    if (outputsList == null || referenceOutputsList == null) {
-      throw new Error(
-        "Trajectory superset match requires both outputs and reference_outputs"
-      );
-    }
-    const isSuperset = _isTrajectorySuperset(outputsList, referenceOutputsList);
-    return isSuperset;
-  };
-  return _runEvaluator(
-    "trajectory_superset",
-    getScore,
-    "trajectory_superset",
-    params
-  );
+  return _runEvaluator("trajectory_superset", _scorer, "trajectory_superset", {
+    ...params,
+    outputs: outputsList,
+    referenceOutputs: referenceOutputsList,
+    toolArgsMatchMode: "ignore",
+  });
 }

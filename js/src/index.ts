@@ -3,6 +3,10 @@ export { trajectorySubset } from "./trajectory/subset.js";
 export { trajectorySuperset } from "./trajectory/superset.js";
 export { trajectoryUnorderedMatch } from "./trajectory/unordered.js";
 export {
+  createTrajectoryMatchEvaluator,
+  type TrajectoryMatchMode,
+} from "./trajectory/match.js";
+export {
   createTrajectoryLLMAsJudge,
   TRAJECTORY_ACCURACY_PROMPT,
   TRAJECTORY_ACCURACY_PROMPT_WITH_REFERENCE,

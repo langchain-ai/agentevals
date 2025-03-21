@@ -1,12 +1,12 @@
 [project]
 name = "agentevals"
-version = "0.0.3"
+version = "0.0.4rc1"
 license = {text = "MIT"}
 description = "Open-source evaluators for LLM agents"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "openevals==0.0.3"
+    "openevals>=0.0.13"
 ]
 
 [dependency-groups]

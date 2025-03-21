@@ -1,8 +1,14 @@
 import { BaseMessage } from "@langchain/core/messages";
-import { ChatCompletionMessage, EvaluatorResult } from "../types.js";
+import {
+  ChatCompletionMessage,
+  EvaluatorResult,
+  ToolArgsMatchMode,
+  ToolArgsMatchOverrides,
+} from "../types.js";
 import { _normalizeToOpenAIMessagesList, _runEvaluator } from "../utils.js";
+import { _getMatcherForToolName } from "./utils.js";
 
-function _scorer(params: {
+export async function _scorer(params: {
   outputs:
     | ChatCompletionMessage[]
     | BaseMessage[]
@@ -11,14 +17,14 @@ function _scorer(params: {
     | ChatCompletionMessage[]
     | BaseMessage[]
     | { messages: (BaseMessage | ChatCompletionMessage)[] };
-  toolCallArgsExactMatch: boolean;
-  messageContentExactMatch: boolean;
-}): boolean {
+  toolArgsMatchMode: ToolArgsMatchMode;
+  toolArgsMatchOverrides?: ToolArgsMatchOverrides;
+}): Promise<boolean> {
   const {
     outputs,
     referenceOutputs,
-    toolCallArgsExactMatch = true,
-    messageContentExactMatch = false,
+    toolArgsMatchMode,
+    toolArgsMatchOverrides,
   } = params;
   const normalizedOutputs = _normalizeToOpenAIMessagesList(outputs);
   const normalizedReferenceOutputs =
@@ -34,61 +40,75 @@ function _scorer(params: {
     return false;
   }
 
-  let exactMatch = true;
   for (let i = 0; i < normalizedOutputs.length; i++) {
     const output = normalizedOutputs[i];
     const referenceOutput = normalizedReferenceOutputs[i];
 
     if (output.role !== referenceOutput.role) {
-      exactMatch = false;
-      break;
+      return false;
     }
 
     const outputHasToolCalls = output.tool_calls != null;
     const referenceHasToolCalls = referenceOutput.tool_calls != null;
 
     if (outputHasToolCalls !== referenceHasToolCalls) {
-      exactMatch = false;
-      break;
+      return false;
     }
 
     if (outputHasToolCalls) {
       if (output.tool_calls!.length !== referenceOutput.tool_calls!.length) {
-        exactMatch = false;
-        break;
+        return false;
       }
+      const referenceCalls = referenceOutput.tool_calls ?? [];
+      const seen = new Array(referenceCalls.length).fill(false);
 
-      for (let j = 0; j < output.tool_calls!.length; j++) {
-        if (
-          output.tool_calls![j].function.name !==
-          referenceOutput.tool_calls![j].function.name
-        ) {
-          exactMatch = false;
-          break;
+      for (const outputCall of output.tool_calls ?? []) {
+        let foundMatch = false;
+        for (let i = 0; i < referenceCalls.length; i++) {
+          const referenceCall = referenceCalls[i];
+          if (
+            !seen[i] &&
+            outputCall.function?.name === referenceCall.function?.name
+          ) {
+            const matcher = _getMatcherForToolName(
+              outputCall.function?.name ?? "",
+              toolArgsMatchMode,
+              toolArgsMatchOverrides
+            );
+            if (
+              await matcher(
+                JSON.parse(outputCall.function?.arguments ?? "{}"),
+                JSON.parse(referenceCall.function?.arguments ?? "{}")
+              )
+            ) {
+              foundMatch = true;
+              seen[i] = true;
+              break;
+            }
+          }
         }
-        if (
-          toolCallArgsExactMatch &&
-          output.tool_calls![j].function.arguments !==
-            referenceOutput.tool_calls![j].function.arguments
-        ) {
-          exactMatch = false;
-          break;
+        if (!foundMatch) {
+          return false;
         }
       }
-    }
-
-    if (
-      messageContentExactMatch &&
-      output.content !== referenceOutput.content
-    ) {
-      exactMatch = false;
-      break;
     }
   }
 
-  return exactMatch;
+  return true;
 }
 
+/**
+ * @deprecated Use `createTrajectoryMatchEvaluator` with `trajectoryMatchMode: "strict"` instead.
+ * Evaluate whether an input agent trajectory and called tools strictly matches a reference trajectory.
+ * This means that at each step, the agent called the same tools in the same order as specified in the reference trajectory.
+ *
+ * @param outputs - Actual trajectory the agent followed. May be a list of OpenAI messages,
+ *                 a list of LangChain messages, or a dictionary containing a "messages" key with one of the above.
+ * @param referenceOutputs - Ideal reference trajectory the agent should have followed. May be a list of OpenAI messages,
+ *                          a list of LangChain messages, or a dictionary containing a "messages" key with one of the above.
+ * @param toolCallArgsExactMatch - Whether to require exact matches for tool call arguments
+ * @returns EvaluatorResult containing a score of true if trajectory (including called tools) matches, false otherwise
+ */
 export async function trajectoryStrictMatch(params: {
   outputs:
     | ChatCompletionMessage[]
@@ -99,28 +119,14 @@ export async function trajectoryStrictMatch(params: {
     | BaseMessage[]
     | { messages: (BaseMessage | ChatCompletionMessage)[] };
   toolCallArgsExactMatch: boolean;
-  messageContentExactMatch: boolean;
 }): Promise<EvaluatorResult> {
-  /**
-   * Evaluate whether an input agent trajectory and called tools strictly matches a reference trajectory.
-   * This means that at each step, the agent called the same tools in the same order as specified in the reference trajectory.
-   *
-   * @param outputs - Actual trajectory the agent followed. May be a list of OpenAI messages,
-   *                 a list of LangChain messages, or a dictionary containing a "messages" key with one of the above.
-   * @param referenceOutputs - Ideal reference trajectory the agent should have followed. May be a list of OpenAI messages,
-   *                          a list of LangChain messages, or a dictionary containing a "messages" key with one of the above.
-   * @param toolCallArgsExactMatch - Whether to require exact matches for tool call arguments
-   * @param messageContentExactMatch - Whether to require exact matches for message content
-   * @returns EvaluatorResult containing a score of true if trajectory (including called tools) matches, false otherwise
-   */
-  function _wrapper() {
-    return _scorer(params);
-  }
-
   return _runEvaluator(
     "trajectory_strict_match",
-    _wrapper,
+    _scorer,
     "trajectory_strict_match",
-    params
+    {
+      ...params,
+      toolArgsMatchMode: params.toolCallArgsExactMatch ? "exact" : "ignore",
+    }
   );
 }

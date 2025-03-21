@@ -1,9 +1,12 @@
-from typing import Optional, TypedDict
+from typing import Callable, Literal, Optional, Union
+from typing_extensions import TypedDict
 
 from openevals.types import (
     ChatCompletionMessage,
     EvaluatorResult,
     FewShotExample,
+    SimpleEvaluator,
+    SimpleAsyncEvaluator,
 )
 
 
@@ -20,9 +23,19 @@ class ExtractedLangGraphThreadTrajectory(TypedDict):
     outputs: GraphTrajectory
 
 
+ToolArgsMatchMode = Literal["exact", "ignore"]
+
+ToolArgsMatchOverrides = dict[
+    str, Union[ToolArgsMatchMode, list[str], Callable[[dict, dict], bool]]
+]
+
 __all__ = [
     "GraphTrajectory",
     "ChatCompletionMessage",
     "EvaluatorResult",
+    "SimpleEvaluator",
+    "SimpleAsyncEvaluator",
     "FewShotExample",
+    "ToolArgsMatchMode",
+    "ToolArgsMatchOverrides",
 ]
