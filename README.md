@@ -201,7 +201,7 @@ Agent trajectory evaluators are used to judge the trajectory of an agent's execu
 These evaluators expect you to format your agent's trajectory as a list of OpenAI format dicts or as a list of LangChain `BaseMessage` classes, and handle message formatting
 under the hood.
 
-AgentEvals offers the `create_trajectory_match_evaluator` and `create_async_trajectory_match_evaluator` methods for this task.
+AgentEvals offers the `create_trajectory_match_evaluator`/`createTrajectoryMatchEvaluator` and `create_async_trajectory_match_evaluator` methods for this task.
 
 #### Checking tool call equality
 
@@ -259,6 +259,7 @@ reference_outputs = [
 
 evaluator = create_trajectory_match_evaluator(
     trajectory_match_mode="strict",
+    tool_args_match_mode="exact",  # Default value
     tool_args_match_overrides={
         "get_weather": lambda x, y: x["city"].lower() == y["city"].lower()
     }
@@ -274,8 +275,72 @@ print(result)
 ```
 {
     'key': 'trajectory_strict_match',
-    'score': False,
+    'score': True,
     'comment': None,
+}
+```
+
+</details>
+
+<details open>
+<summary>TypeScript</summary>
+
+```ts
+import { createTrajectoryMatchEvaluator } from "agentevals";
+
+const outputs = [
+    { role: "user", content: "What is the weather in SF?" },
+    {
+      role: "assistant",
+      tool_calls: [{
+        function: {
+          name: "get_weather",
+          arguments: JSON.stringify({ city: "san francisco" })
+        },
+      }]
+    },
+    { role: "tool", content: "It's 80 degrees and sunny in SF." },
+    { role: "assistant", content: "The weather in SF is 80 degrees and sunny." },
+];
+
+const referenceOutputs = [
+    { role: "user", content: "What is the weather in San Francisco?" },
+    {
+      role: "assistant",
+      tool_calls: [{
+        function: {
+          name: "get_weather",
+          arguments: JSON.stringify({ city: "San Francisco" })
+        }
+      }]
+    },
+    { role: "tool", content: "It's 80 degrees and sunny in San Francisco." },
+];
+
+const evaluator = createTrajectoryMatchEvaluator({
+  trajectoryMatchMode: "strict",
+  toolArgsMatchMode: "exact",  // Default value
+  toolArgsMatchOverrides: {
+    get_weather: (x, y) => {
+      return typeof x.city === "string" &&
+        typeof y.city === "string" &&
+        x.city.toLowerCase() === y.city.toLowerCase();
+    },
+  }
+})
+
+const result = await evaluator({
+  outputs,
+  referenceOutputs,
+});
+
+console.log(result);
+```
+
+```
+{
+    'key': 'trajectory_strict_match',
+    'score': true,
 }
 ```
 
@@ -365,12 +430,15 @@ const outputs = [
     {
       role: "assistant",
       tool_calls: [{
-        function: { name: "get_weather", arguments: JSON.stringify({ city: "San Francisco" }) }
+        function: {
+          name: "get_weather",
+          arguments: JSON.stringify({ city: "San Francisco" })
+        },
       }, {
-        "function": {
-          "name": "accuweather_forecast",
-          "arguments": JSON.stringify({"city": "San Francisco"}),
-        }
+        function: {
+          name: "accuweather_forecast",
+          arguments: JSON.stringify({"city": "San Francisco"}),
+        },
       }]
     },
     { role: "tool", content: "It's 80 degrees and sunny in SF." },
