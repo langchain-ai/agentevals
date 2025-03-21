@@ -17,8 +17,8 @@ if TYPE_CHECKING:
 
 def _scorer(
     *,
-    outputs: Union[list[ChatCompletionMessage], list[BaseMessage], dict],
-    reference_outputs: Union[list[ChatCompletionMessage], list[BaseMessage], dict],
+    outputs: list[ChatCompletionMessage],
+    reference_outputs: list[ChatCompletionMessage],
     tool_args_match_mode: ToolArgsMatchMode,
     tool_args_match_overrides: Optional[ToolArgsMatchOverrides] = None,
     **kwargs: Any,
@@ -76,7 +76,7 @@ def trajectory_subset(
         feedback_key="trajectory_subset",
         outputs=outputs,
         reference_outputs=reference_outputs,
-        tool_args_match_mode="none",
+        tool_args_match_mode="ignore",
         **kwargs,
     )
 
@@ -124,6 +124,6 @@ async def trajectory_subset_async(
         feedback_key="trajectory_subset",
         outputs=outputs,
         reference_outputs=reference_outputs,
-        tool_args_match_mode="none",
+        tool_args_match_mode="ignore",
         **kwargs,
     )

@@ -1,27 +1,32 @@
-import { ChatCompletionMessage } from "../types.js";
+import {
+  ChatCompletionMessage,
+  ToolArgsMatchMode,
+  ToolArgsMatchOverrides,
+} from "../types.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function _normalizeToolCall(toolCall: Record<string, any>): {
   name: string;
-  args: string;
+  args: Record<string, unknown>;
 } {
   if (
     "function" in toolCall &&
     toolCall.function != null &&
-    typeof toolCall.function === "object"
+    typeof toolCall.function === "object" &&
+    typeof toolCall.function.arguments === "string"
   ) {
     return {
       name: toolCall.function.name,
-      args: toolCall.function.arguments,
+      args: JSON.parse(toolCall.function.arguments),
     };
   }
-  return toolCall as { name: string; args: string };
+  return toolCall as { name: string; args: Record<string, unknown> };
 }
 
 function _extractToolCalls(
   messages: ChatCompletionMessage[]
-): { name: string; args: string }[] {
-  const toolCalls: { name: string; args: string }[] = [];
+): { name: string; args: Record<string, unknown> }[] {
+  const toolCalls: { name: string; args: Record<string, unknown> }[] = [];
   for (const message of messages) {
     if (message.tool_calls) {
       toolCalls.push(...message.tool_calls.map(_normalizeToolCall));
@@ -32,35 +37,160 @@ function _extractToolCalls(
 
 export function _isTrajectorySuperset(
   outputs: ChatCompletionMessage[],
-  referenceOutputs: ChatCompletionMessage[]
+  referenceOutputs: ChatCompletionMessage[],
+  toolArgsMatchMode: ToolArgsMatchMode,
+  toolArgsMatchOverrides?: ToolArgsMatchOverrides
 ): boolean {
   const outputToolCalls = _extractToolCalls(outputs);
   const referenceToolCalls = _extractToolCalls(referenceOutputs);
-  const outputToolCounts = new Map<string, number>();
-  const referenceToolCounts = new Map<string, number>();
 
-  for (const call of outputToolCalls) {
-    outputToolCounts.set(call.name, (outputToolCounts.get(call.name) ?? 0) + 1);
-  }
-  for (const call of referenceToolCalls) {
-    referenceToolCounts.set(
-      call.name,
-      (referenceToolCounts.get(call.name) ?? 0) + 1
-    );
-  }
+  // Keep track of which reference tool calls have been matched
+  const matchedReferenceCalls = new Set<number>();
 
-  const allTools = new Set([
-    ...outputToolCounts.keys(),
-    ...referenceToolCounts.keys(),
-  ]);
-  for (const name of allTools) {
-    if (
-      (outputToolCounts.get(name) ?? 0) < (referenceToolCounts.get(name) ?? 0)
-    ) {
+  // For each reference tool call, find a matching output tool call
+  for (const refCall of referenceToolCalls) {
+    const refName = refCall.name;
+    const refArgs = refCall.args;
+
+    let foundMatch = false;
+    for (let outIdx = 0; outIdx < outputToolCalls.length; outIdx++) {
+      const outCall = outputToolCalls[outIdx];
+      const outName = outCall.name;
+
+      // Names must match
+      if (refName !== outName) {
+        continue;
+      }
+
+      // If we're already using this output call for a different match, skip
+      if (matchedReferenceCalls.has(outIdx)) {
+        continue;
+      }
+
+      // Check tool args according to match mode
+      const matcher = _getMatcherForToolName(
+        refName,
+        toolArgsMatchMode,
+        toolArgsMatchOverrides
+      );
+
+      const outArgs = outCall.args;
+      if (matcher(outArgs, refArgs)) {
+        matchedReferenceCalls.add(outIdx);
+        foundMatch = true;
+        break;
+      }
+    }
+
+    // If we didn't find a match for this reference call, we're not a superset
+    if (!foundMatch) {
       return false;
     }
   }
+
   return true;
+}
+
+function _sortAndStringify(obj: Record<string, unknown>): string {
+  const ordered: Record<string, unknown> = {};
+  Object.keys(obj)
+    .sort()
+    .forEach((key) => {
+      const value = obj[key];
+      ordered[key] =
+        value && typeof value === "object"
+          ? _sortAndStringify(value as Record<string, unknown>)
+          : value;
+    });
+  return JSON.stringify(ordered);
+}
+
+function _exactMatch(
+  toolCall: Record<string, unknown>,
+  referenceToolCall: Record<string, unknown>
+): boolean {
+  return _sortAndStringify(toolCall) === _sortAndStringify(referenceToolCall);
+}
+
+function _ignoreMatch(
+  _toolCall: Record<string, unknown>,
+  _referenceToolCall: Record<string, unknown>
+): boolean {
+  return true;
+}
+
+function _getMatcherForComparisonMode(
+  mode: ToolArgsMatchMode
+): MatcherFunction {
+  if (mode === "exact") {
+    return _exactMatch;
+  } else {
+    return _ignoreMatch;
+  }
+}
+
+function _getPartialMatcherOnKeys(keys: string[]): MatcherFunction {
+  const getNestedValue = (
+    d: Record<string, unknown>,
+    keyPath: string
+  ): unknown => {
+    let current: unknown = d;
+    for (const part of keyPath.split(".")) {
+      if (current && typeof current === "object" && part in current) {
+        current = current[part as keyof typeof current];
+      } else {
+        return undefined;
+      }
+    }
+    return current;
+  };
+
+  return (
+    outputCall: Record<string, unknown>,
+    referenceCall: Record<string, unknown>
+  ): boolean => {
+    return keys.every((key) => {
+      const nestedOutputValue = getNestedValue(outputCall, key);
+      const nestedReferenceValue = getNestedValue(referenceCall, key);
+      if (typeof nestedOutputValue !== typeof nestedReferenceValue) {
+        return false;
+      }
+      if (typeof nestedOutputValue === "object" && nestedOutputValue != null) {
+        return (
+          _sortAndStringify(nestedOutputValue as Record<string, unknown>) ===
+          _sortAndStringify(nestedReferenceValue as Record<string, unknown>)
+        );
+      }
+      return nestedOutputValue === nestedReferenceValue;
+    });
+  };
+}
+
+type MatcherFunction = (
+  toolCall: Record<string, unknown>,
+  referenceToolCall: Record<string, unknown>
+) => boolean;
+
+export function _getMatcherForToolName(
+  toolCallName: string,
+  toolArgsMatchMode: ToolArgsMatchMode,
+  toolArgsMatchOverrides?: ToolArgsMatchOverrides
+): MatcherFunction {
+  let matcher = _getMatcherForComparisonMode(toolArgsMatchMode);
+
+  if (toolArgsMatchOverrides && toolCallName in toolArgsMatchOverrides) {
+    const override = toolArgsMatchOverrides[toolCallName];
+
+    if (typeof override === "string") {
+      matcher = _getMatcherForComparisonMode(override);
+    } else if (typeof override === "function") {
+      matcher = override;
+    } else if (Array.isArray(override)) {
+      matcher = _getPartialMatcherOnKeys(override);
+    }
+  }
+
+  return matcher;
 }
 
 export function _chatCompletionMessagesToString(

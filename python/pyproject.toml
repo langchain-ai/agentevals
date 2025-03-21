@@ -6,7 +6,7 @@ description = "Open-source evaluators for LLM agents"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "openevals>=0.0.9"
+    "openevals>=0.0.12"
 ]
 
 [dependency-groups]

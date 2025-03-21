@@ -19,3 +19,12 @@ export type TrajectoryLLMAsJudgeParams = Omit<
   Parameters<typeof createLLMAsJudge>[0],
   "prompt"
 > & { prompt?: string };
+
+export type ToolArgsMatchMode = "exact" | "ignore";
+
+export type ToolArgsMatchOverrides = Record<
+  string,
+  | ToolArgsMatchMode
+  | string[]
+  | ((a: Record<string, unknown>, b: Record<string, unknown>) => boolean)
+>;

@@ -205,9 +205,9 @@ AgentEvals offers the `create_trajectory_match_evaluator` and `create_async_traj
 
 #### Checking tool call equality
 
-When checking equality between tool calls, these matchers will require that all tool call arguments are the same. You can configure this behavior to ignore tool call arguments by setting `tool_args_match_mode="ignore"`, or by only checking specific properties within the call using the `tool_args_match_overrides` param.
+When checking equality between tool calls, these matchers will require that all tool call arguments are the same. You can configure this behavior to ignore tool call arguments by setting `tool_args_match_mode="ignore"` (Python) or `toolArgsMatchMode: "ignore"` (JS), or by only checking specific properties within the call using the `tool_args_match_overrides`/`toolArgsMatchOverrides` param.
 
-`tool_args_match_overrides` takes a dict whose keys are tool names and whose values are either `"exact"`, `"ignore"`, a list of fields within the tool call that must match exactly, or a comparator function that takes two arguments and returns whether they are equal:
+`tool_args_match_overrides`/`toolArgsMatchOverrides` takes a dictionary whose keys are tool names and whose values are either `"exact"`, `"ignore"`, a list of fields within the tool call that must match exactly, or a comparator function that takes two arguments and returns whether they are equal:
 
 ```python
 ToolArgsMatchMode = Literal["exact", "ignore"]
@@ -280,6 +280,8 @@ print(result)
 ```
 
 </details>
+
+This flexibility allows you to handle cases where you want looser equality for LLM generated arguments (`"san francisco"` to equal `"San Francisco"`) for only specific tool calls.
 
 #### Strict match
 

@@ -85,28 +85,24 @@ def _exact_match(tool_call: dict, reference_tool_call: dict) -> bool:
     return tool_call == reference_tool_call
 
 
-def _none_match(tool_call: dict, reference_tool_call: dict) -> bool:
+def _ignore_match(tool_call: dict, reference_tool_call: dict) -> bool:
     return True
 
 
 def _get_matcher_for_comparison_mode(
     mode: ToolArgsMatchMode,
-) -> Callable[[str, str], bool]:
+) -> Callable[[dict, dict], bool]:
     if mode == "exact":
         return _exact_match
     else:
-        return _none_match
+        return _ignore_match
 
 
-def _get_partial_matcher_on_keys(keys: list[str]) -> Callable[[str, str], bool]:
+def _get_partial_matcher_on_keys(keys: list[str]) -> Callable[[dict, dict], bool]:
     def get_nested_value(d: dict, key_path: str):
         current = d
         for part in key_path.split("."):
-            current = (
-                current["function"]["arguments"]
-                if part == "function.arguments"
-                else current[part]
-            )
+            current = current[part]
         return current
 
     def matcher(output_call: dict, reference_call: dict) -> bool:
@@ -122,16 +118,18 @@ def _get_matcher_for_tool_name(
     tool_call_name: str,
     tool_args_match_mode: ToolArgsMatchMode,
     tool_args_match_overrides: Optional[ToolArgsMatchOverrides],
-) -> Callable[[str, str], bool]:
+) -> Callable[[dict, dict], bool]:
     matcher = _get_matcher_for_comparison_mode(tool_args_match_mode)
     if tool_args_match_overrides is not None and tool_args_match_overrides.get(
-        tool_call_name, None
+        tool_call_name, False
     ):
         override = tool_args_match_overrides.get(tool_call_name)
         if isinstance(override, str):
             matcher = _get_matcher_for_comparison_mode(override)
-        elif isinstance(override, Callable):
+        elif callable(override):
             matcher = override
-        else:
+        elif isinstance(override, list):
             matcher = _get_partial_matcher_on_keys(override)
+        else:
+            raise ValueError(f"Invalid tool args match override: {override}")
     return matcher
