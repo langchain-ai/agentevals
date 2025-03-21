@@ -20,7 +20,6 @@ export const _scorer = (params: {
     params.toolArgsMatchMode,
     params.toolArgsMatchOverrides
   );
-  console.log("isSuperset", isSuperset, params);
   return isSuperset;
 };
 

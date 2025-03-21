@@ -403,7 +403,9 @@ console.log(result);
 ```
 </details>
 
-If you would like to configure the way this evaluator checks for tool call equality, see [this section](#checking-tool-call-equality).
+`"strict"` is useful is if you want to ensure that tools are always called in the same order for a given query (e.g. a company policy lookup tool before a tool that requests vacation time for an employee).
+
+**Note:** If you would like to configure the way this evaluator checks for tool call equality, see [this section](#checking-tool-call-equality).
 
 #### Unordered match
 
@@ -560,11 +562,13 @@ console.log(result)
 ```
 </details>
 
-If you would like to configure the way this evaluator checks for tool call equality, see [this section](#checking-tool-call-equality).
+`"unordered"` is useful is if you want to ensure that specific tools are called at some point in the trajectory, but you don't necessarily need them to be in message order (e.g. the agent called a company policy retrieval tool at an arbitrary point in an interaction before authorizing spend for a pizza party).
+
+**Note:** If you would like to configure the way this evaluator checks for tool call equality, see [this section](#checking-tool-call-equality).
 
 #### Subset and superset match
 
-There are other evaluators for checking partial trajectory matches (ensuring that a trajectory contains a subset and superset of tool calls compared to a reference trajectory).
+The `"subset"` and `"superset"` modes match partial trajectories (ensuring that a trajectory contains a subset/superset of tool calls contained in a reference trajectory).
 
 <details open>
 <summary>Python</summary>
@@ -612,7 +616,6 @@ reference_outputs = [
 
 evaluator = create_trajectory_match_evaluator(
     trajectory_match_mode="superset", # or "subset"
-    
 )
 
 result = evaluator(
@@ -676,7 +679,7 @@ const referenceOutputs = [
 ];
 
 const evaluator = createTrajectoryMatchEvaluator({
-  trajectoryMatchMode: "superset",
+  trajectoryMatchMode: "superset", // or "subset"
 });
 
 const result = await evaluator({
@@ -695,7 +698,9 @@ console.log(result)
 ```
 </details>
 
-If you would like to configure the way this evaluator checks for tool call equality, see [this section](#checking-tool-call-equality).
+`"superset"` is useful if you want to ensure that some key tools were called at some point in the trajectory, but an agent calling extra tools is still acceptable. `"subset"` is the inverse and is useful if you want to ensure that the agent did not call any tools beyond the expected ones.
+
+**Note:** If you would like to configure the way this evaluator checks for tool call equality, see [this section](#checking-tool-call-equality).
 
 #### Trajectory LLM-as-judge
 
