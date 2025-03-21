@@ -25,7 +25,7 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "openevals", specifier = ">=0.0.12" }]
+requires-dist = [{ name = "openevals", specifier = ">=0.0.13" }]
 
 [package.metadata.requires-dev]
 dev = [
@@ -874,7 +874,7 @@ wheels = [
 
 [[package]]
 name = "openevals"
-version = "0.0.12"
+version = "0.0.13"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "langchain" },
@@ -882,9 +882,9 @@ dependencies = [
     { name = "langsmith" },
     { name = "rich" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/bf/e9/ff9ea02496aac375b99842bed6be585e061e2d4040c2d2759bc2cd4c8377/openevals-0.0.12.tar.gz", hash = "sha256:f5e7a463cfef5574ff932d9df79c26a8b194a121d2687df491e23395d7279422", size = 40135 }
+sdist = { url = "https://files.pythonhosted.org/packages/fb/64/c2380bf1c3c1b94552bda796a236d38b6f7e0b1af0cb9ec6307984870846/openevals-0.0.13.tar.gz", hash = "sha256:3c702fa25f1349d82de2cf4d51cfd4efbac6d0d27b7301f9f45374497eafa011", size = 40221 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ce/e1/be8ed28bef4bbdbb3b2afed290ed21a41f5a2b847b56cbd202100751bd94/openevals-0.0.12-py3-none-any.whl", hash = "sha256:408c32df50886dd10112709e35be8ceeb21cda4ededa7bbd3c4b535844a0f4be", size = 36621 },
+    { url = "https://files.pythonhosted.org/packages/43/91/86fae77ff42a7ee81f0b3e0e6c06c75d44af5015672ea02ac372fc14f487/openevals-0.0.13-py3-none-any.whl", hash = "sha256:13fadf8e52a78c0f5912383cf05ce60b572c5926f1c58ee1133c1a5d4210065a", size = 36750 },
 ]
 
 [[package]]

@@ -6,7 +6,6 @@ from openevals.utils import (
 )
 from agentevals.types import (
     ChatCompletionMessage,
-    EvaluatorResult,
     ToolArgsMatchMode,
     ToolArgsMatchOverrides,
 )
@@ -26,7 +25,7 @@ def _scorer(
     tool_args_match_mode: ToolArgsMatchMode,
     tool_args_match_overrides: Optional[ToolArgsMatchOverrides] = None,
     **kwargs: Any,
-) -> EvaluatorResult:
+):
     if outputs is None or reference_outputs is None:
         raise ValueError(
             "Trajectory unordered match requires both outputs and reference_outputs"
@@ -44,7 +43,7 @@ def trajectory_unordered_match(
     outputs: Union[list[ChatCompletionMessage], list[BaseMessage], dict],
     reference_outputs: Union[list[ChatCompletionMessage], list[BaseMessage], dict],
     **kwargs: Any,
-) -> EvaluatorResult:
+):
     """
     DEPRECATED: Use create_trajectory_match_evaluator() instead:
     ```python
@@ -92,7 +91,7 @@ async def trajectory_unordered_match_async(
     outputs: Union[list[ChatCompletionMessage], list[BaseMessage], dict],
     reference_outputs: Union[list[ChatCompletionMessage], list[BaseMessage], dict],
     **kwargs: Any,
-) -> EvaluatorResult:
+):
     """
     Evaluate whether an input agent trajectory and called tools contains all the tools used in a reference trajectory.
     This accounts for some differences in an LLM's reasoning process in a case-by-case basis.

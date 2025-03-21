@@ -6,7 +6,6 @@ from agentevals.trajectory.subset import _scorer as trajectory_subset_scorer
 from agentevals.trajectory.superset import _scorer as trajectory_superset_scorer
 from agentevals.types import (
     ChatCompletionMessage,
-    EvaluatorResult,
     SimpleEvaluator,
     SimpleAsyncEvaluator,
     ToolArgsMatchMode,
@@ -46,7 +45,7 @@ def create_trajectory_match_evaluator(
         outputs: Union[list[ChatCompletionMessage], list[BaseMessage], dict],
         reference_outputs: Union[list[ChatCompletionMessage], list[BaseMessage], dict],
         **kwargs,
-    ) -> EvaluatorResult:
+    ):
         outputs = _normalize_to_openai_messages_list(outputs)
         reference_outputs = _normalize_to_openai_messages_list(reference_outputs)
         return _run_evaluator(
@@ -88,7 +87,7 @@ def create_async_trajectory_match_evaluator(
         outputs: Union[list[ChatCompletionMessage], list[BaseMessage], dict],
         reference_outputs: Union[list[ChatCompletionMessage], list[BaseMessage], dict],
         **kwargs,
-    ) -> EvaluatorResult:
+    ):
         outputs = _normalize_to_openai_messages_list(outputs)
         reference_outputs = _normalize_to_openai_messages_list(reference_outputs)
         return await _arun_evaluator(

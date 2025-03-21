@@ -7,7 +7,6 @@ from openevals.utils import (
 )
 from agentevals.types import (
     ChatCompletionMessage,
-    EvaluatorResult,
     ToolArgsMatchMode,
     ToolArgsMatchOverrides,
 )
@@ -27,7 +26,7 @@ def _scorer(
     tool_args_match_mode: ToolArgsMatchMode,
     tool_args_match_overrides: Optional[ToolArgsMatchOverrides] = None,
     **kwargs: Any,
-) -> bool:
+):
     outputs = _normalize_to_openai_messages_list(outputs)
     reference_outputs = _normalize_to_openai_messages_list(reference_outputs)
     if outputs is None or reference_outputs is None:
@@ -81,7 +80,7 @@ def trajectory_strict_match(
     reference_outputs: Union[list[ChatCompletionMessage], list[BaseMessage], dict],
     tool_call_args_exact_match: bool = True,
     **kwargs: Any,
-) -> EvaluatorResult:
+):
     """
     DEPRECATED: Use create_trajectory_match_evaluator() instead:
     ```python
@@ -133,7 +132,7 @@ async def trajectory_strict_match_async(
     reference_outputs: Union[list[ChatCompletionMessage], list[BaseMessage], dict],
     tool_call_args_exact_match: bool = True,
     **kwargs: Any,
-) -> EvaluatorResult:
+):
     """
     DEPRECATED: Use create_async_trajectory_match_evaluator() instead:
     ```python

@@ -16,7 +16,7 @@ from openevals.utils import (
     _chat_completion_messages_to_string,
     _normalize_to_openai_messages_list,
 )
-from agentevals.types import EvaluatorResult, FewShotExample
+from agentevals.types import FewShotExample
 from agentevals.utils import _run_evaluator, _arun_evaluator
 
 from langchain_core.language_models.chat_models import BaseChatModel
@@ -156,7 +156,7 @@ def create_trajectory_llm_as_judge(
             Union[list[ChatCompletionMessage], list[BaseMessage], dict]
         ] = None,
         **kwargs,
-    ) -> EvaluatorResult:
+    ):
         (
             formatted_outputs,
             formatted_reference_outputs,
@@ -234,7 +234,7 @@ def create_async_trajectory_llm_as_judge(
             Union[list[ChatCompletionMessage], list[BaseMessage], dict]
         ] = None,
         **kwargs,
-    ) -> EvaluatorResult:
+    ):
         (
             formatted_outputs,
             formatted_reference_outputs,

@@ -4,7 +4,7 @@ from warnings import warn
 from openevals.utils import (
     _normalize_to_openai_messages_list,
 )
-from agentevals.types import ChatCompletionMessage, EvaluatorResult
+from agentevals.types import ChatCompletionMessage
 from agentevals.trajectory.utils import _is_trajectory_superset
 from agentevals.utils import _run_evaluator, _arun_evaluator
 from agentevals.types import ToolArgsMatchMode, ToolArgsMatchOverrides
@@ -22,7 +22,7 @@ def _scorer(
     tool_args_match_mode: ToolArgsMatchMode,
     tool_args_match_overrides: Optional[ToolArgsMatchOverrides] = None,
     **kwargs: Any,
-) -> EvaluatorResult:
+):
     if outputs is None or reference_outputs is None:
         raise ValueError(
             "Trajectory subset match requires both outputs and reference_outputs"
@@ -38,7 +38,7 @@ def trajectory_subset(
     outputs: Union[list[ChatCompletionMessage], list[BaseMessage], dict],
     reference_outputs: Union[list[ChatCompletionMessage], list[BaseMessage], dict],
     **kwargs: Any,
-) -> EvaluatorResult:
+):
     """
     DEPRECATED: Use create_trajectory_match_evaluator() instead:
     ```python
@@ -86,7 +86,7 @@ async def trajectory_subset_async(
     outputs: Union[list[ChatCompletionMessage], list[BaseMessage], dict],
     reference_outputs: Union[list[ChatCompletionMessage], list[BaseMessage], dict],
     **kwargs: Any,
-) -> EvaluatorResult:
+):
     """
     DEPRECATED: Use create_async_trajectory_match_evaluator() instead:
     ```python

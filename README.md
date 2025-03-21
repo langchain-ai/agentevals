@@ -285,7 +285,7 @@ This flexibility allows you to handle cases where you want looser equality for L
 
 #### Strict match
 
-The strict match evaluator compares two trajectories and ensures that they contain the same messages
+The `"strict"` `trajectory_match_mode` compares two trajectories and ensures that they contain the same messages
 in the same order with the same tool calls. Note that it does allow for differences in message content:
 
 <details open>
@@ -358,14 +358,19 @@ print(result)
 <summary>TypeScript</summary>
 
 ```ts
-import { trajectoryStrictMatch } from "agentevals";
+import { createTrajectoryMatchEvaluator } from "agentevals";
 
 const outputs = [
     { role: "user", content: "What is the weather in SF?" },
     {
       role: "assistant",
       tool_calls: [{
-        function: { name: "get_weather", arguments: JSON.stringify({ city: "SF" }) }
+        function: { name: "get_weather", arguments: JSON.stringify({ city: "San Francisco" }) }
+      }, {
+        "function": {
+          "name": "accuweather_forecast",
+          "arguments": JSON.stringify({"city": "San Francisco"}),
+        }
       }]
     },
     { role: "tool", content: "It's 80 degrees and sunny in SF." },
@@ -378,7 +383,11 @@ const referenceOutputs = [
     { role: "tool", content: "It's 80 degrees and sunny in San Francisco." },
 ];
 
-const result = await trajectoryStrictMatch({
+const evaluator = createTrajectoryMatchEvaluator({
+  trajectoryMatchMode: "strict",
+})
+
+const result = await evaluator({
   outputs,
   referenceOutputs,
 });
@@ -398,7 +407,7 @@ If you would like to configure the way this evaluator checks for tool call equal
 
 #### Unordered match
 
-The `trajectory_unordered_match` evaluator, compares two trajectories and ensures that they contain the same number of tool calls in any order. This is useful if you want to allow flexibility in how an agent obtains the proper information, but still do care that all information was retrieved.
+The `"unordered"` `trajectory_match_mode` compares two trajectories and ensures that they contain the same tool calls in any order. This is useful if you want to allow flexibility in how an agent obtains the proper information, but still do care that all information was retrieved.
 
 <details open>
 <summary>Python</summary>
@@ -480,7 +489,7 @@ print(result)
 <summary>TypeScript</summary>
 
 ```ts
-import { trajectoryUnorderedMatch } from "agentevals";
+import { createTrajectoryMatchEvaluator } from "agentevals";
 
 const outputs = [
   { role: "user", content: "What is the weather in SF and is there anything fun happening?" },
@@ -531,7 +540,11 @@ const referenceOutputs = [
   { role: "assistant", content: "In SF, it's 80˚ and sunny, but there is nothing fun happening." },
 ];
 
-const result = await trajectoryUnorderedMatch({
+const evaluator = createTrajectoryMatchEvaluator({
+  trajectoryMatchMode: "unordered",
+});
+
+const result = await evaluator({
   outputs,
   referenceOutputs,
 });
@@ -622,8 +635,7 @@ print(result)
 <summary>TypeScript</summary>
 
 ```ts
-import { trajectorySubset } from "agentevals";
-// import { trajectorySuperset } from "agentevals";
+import { createTrajectoryMatchEvaluator } from "agentevals";
 
 const outputs = [
   { role: "user", content: "What is the weather in SF and London?" },
@@ -648,23 +660,27 @@ const referenceOutputs = [
       {
         function: {
           name: "get_weather",
-          arguments: JSON.stringify({ city: "San Francisco" }),
+          arguments: JSON.stringify({ city: "SF and London" }),
         }
       },
       {
-        function: {
-          name: "get_weather",
-          arguments: JSON.stringify({ city: "London" }),
+        "function": {
+          name: "accuweather_forecast",
+          arguments: JSON.stringify({"city": "SF and London"}),
         }
       },
     ],
   },
-  { role: "tool", content: "It's 80 degrees and sunny in San Francisco." },
-  { role: "tool", content: "It's 90 degrees and rainy in London." },
+  { role: "tool", content: "It's 80 degrees and sunny in San Francisco, and 90 degrees and rainy in London." },
+  { role: "tool", content: "Unknown." },
   { role: "assistant", content: "The weather in SF is 80˚ and sunny. In London, it's 90˚ and rainy." },
 ];
 
-const result = await trajectorySubset({
+const evaluator = createTrajectoryMatchEvaluator({
+  trajectoryMatchMode: "superset",
+});
+
+const result = await evaluator({
   outputs,
   referenceOutputs,
 });
@@ -674,7 +690,7 @@ console.log(result)
 
 ```
 {
-    'key': 'trajectory_subset_match',
+    'key': 'trajectory_superset_match',
     'score': true,
 }
 ```
