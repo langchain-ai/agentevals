@@ -69,6 +69,7 @@ async def test_trajectory_match(feedback_key, match_mode):
         key=feedback_key,
         score=True,
         comment=None,
+        metadata=None,
     )
 
 
@@ -154,6 +155,7 @@ async def test_trajectory_with_different_tool_message_order(feedback_key, match_
         key=feedback_key,
         score=True,
         comment=None,
+        metadata=None,
     )
 
 
@@ -240,7 +242,7 @@ async def test_trajectory_with_different_message_count(feedback_key, match_mode,
     ]
     assert await evaluator(
         inputs=inputs, outputs=outputs, reference_outputs=reference_outputs
-    ) == EvaluatorResult(key=feedback_key, score=score, comment=None)
+    ) == EvaluatorResult(key=feedback_key, score=score, comment=None, metadata=None)
 
 
 @pytest.mark.langsmith
@@ -314,7 +316,7 @@ async def test_trajectory_subset_tool_call(feedback_key, match_mode, score):
     ]
     assert await evaluator(
         inputs=inputs, outputs=outputs, reference_outputs=reference_outputs
-    ) == EvaluatorResult(key=feedback_key, score=score, comment=None)
+    ) == EvaluatorResult(key=feedback_key, score=score, comment=None, metadata=None)
 
 
 @pytest.mark.langsmith
@@ -373,7 +375,7 @@ async def test_exact_matcher_with_different_called_tools(feedback_key, match_mod
     ]
     assert await evaluator(
         inputs=inputs, outputs=outputs, reference_outputs=reference_outputs
-    ) == EvaluatorResult(key=feedback_key, score=False, comment=None)
+    ) == EvaluatorResult(key=feedback_key, score=False, comment=None, metadata=None)
 
 
 @pytest.mark.langsmith
@@ -453,7 +455,7 @@ async def test_trajectory_with_extra_tool_calls_and_override(
     ]
     assert await evaluator(
         inputs=inputs, outputs=outputs, reference_outputs=reference_outputs
-    ) == EvaluatorResult(key=feedback_key, score=score, comment=None)
+    ) == EvaluatorResult(key=feedback_key, score=score, comment=None, metadata=None)
 
 
 @pytest.mark.langsmith
@@ -533,7 +535,7 @@ async def test_trajectory_with_subset_tool_calls_and_override(
     ]
     assert await evaluator(
         inputs=inputs, outputs=outputs, reference_outputs=reference_outputs
-    ) == EvaluatorResult(key=feedback_key, score=score, comment=None)
+    ) == EvaluatorResult(key=feedback_key, score=score, comment=None, metadata=None)
 
 
 @pytest.mark.langsmith
@@ -598,6 +600,7 @@ async def test_trajectory_match_with_langchain_messages_and_override(
         key=feedback_key,
         score=True,
         comment=None,
+        metadata=None,
     )
 
 
@@ -653,4 +656,4 @@ async def test_trajectory_match_with_langchain_messages_failure(
     ]
     assert await evaluator(
         inputs=inputs, outputs=outputs, reference_outputs=reference_outputs
-    ) == EvaluatorResult(key=feedback_key, score=False, comment=None)
+    ) == EvaluatorResult(key=feedback_key, score=False, comment=None, metadata=None)
