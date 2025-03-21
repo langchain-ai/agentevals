@@ -20,15 +20,57 @@ from openevals.utils import (
 from langchain_core.messages import BaseMessage
 
 
+TrajectoryMatchMode = Literal["strict", "unordered", "subset", "superset"]
+
+
 def create_trajectory_match_evaluator(
     *,
-    trajectory_match_mode: Literal[
-        "strict", "unordered", "subset", "superset"
-    ] = "strict",
+    trajectory_match_mode: TrajectoryMatchMode = "strict",
     tool_args_match_mode: ToolArgsMatchMode = "exact",
     tool_args_match_overrides: Optional[ToolArgsMatchOverrides] = None,
-    **kwargs,
 ) -> SimpleEvaluator:
+    """Creates an evaluator that compares trajectories between model outputs and reference outputs.
+
+    Args:
+        trajectory_match_mode (TrajectoryMatchMode): The mode for matching trajectories:
+            - "strict": Requires exact match in order and content
+            - "unordered": Allows matching in any order
+            - "subset": Accepts if output trajectory is a subset of reference
+            - "superset": Accepts if output trajectory is a superset of reference
+        tool_args_match_mode (ToolArgsMatchMode): Mode for matching tool arguments ("exact" by default, can be "ignore")
+        tool_args_match_overrides (Optional[ToolArgsMatchOverrides]): Dict containing custom overrides for
+            tool argument matching. Each key should be a tool name, and each value should be either a
+            match mode or a matcher. Matchers should be a Callable that takes two sets of tool call args
+            and returns whether they are equal.
+
+    Returns:
+        SimpleEvaluator: A function that evaluates trajectory matches between outputs and references
+
+    The returned evaluator accepts:
+        - outputs: List of messages or dict representing the model output trajectory
+        - reference_outputs: List of messages or dict representing the reference trajectory
+        - **kwargs: Additional arguments passed to the underlying evaluator
+
+    Example:
+    ```python
+    def matcher(output_tool_call_args: dict, reference_tool_call_args: dict) -> bool:
+        output_args = output_tool_call_args.get("query", "").lower()
+        reference_args = reference_tool_call_args.get("query", "").lower()
+        return output_args == reference_args
+
+    evaluator = create_trajectory_match_evaluator(
+        trajectory_match_mode="strict",
+        tool_args_match_mode="exact",
+        tool_args_match_overrides={
+            "my_tool_name": matcher,
+        },
+    )
+    result = evaluator(
+        outputs=...,
+        reference_outputs=...,
+    )
+    ```
+    """
     if trajectory_match_mode == "strict":
         scorer = trajectory_strict_scorer
     elif trajectory_match_mode == "unordered":
@@ -64,13 +106,52 @@ def create_trajectory_match_evaluator(
 
 def create_async_trajectory_match_evaluator(
     *,
-    trajectory_match_mode: Literal[
-        "strict", "unordered", "subset", "superset"
-    ] = "strict",
+    trajectory_match_mode: TrajectoryMatchMode = "strict",
     tool_args_match_mode: ToolArgsMatchMode = "exact",
     tool_args_match_overrides: Optional[ToolArgsMatchOverrides] = None,
-    **kwargs,
 ) -> SimpleAsyncEvaluator:
+    """Creates an async evaluator that compares trajectories between model outputs and reference outputs.
+
+    Args:
+        trajectory_match_mode (TrajectoryMatchMode): The mode for matching trajectories:
+            - "strict": Requires exact match in order and content
+            - "unordered": Allows matching in any order
+            - "subset": Accepts if output trajectory is a subset of reference
+            - "superset": Accepts if output trajectory is a superset of reference
+        tool_args_match_mode (ToolArgsMatchMode): Mode for matching tool arguments ("exact" by default, can be "ignore")
+        tool_args_match_overrides (Optional[ToolArgsMatchOverrides]): Dict containing custom overrides for
+            tool argument matching. Each key should be a tool name, and each value should be either a
+            match mode or a matcher. Matchers should be a Callable that takes two sets of tool call args
+            and returns whether they are equal.
+
+    Returns:
+        SimpleAsyncEvaluator: An async function that evaluates trajectory matches between outputs and references
+
+    The returned evaluator accepts:
+        - outputs: List of messages or dict representing the model output trajectory
+        - reference_outputs: List of messages or dict representing the reference trajectory
+        - **kwargs: Additional arguments passed to the underlying evaluator
+
+    Example:
+    ```python
+    def matcher(output_tool_call_args: dict, reference_tool_call_args: dict) -> bool:
+        output_args = output_tool_call_args.get("query", "").lower()
+        reference_args = reference_tool_call_args.get("query", "").lower()
+        return output_args == reference_args
+
+    evaluator = create_async_trajectory_match_evaluator(
+        trajectory_match_mode="strict",
+        tool_args_match_mode="exact",
+        tool_args_match_overrides={
+            "my_tool_name": matcher,
+        },
+    )
+    result = await evaluator(
+        outputs=...,
+        reference_outputs=...,
+    )
+    ```
+    """
     if trajectory_match_mode == "strict":
         scorer = trajectory_strict_scorer
     elif trajectory_match_mode == "unordered":
