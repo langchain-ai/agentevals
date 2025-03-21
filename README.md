@@ -282,7 +282,7 @@ print(result)
 
 </details>
 
-<details open>
+<details>
 <summary>TypeScript</summary>
 
 ```ts
@@ -327,7 +327,7 @@ const evaluator = createTrajectoryMatchEvaluator({
         x.city.toLowerCase() === y.city.toLowerCase();
     },
   }
-})
+});
 
 const result = await evaluator({
   outputs,
@@ -339,8 +339,8 @@ console.log(result);
 
 ```
 {
-    'key': 'trajectory_strict_match',
-    'score': true,
+  'key': 'trajectory_strict_match',
+  'score': true,
 }
 ```
 

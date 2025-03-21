@@ -8,7 +8,7 @@ import {
 import { _normalizeToOpenAIMessagesList, _runEvaluator } from "../utils.js";
 import { _getMatcherForToolName } from "./utils.js";
 
-export function _scorer(params: {
+export async function _scorer(params: {
   outputs:
     | ChatCompletionMessage[]
     | BaseMessage[]
@@ -19,7 +19,7 @@ export function _scorer(params: {
     | { messages: (BaseMessage | ChatCompletionMessage)[] };
   toolArgsMatchMode: ToolArgsMatchMode;
   toolArgsMatchOverrides?: ToolArgsMatchOverrides;
-}): boolean {
+}): Promise<boolean> {
   const {
     outputs,
     referenceOutputs,
@@ -76,7 +76,7 @@ export function _scorer(params: {
               toolArgsMatchOverrides
             );
             if (
-              matcher(
+              await matcher(
                 JSON.parse(outputCall.function?.arguments ?? "{}"),
                 JSON.parse(referenceCall.function?.arguments ?? "{}")
               )

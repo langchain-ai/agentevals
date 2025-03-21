@@ -1,3 +1,4 @@
+import { exactMatch } from "openevals";
 import {
   ChatCompletionMessage,
   ToolArgsMatchMode,
@@ -35,12 +36,12 @@ function _extractToolCalls(
   return toolCalls;
 }
 
-export function _isTrajectorySuperset(
+export async function _isTrajectorySuperset(
   outputs: ChatCompletionMessage[],
   referenceOutputs: ChatCompletionMessage[],
   toolArgsMatchMode: ToolArgsMatchMode,
   toolArgsMatchOverrides?: ToolArgsMatchOverrides
-): boolean {
+): Promise<boolean> {
   const outputToolCalls = _extractToolCalls(outputs);
   const referenceToolCalls = _extractToolCalls(referenceOutputs);
 
@@ -75,7 +76,7 @@ export function _isTrajectorySuperset(
       );
 
       const outArgs = outCall.args;
-      if (matcher(outArgs, refArgs)) {
+      if (await matcher(outArgs, refArgs)) {
         matchedReferenceCalls.add(outIdx);
         foundMatch = true;
         break;
@@ -105,11 +106,15 @@ function _sortAndStringify(obj: Record<string, unknown>): string {
   return JSON.stringify(ordered);
 }
 
-function _exactMatch(
+async function _exactMatch(
   toolCall: Record<string, unknown>,
   referenceToolCall: Record<string, unknown>
-): boolean {
-  return _sortAndStringify(toolCall) === _sortAndStringify(referenceToolCall);
+): Promise<boolean> {
+  const res = await exactMatch({
+    outputs: toolCall,
+    referenceOutputs: referenceToolCall,
+  });
+  return !!res.score;
 }
 
 function _ignoreMatch(
@@ -169,7 +174,7 @@ function _getPartialMatcherOnKeys(keys: string[]): MatcherFunction {
 type MatcherFunction = (
   toolCall: Record<string, unknown>,
   referenceToolCall: Record<string, unknown>
-) => boolean;
+) => boolean | Promise<boolean>;
 
 export function _getMatcherForToolName(
   toolCallName: string,

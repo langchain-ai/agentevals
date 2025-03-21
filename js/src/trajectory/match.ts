@@ -75,7 +75,7 @@ export function createTrajectoryMatchEvaluator({
     referenceOutputs: ChatCompletionMessage[];
     toolArgsMatchMode: ToolArgsMatchMode;
     toolArgsMatchOverrides?: ToolArgsMatchOverrides;
-  }) => boolean;
+  }) => boolean | Promise<boolean>;
   switch (trajectoryMatchMode) {
     case "strict":
       scorer = trajectoryStrictScorer;

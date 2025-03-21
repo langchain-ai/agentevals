@@ -8,25 +8,25 @@ import {
 import { _normalizeToOpenAIMessagesList, _runEvaluator } from "../utils.js";
 import { _isTrajectorySuperset } from "./utils.js";
 
-export const _scorer = (params: {
+export const _scorer = async (params: {
   outputs: ChatCompletionMessage[];
   referenceOutputs: ChatCompletionMessage[];
   toolArgsMatchMode: ToolArgsMatchMode;
   toolArgsMatchOverrides?: ToolArgsMatchOverrides;
-}): boolean => {
+}): Promise<boolean> => {
   const isUnorderedMatch =
-    _isTrajectorySuperset(
+    (await _isTrajectorySuperset(
       params.outputs,
       params.referenceOutputs,
       params.toolArgsMatchMode,
       params.toolArgsMatchOverrides
-    ) &&
-    _isTrajectorySuperset(
+    )) &&
+    (await _isTrajectorySuperset(
       params.referenceOutputs,
       params.outputs,
       params.toolArgsMatchMode,
       params.toolArgsMatchOverrides
-    );
+    ));
   return isUnorderedMatch;
 };
 

@@ -8,13 +8,13 @@ import {
 import { _normalizeToOpenAIMessagesList, _runEvaluator } from "../utils.js";
 import { _isTrajectorySuperset } from "./utils.js";
 
-export const _scorer = (params: {
+export const _scorer = async (params: {
   outputs: ChatCompletionMessage[];
   referenceOutputs: ChatCompletionMessage[];
   toolArgsMatchMode: ToolArgsMatchMode;
   toolArgsMatchOverrides?: ToolArgsMatchOverrides;
-}): boolean => {
-  const isSubset = _isTrajectorySuperset(
+}): Promise<boolean> => {
+  const isSubset = await _isTrajectorySuperset(
     params.referenceOutputs,
     params.outputs,
     params.toolArgsMatchMode,
