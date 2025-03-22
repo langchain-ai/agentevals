@@ -133,7 +133,9 @@ console.log(evalResult);
 ```
 </details>
 
-You can see that despite the small difference in the final response and tool calls, the evaluator still returns a score of `true` since the overall trajectory is the same between the output and reference!
+You can see that the evaluator returns a score of `true` since the overall trajectory is a reasonable path for the agent to take to answer the user's question.
+
+For more details on this evaluator, including how to customize it, see the section on [trajectory LLM-as-judge](#trajectory-llm-as-judge).
 
 ## Table of Contents
 
