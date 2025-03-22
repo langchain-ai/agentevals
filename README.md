@@ -143,7 +143,7 @@ You can see that despite the small difference in the final response and tool cal
     - [Strict match](#strict-match)
     - [Unordered match](#unordered-match)
     - [Subset/superset match](#subset-and-superset-match)
-    - [Tool call match modes](#tool-call-match-modes)
+    - [Tool args match modes](#tool-args-match-modes)
   - [Trajectory LLM-as-judge](#trajectory-llm-as-judge)
   - [Graph Trajectory](#graph-trajectory)
     - [Graph trajectory LLM-as-judge](#graph-trajectory-llm-as-judge)
@@ -198,13 +198,14 @@ LangSmith's pytest integration for running evals, which is documented [here](htt
 
 ### Agent trajectory match
 
-Agent trajectory evaluators are used to judge the trajectory of an agent's execution either against an expected trajectory or using an LLM.
+Agent trajectory match evaluators are used to judge the trajectory of an agent's execution either against an expected trajectory or using an LLM.
 These evaluators expect you to format your agent's trajectory as a list of OpenAI format dicts or as a list of LangChain `BaseMessage` classes, and handle message formatting
 under the hood.
 
-AgentEvals offers the `create_trajectory_match_evaluator`/`createTrajectoryMatchEvaluator` and `create_async_trajectory_match_evaluator` methods for this task.
+AgentEvals offers the `create_trajectory_match_evaluator`/`createTrajectoryMatchEvaluator` and `create_async_trajectory_match_evaluator` methods for this task. You can customize their behavior in a few ways:
 
-For different ways to customize how
+- Setting `trajectory_match_mode`/`trajectoryMatchMode` to [`strict`](#strict-match), [`unordered`](#unordered-match), [`subset`](#subset-and-superset-match), or [`superset`](#subset-and-superset-match) to provide the general strategy the evaluator will use to compare trajectories
+- Setting [`tool_args_match_mode`](#tool-args-match-modes) and/or [`tool_args_match_overrides`](#tool-args-match-modes) to customize how the evaluator considers equality between tool calls in the actual trajectory vs. the reference. By default, only tool calls with the same arguments to the same tool are considered equal.
 
 #### Strict match
 
@@ -331,7 +332,7 @@ console.log(result);
 
 `"strict"` is useful is if you want to ensure that tools are always called in the same order for a given query (e.g. a company policy lookup tool before a tool that requests vacation time for an employee).
 
-**Note:** If you would like to configure the way this evaluator checks for tool call equality, see [this section](#tool-call-match-modes).
+**Note:** If you would like to configure the way this evaluator checks for tool call equality, see [this section](#tool-args-match-modes).
 
 #### Unordered match
 
@@ -490,7 +491,7 @@ console.log(result)
 
 `"unordered"` is useful is if you want to ensure that specific tools are called at some point in the trajectory, but you don't necessarily need them to be in message order (e.g. the agent called a company policy retrieval tool at an arbitrary point in an interaction before authorizing spend for a pizza party).
 
-**Note:** If you would like to configure the way this evaluator checks for tool call equality, see [this section](#tool-call-match-modes).
+**Note:** If you would like to configure the way this evaluator checks for tool call equality, see [this section](#tool-args-match-modes).
 
 #### Subset and superset match
 
@@ -626,9 +627,9 @@ console.log(result)
 
 `"superset"` is useful if you want to ensure that some key tools were called at some point in the trajectory, but an agent calling extra tools is still acceptable. `"subset"` is the inverse and is useful if you want to ensure that the agent did not call any tools beyond the expected ones.
 
-**Note:** If you would like to configure the way this evaluator checks for tool call equality, see [this section](#tool-call-match-modes).
+**Note:** If you would like to configure the way this evaluator checks for tool call equality, see [this section](#tool-args-match-modes).
 
-#### Tool call match modes
+#### Tool args match modes
 
 When checking equality between tool calls, the above evaluators will require that all tool call arguments are the exact same by default. You can configure this behavior in the following ways:
 
