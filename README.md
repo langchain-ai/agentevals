@@ -139,11 +139,12 @@ You can see that despite the small difference in the final response and tool cal
 
 - [Installation](#installation)
 - [Evaluators](#evaluators)
-  - [Agent Trajectory](#agent-trajectory)
+  - [Agent Trajectory Match](#agent-trajectory-match)
     - [Strict match](#strict-match)
     - [Unordered match](#unordered-match)
     - [Subset/superset match](#subset-and-superset-match)
-    - [Trajectory LLM-as-judge](#trajectory-llm-as-judge)
+    - [Tool call match modes](#tool-call-match-modes)
+  - [Trajectory LLM-as-judge](#trajectory-llm-as-judge)
   - [Graph Trajectory](#graph-trajectory)
     - [Graph trajectory LLM-as-judge](#graph-trajectory-llm-as-judge)
     - [Graph trajectory strict match](#graph-trajectory-strict-match)
@@ -195,7 +196,7 @@ LangSmith's pytest integration for running evals, which is documented [here](htt
 
 ## Evaluators
 
-### Agent trajectory
+### Agent trajectory match
 
 Agent trajectory evaluators are used to judge the trajectory of an agent's execution either against an expected trajectory or using an LLM.
 These evaluators expect you to format your agent's trajectory as a list of OpenAI format dicts or as a list of LangChain `BaseMessage` classes, and handle message formatting
@@ -203,150 +204,7 @@ under the hood.
 
 AgentEvals offers the `create_trajectory_match_evaluator`/`createTrajectoryMatchEvaluator` and `create_async_trajectory_match_evaluator` methods for this task.
 
-#### Checking tool call equality
-
-When checking equality between tool calls, these matchers will require that all tool call arguments are the same. You can configure this behavior to ignore tool call arguments by setting `tool_args_match_mode="ignore"` (Python) or `toolArgsMatchMode: "ignore"` (JS), or by only checking specific properties within the call using the `tool_args_match_overrides`/`toolArgsMatchOverrides` param.
-
-`tool_args_match_overrides`/`toolArgsMatchOverrides` takes a dictionary whose keys are tool names and whose values are either `"exact"`, `"ignore"`, a list of fields within the tool call that must match exactly, or a comparator function that takes two arguments and returns whether they are equal:
-
-```python
-ToolArgsMatchMode = Literal["exact", "ignore"]
-
-ToolArgsMatchOverrides = dict[str, Union[ToolArgsMatchMode, list[str],  Callable[[dict, dict], bool]]]
-```
-
-Here's an example that allows case insensitivity for the arguments to a tool named `get_weather`:
-
-<details open>
-<summary>Python</summary>
-
-```python
-import json
-from agentevals.trajectory.match import create_trajectory_match_evaluator
-
-outputs = [
-    {"role": "user", "content": "What is the weather in SF?"},
-    {
-        "role": "assistant",
-        "tool_calls": [
-            {
-                "function": {
-                    "name": "get_weather",
-                    "arguments": json.dumps({"city": "san francisco"}),
-                }
-            }
-        ],
-    },
-    {"role": "tool", "content": "It's 80 degrees and sunny in SF."},
-    {"role": "assistant", "content": "The weather in SF is 80 degrees and sunny."},
-]
-reference_outputs = [
-    {"role": "user", "content": "What is the weather in San Francisco?"},
-    {
-        "role": "assistant",
-        "tool_calls": [
-            {
-                "function": {
-                    "name": "get_weather",
-                    "arguments": json.dumps({"city": "San Francisco"}),
-                }
-            }
-        ],
-    },
-    {"role": "tool", "content": "It's 80 degrees and sunny in San Francisco."},
-    {"role": "assistant", "content": "The weather in SF is 80˚ and sunny."},
-]
-
-evaluator = create_trajectory_match_evaluator(
-    trajectory_match_mode="strict",
-    tool_args_match_mode="exact",  # Default value
-    tool_args_match_overrides={
-        "get_weather": lambda x, y: x["city"].lower() == y["city"].lower()
-    }
-)
-
-result = evaluator(
-    outputs=outputs, reference_outputs=reference_outputs
-)
-
-print(result)
-```
-
-```
-{
-    'key': 'trajectory_strict_match',
-    'score': True,
-    'comment': None,
-}
-```
-
-</details>
-
-<details>
-<summary>TypeScript</summary>
-
-```ts
-import { createTrajectoryMatchEvaluator } from "agentevals";
-
-const outputs = [
-    { role: "user", content: "What is the weather in SF?" },
-    {
-      role: "assistant",
-      tool_calls: [{
-        function: {
-          name: "get_weather",
-          arguments: JSON.stringify({ city: "san francisco" })
-        },
-      }]
-    },
-    { role: "tool", content: "It's 80 degrees and sunny in SF." },
-    { role: "assistant", content: "The weather in SF is 80 degrees and sunny." },
-];
-
-const referenceOutputs = [
-    { role: "user", content: "What is the weather in San Francisco?" },
-    {
-      role: "assistant",
-      tool_calls: [{
-        function: {
-          name: "get_weather",
-          arguments: JSON.stringify({ city: "San Francisco" })
-        }
-      }]
-    },
-    { role: "tool", content: "It's 80 degrees and sunny in San Francisco." },
-];
-
-const evaluator = createTrajectoryMatchEvaluator({
-  trajectoryMatchMode: "strict",
-  toolArgsMatchMode: "exact",  // Default value
-  toolArgsMatchOverrides: {
-    get_weather: (x, y) => {
-      return typeof x.city === "string" &&
-        typeof y.city === "string" &&
-        x.city.toLowerCase() === y.city.toLowerCase();
-    },
-  }
-});
-
-const result = await evaluator({
-  outputs,
-  referenceOutputs,
-});
-
-console.log(result);
-```
-
-```
-{
-  'key': 'trajectory_strict_match',
-  'score': true,
-}
-```
-
-</details>
-
-This flexibility allows you to handle cases where you want looser equality for LLM generated arguments (`"san francisco"` to equal `"San Francisco"`) for only specific tool calls.
+For different ways to customize how
 
 #### Strict match
 
@@ -473,7 +331,7 @@ console.log(result);
 
 `"strict"` is useful is if you want to ensure that tools are always called in the same order for a given query (e.g. a company policy lookup tool before a tool that requests vacation time for an employee).
 
-**Note:** If you would like to configure the way this evaluator checks for tool call equality, see [this section](#checking-tool-call-equality).
+**Note:** If you would like to configure the way this evaluator checks for tool call equality, see [this section](#tool-call-match-modes).
 
 #### Unordered match
 
@@ -632,7 +490,7 @@ console.log(result)
 
 `"unordered"` is useful is if you want to ensure that specific tools are called at some point in the trajectory, but you don't necessarily need them to be in message order (e.g. the agent called a company policy retrieval tool at an arbitrary point in an interaction before authorizing spend for a pizza party).
 
-**Note:** If you would like to configure the way this evaluator checks for tool call equality, see [this section](#checking-tool-call-equality).
+**Note:** If you would like to configure the way this evaluator checks for tool call equality, see [this section](#tool-call-match-modes).
 
 #### Subset and superset match
 
@@ -768,9 +626,159 @@ console.log(result)
 
 `"superset"` is useful if you want to ensure that some key tools were called at some point in the trajectory, but an agent calling extra tools is still acceptable. `"subset"` is the inverse and is useful if you want to ensure that the agent did not call any tools beyond the expected ones.
 
-**Note:** If you would like to configure the way this evaluator checks for tool call equality, see [this section](#checking-tool-call-equality).
+**Note:** If you would like to configure the way this evaluator checks for tool call equality, see [this section](#tool-call-match-modes).
 
-#### Trajectory LLM-as-judge
+#### Tool call match modes
+
+When checking equality between tool calls, the above evaluators will require that all tool call arguments are the exact same by default. You can configure this behavior in the following ways:
+
+- Treating any two tool calls for the same tool as equivalent by setting `tool_args_match_mode="ignore"` (Python) or `toolArgsMatchMode: "ignore"` (TypeScript)
+- Setting custom matchers for all calls of a given tool using the `tool_args_match_overrides` (Python) or `toolArgsMatchOverrides` (TypeScript) param
+
+You can set both of these parameters at the same time. `tool_args_match_overrides` will take precendence over `tool_args_match_mode`.
+
+`tool_args_match_overrides`/`toolArgsMatchOverrides` takes a dictionary whose keys are tool names and whose values are either `"exact"`, `"ignore"`, a list of fields within the tool call that must match exactly, or a comparator function that takes two arguments and returns whether they are equal:
+
+```python
+ToolArgsMatchMode = Literal["exact", "ignore"]
+
+ToolArgsMatchOverrides = dict[str, Union[ToolArgsMatchMode, list[str],  Callable[[dict, dict], bool]]]
+```
+
+Here's an example that allows case insensitivity for the arguments to a tool named `get_weather`:
+
+<details open>
+<summary>Python</summary>
+
+```python
+import json
+from agentevals.trajectory.match import create_trajectory_match_evaluator
+
+outputs = [
+    {"role": "user", "content": "What is the weather in SF?"},
+    {
+        "role": "assistant",
+        "tool_calls": [
+            {
+                "function": {
+                    "name": "get_weather",
+                    "arguments": json.dumps({"city": "san francisco"}),
+                }
+            }
+        ],
+    },
+    {"role": "tool", "content": "It's 80 degrees and sunny in SF."},
+    {"role": "assistant", "content": "The weather in SF is 80 degrees and sunny."},
+]
+reference_outputs = [
+    {"role": "user", "content": "What is the weather in San Francisco?"},
+    {
+        "role": "assistant",
+        "tool_calls": [
+            {
+                "function": {
+                    "name": "get_weather",
+                    "arguments": json.dumps({"city": "San Francisco"}),
+                }
+            }
+        ],
+    },
+    {"role": "tool", "content": "It's 80 degrees and sunny in San Francisco."},
+    {"role": "assistant", "content": "The weather in SF is 80˚ and sunny."},
+]
+
+evaluator = create_trajectory_match_evaluator(
+    trajectory_match_mode="strict",
+    tool_args_match_mode="exact",  # Default value
+    tool_args_match_overrides={
+        "get_weather": lambda x, y: x["city"].lower() == y["city"].lower()
+    }
+)
+
+result = evaluator(
+    outputs=outputs, reference_outputs=reference_outputs
+)
+
+print(result)
+```
+
+```
+{
+    'key': 'trajectory_strict_match',
+    'score': True,
+    'comment': None,
+}
+```
+
+</details>
+
+<details>
+<summary>TypeScript</summary>
+
+```ts
+import { createTrajectoryMatchEvaluator } from "agentevals";
+
+const outputs = [
+    { role: "user", content: "What is the weather in SF?" },
+    {
+      role: "assistant",
+      tool_calls: [{
+        function: {
+          name: "get_weather",
+          arguments: JSON.stringify({ city: "san francisco" })
+        },
+      }]
+    },
+    { role: "tool", content: "It's 80 degrees and sunny in SF." },
+    { role: "assistant", content: "The weather in SF is 80 degrees and sunny." },
+];
+
+const referenceOutputs = [
+    { role: "user", content: "What is the weather in San Francisco?" },
+    {
+      role: "assistant",
+      tool_calls: [{
+        function: {
+          name: "get_weather",
+          arguments: JSON.stringify({ city: "San Francisco" })
+        }
+      }]
+    },
+    { role: "tool", content: "It's 80 degrees and sunny in San Francisco." },
+];
+
+const evaluator = createTrajectoryMatchEvaluator({
+  trajectoryMatchMode: "strict",
+  toolArgsMatchMode: "exact",  // Default value
+  toolArgsMatchOverrides: {
+    get_weather: (x, y) => {
+      return typeof x.city === "string" &&
+        typeof y.city === "string" &&
+        x.city.toLowerCase() === y.city.toLowerCase();
+    },
+  }
+});
+
+const result = await evaluator({
+  outputs,
+  referenceOutputs,
+});
+
+console.log(result);
+```
+
+```
+{
+  'key': 'trajectory_strict_match',
+  'score': true,
+}
+```
+
+</details>
+
+This flexibility allows you to handle cases where you want looser equality for LLM generated arguments (`"san francisco"` to equal `"San Francisco"`) for only specific tool calls.
+
+### Trajectory LLM-as-judge
 
 The LLM-as-judge trajectory evaluator that uses an LLM to evaluate the trajectory. Unlike the trajectory match evaluators, it doesn't require a reference trajectory. Here's an example:
 
