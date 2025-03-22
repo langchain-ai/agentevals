@@ -631,3 +631,456 @@ def test_trajectory_match_with_langchain_messages_failure(feedback_key, match_mo
     assert evaluator(
         inputs=inputs, outputs=outputs, reference_outputs=reference_outputs
     ) == EvaluatorResult(key=feedback_key, score=False, comment=None, metadata=None)
+
+
+@pytest.mark.langsmith
+@pytest.mark.parametrize(
+    "trajectory_match_mode, score",
+    [
+        ("unordered", False),
+        ("superset", True),
+        ("subset", False),
+        ("strict", False),
+    ],
+)
+def test_trajectory_match_with_overrides(trajectory_match_mode, score):
+    outputs = [
+        {"role": "user", "content": "Hi there, what time is my flight?"},
+        {
+            "role": "assistant",
+            "tool_calls": [
+                {
+                    "type": "function",
+                    "id": "d3b6d04c-87b5-4e94-a11f-d8bc7c033188",
+                    "function": {
+                        "name": "fetch_user_flight_information",
+                        "arguments": "{}",
+                    },
+                }
+            ],
+            "content": "",
+        },
+        {
+            "role": "tool",
+            "name": "fetch_user_flight_information",
+            "tool_call_id": "d3b6d04c-87b5-4e94-a11f-d8bc7c033188",
+            "content": json.dumps(
+                [
+                    {
+                        "ticket_no": "7240005432906569",
+                        "book_ref": "C46E9F",
+                        "flight_id": 19250,
+                        "flight_no": "LX0112",
+                        "departure_airport": "CDG",
+                        "arrival_airport": "BSL",
+                        "scheduled_departure": "2025-03-22T18:34:40Z",
+                        "scheduled_arrival": "2025-03-22T20:34:40Z",
+                        "seat_no": "18E",
+                        "fare_conditions": "Economy",
+                    }
+                ]
+            ),
+        },
+        {
+            "role": "assistant",
+            "content": "Your flight LX0112 from CDG to BSL is scheduled to depart in an hour and arrive in two hours.",
+        },
+        {
+            "role": "user",
+            "content": "Update it to the next flight after that and bump me to first class if there is availability.",
+        },
+        {
+            "role": "assistant",
+            "tool_calls": [
+                {
+                    "type": "function",
+                    "id": "f6ff5419-c03f-4543-b67d-72693c94b2ca",
+                    "function": {
+                        "name": "search_flights",
+                        "arguments": json.dumps(
+                            {
+                                "start_time": "2025-03-22T18:34:40Z",
+                                "departure_airport": "CDG",
+                                "arrival_airport": "BSL",
+                            }
+                        ),
+                    },
+                }
+            ],
+            "content": "",
+        },
+        {
+            "role": "tool",
+            "name": "search_flights",
+            "tool_call_id": "f6ff5419-c03f-4543-b67d-72693c94b2ca",
+            "content": json.dumps(
+                [
+                    {
+                        "flight_id": 19229,
+                        "flight_no": "LX0112",
+                        "scheduled_departure": "2025-03-22T19:34:40Z",
+                        "scheduled_arrival": "2025-03-22T21:34:40Z",
+                        "departure_airport": "CDG",
+                        "arrival_airport": "BSL",
+                        "status": "Scheduled",
+                        "aircraft_code": "SU9",
+                    },
+                    {
+                        "flight_id": 19232,
+                        "flight_no": "LX0112",
+                        "scheduled_departure": "2025-03-22T20:34:40Z",
+                        "scheduled_arrival": "2025-03-22T22:34:40Z",
+                        "departure_airport": "CDG",
+                        "arrival_airport": "BSL",
+                        "status": "Scheduled",
+                        "aircraft_code": "SU9",
+                    },
+                ]
+            ),
+        },
+        {
+            "role": "assistant",
+            "content": "",
+            "tool_calls": [
+                {
+                    "type": "function",
+                    "id": "4a286aff-199a-4152-99b1-df1ca07c920e",
+                    "function": {
+                        "name": "lookup_policy",
+                        "arguments": json.dumps({"query": "flight upgrades"}),
+                    },
+                },
+                {
+                    "type": "function",
+                    "id": "00000000-0000-0000-0000-000000000000",
+                    "function": {
+                        "name": "lookup_policy",
+                        "arguments": json.dumps({"query": "first class"}),
+                    },
+                },
+            ],
+        },
+        {
+            "role": "tool",
+            "name": "lookup_policy",
+            "tool_call_id": "4a286aff-199a-4152-99b1-df1ca07c920e",
+            "content": "Upgrades to first class are not currently available as they are being saved for VIPs.",
+        },
+        {
+            "role": "tool",
+            "name": "lookup_policy",
+            "tool_call_id": "00000000-0000-0000-0000-000000000000",
+            "content": "Upgrades to first class are not currently available as they are being saved for VIPs.",
+        },
+        {
+            "role": "assistant",
+            "content": "The next flight after that is LX0112 from CDG to BSL is in 4 hours. However, we do not currently allow upgrades to first class. Confirming that I should book it for you anyway?",
+        },
+    ]
+
+    reference_outputs = [
+        {"role": "user", "content": "Hi there, what time is my flight?"},
+        {
+            "role": "assistant",
+            "tool_calls": [
+                {
+                    "type": "function",
+                    "id": "d3b6d04c-87b5-4e94-a11f-d8bc7c033188",
+                    "function": {
+                        "name": "fetch_user_flight_information",
+                        "arguments": "{}",
+                    },
+                }
+            ],
+            "content": "",
+        },
+        {
+            "role": "tool",
+            "name": "fetch_user_flight_information",
+            "tool_call_id": "d3b6d04c-87b5-4e94-a11f-d8bc7c033188",
+            "content": '[{"ticket_no": "7240005432906569", "book_ref": "C46E9F", "flight_id": 19250, "flight_no": "LX0112", "departure_airport": "CDG", "arrival_airport": "BSL", "scheduled_departure": "2025-03-20T15:00:00-07:00", "scheduled_arrival": "2025-03-20T16:00:00-07:00", "seat_no": "18E", "fare_conditions": "Economy"}]',
+        },
+        {
+            "role": "assistant",
+            "content": "Your flight LX0112 from CDG to BSL is scheduled to depart in an hour and arrive in two hours.",
+        },
+        {
+            "role": "user",
+            "content": "Update it to the next flight after that and bump me to first class if there is availability.",
+        },
+        {
+            "role": "assistant",
+            "name": "flight_agent",
+            "tool_calls": [
+                {
+                    "type": "function",
+                    "id": "cb2f81d3-382a-46ce-8fa0-a7ece7a75de1",
+                    "function": {
+                        "name": "lookup_policy",
+                        "arguments": '{"query": "upgrade to first class"}',
+                    },
+                },
+                {
+                    "type": "function",
+                    "id": "00000000-0000-0000-0000-000000000000",
+                    "function": {
+                        "name": "lookup_policy",
+                        "arguments": json.dumps({"query": "foo"}),
+                    },
+                },
+            ],
+            "content": "",
+        },
+        {
+            "role": "tool",
+            "name": "lookup_policy",
+            "tool_call_id": "cb2f81d3-382a-46ce-8fa0-a7ece7a75de1",
+            "content": "...",
+        },
+        {
+            "role": "tool",
+            "name": "lookup_policy",
+            "tool_call_id": "00000000-0000-0000-0000-000000000000",
+            "content": "...",
+        },
+        {
+            "role": "assistant",
+            "name": "flight_agent",
+            "content": "Ok, it looks like upgrades to first class are possible. What date would you like to change your flight to?",
+        },
+    ]
+
+    evaluator_no_overrides = create_trajectory_match_evaluator(
+        trajectory_match_mode=trajectory_match_mode,
+    )
+
+    evaluator_no_overrides_result = evaluator_no_overrides(
+        outputs=outputs, reference_outputs=reference_outputs
+    )
+    assert not evaluator_no_overrides_result["score"]
+
+    def lookup_policy_query_matcher(tool_args: dict, reference_tool_args: dict):
+        if reference_tool_args.get("query") and "upgrade" in reference_tool_args.get(
+            "query"
+        ):
+            return "upgrade" in tool_args.get("query")
+        # Ignore for other policy query matches
+        return True
+
+    evaluator = create_trajectory_match_evaluator(
+        trajectory_match_mode=trajectory_match_mode,
+        tool_args_match_overrides={
+            "lookup_policy": lookup_policy_query_matcher,
+        },
+    )
+    evaluator_result = evaluator(outputs=outputs, reference_outputs=reference_outputs)
+    assert evaluator_result["score"] == score
+
+
+@pytest.mark.langsmith
+@pytest.mark.parametrize(
+    "trajectory_match_mode",
+    [
+        ("unordered"),
+        ("superset"),
+        ("subset"),
+        ("strict"),
+    ],
+)
+def test_trajectory_match_with_nested_field_overrides(trajectory_match_mode):
+    outputs = [
+        {"role": "user", "content": "Hi there, what time is my flight?"},
+        {
+            "role": "assistant",
+            "tool_calls": [
+                {
+                    "type": "function",
+                    "id": "d3b6d04c-87b5-4e94-a11f-d8bc7c033188",
+                    "function": {
+                        "name": "fetch_user_flight_information",
+                        "arguments": json.dumps({"user_id": "123"}),
+                    },
+                }
+            ],
+            "content": "",
+        },
+        {
+            "role": "tool",
+            "name": "fetch_user_flight_information",
+            "tool_call_id": "d3b6d04c-87b5-4e94-a11f-d8bc7c033188",
+            "content": json.dumps(
+                [
+                    {
+                        "ticket_no": "7240005432906569",
+                        "book_ref": "C46E9F",
+                        "flight_id": 19250,
+                        "flight_no": "LX0112",
+                        "departure_airport": "CDG",
+                        "arrival_airport": "BSL",
+                        "scheduled_departure": "2025-03-22T18:34:40Z",
+                        "scheduled_arrival": "2025-03-22T20:34:40Z",
+                        "seat_no": "18E",
+                        "fare_conditions": "Economy",
+                    }
+                ]
+            ),
+        },
+        {
+            "role": "assistant",
+            "content": "Your flight LX0112 from CDG to BSL is scheduled to depart in an hour and arrive in two hours.",
+        },
+        {
+            "role": "user",
+            "content": "Update it to the next flight after that and bump me to first class if there is availability.",
+        },
+        {
+            "role": "assistant",
+            "content": "",
+            "tool_calls": [
+                {
+                    "type": "function",
+                    "id": "4a286aff-199a-4152-99b1-df1ca07c920e",
+                    "function": {
+                        "name": "lookup_policy",
+                        "arguments": json.dumps(
+                            {
+                                "query": "flight upgrades",
+                                "time": {
+                                    "start": "2025-03-22T18:34:40Z",
+                                    "end": "2025-03-22T20:34:40Z",
+                                },
+                            }
+                        ),
+                    },
+                },
+                {
+                    "type": "function",
+                    "id": "00000000-0000-0000-0000-000000000000",
+                    "function": {
+                        "name": "lookup_policy",
+                        "arguments": json.dumps(
+                            {
+                                "query": "first class",
+                                "time": {
+                                    "start": "2025-03-22T18:34:40Z",
+                                    "end": "2025-03-22T20:34:40Z",
+                                },
+                            }
+                        ),
+                    },
+                },
+            ],
+        },
+        {
+            "role": "tool",
+            "name": "lookup_policy",
+            "tool_call_id": "4a286aff-199a-4152-99b1-df1ca07c920e",
+            "content": "Upgrades to first class are not currently available as they are being saved for VIPs.",
+        },
+        {
+            "role": "tool",
+            "name": "lookup_policy",
+            "tool_call_id": "00000000-0000-0000-0000-000000000000",
+            "content": "Upgrades to first class are not currently available as they are being saved for VIPs.",
+        },
+        {
+            "role": "assistant",
+            "content": "The next flight after that is LX0112 from CDG to BSL is in 4 hours. However, we do not currently allow upgrades to first class. Confirming that I should book it for you anyway?",
+        },
+    ]
+
+    reference_outputs = [
+        {"role": "user", "content": "Hi there, what time is my flight?"},
+        {
+            "role": "assistant",
+            "tool_calls": [
+                {
+                    "type": "function",
+                    "id": "d3b6d04c-87b5-4e94-a11f-d8bc7c033188",
+                    "function": {
+                        "name": "fetch_user_flight_information",
+                        "arguments": json.dumps({"user_id": "123"}),
+                    },
+                },
+            ],
+            "content": "",
+        },
+        {
+            "role": "tool",
+            "name": "fetch_user_flight_information",
+            "tool_call_id": "d3b6d04c-87b5-4e94-a11f-d8bc7c033188",
+            "content": '[{"ticket_no": "7240005432906569", "book_ref": "C46E9F", "flight_id": 19250, "flight_no": "LX0112", "departure_airport": "CDG", "arrival_airport": "BSL", "scheduled_departure": "2025-03-20T15:00:00-07:00", "scheduled_arrival": "2025-03-20T16:00:00-07:00", "seat_no": "18E", "fare_conditions": "Economy"}]',
+        },
+        {
+            "role": "assistant",
+            "content": "Your flight LX0112 from CDG to BSL is scheduled to depart in an hour and arrive in two hours.",
+        },
+        {
+            "role": "user",
+            "content": "Update it to the next flight after that and bump me to first class if there is availability.",
+        },
+        {
+            "role": "assistant",
+            "name": "flight_agent",
+            "tool_calls": [
+                {
+                    "type": "function",
+                    "id": "cb2f81d3-382a-46ce-8fa0-a7ece7a75de1",
+                    "function": {
+                        "name": "lookup_policy",
+                        "arguments": '{"query": "foo", "time": {"start": "2025-03-22T18:34:40Z", "end": "baz"}}',
+                    },
+                },
+                {
+                    "type": "function",
+                    "id": "00000000-0000-0000-0000-000000000000",
+                    "function": {
+                        "name": "lookup_policy",
+                        "arguments": json.dumps(
+                            {
+                                "query": "bar",
+                                "time": {"start": "2025-03-22T18:34:40Z", "end": "baz"},
+                            }
+                        ),
+                    },
+                },
+            ],
+            "content": "",
+        },
+        {
+            "role": "tool",
+            "name": "lookup_policy",
+            "tool_call_id": "cb2f81d3-382a-46ce-8fa0-a7ece7a75de1",
+            "content": "...",
+        },
+        {
+            "role": "tool",
+            "name": "lookup_policy",
+            "tool_call_id": "00000000-0000-0000-0000-000000000000",
+            "content": "...",
+        },
+        {
+            "role": "assistant",
+            "name": "flight_agent",
+            "content": "Ok, it looks like upgrades to first class are possible. What date would you like to change your flight to?",
+        },
+    ]
+
+    evaluator_no_overrides = create_trajectory_match_evaluator(
+        trajectory_match_mode=trajectory_match_mode,
+    )
+
+    evaluator_no_overrides_result = evaluator_no_overrides(
+        outputs=outputs, reference_outputs=reference_outputs
+    )
+    assert not evaluator_no_overrides_result["score"]
+
+    evaluator = create_trajectory_match_evaluator(
+        trajectory_match_mode=trajectory_match_mode,
+        # Only match on time.start for lookup_policy
+        tool_args_match_overrides={
+            "lookup_policy": ["time.start"],
+        },
+    )
+    evaluator_result = evaluator(outputs=outputs, reference_outputs=reference_outputs)
+    assert evaluator_result["score"]

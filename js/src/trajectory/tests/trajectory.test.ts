@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as ls from "langsmith/vitest";
 import { expect } from "vitest";
 
@@ -848,4 +849,490 @@ ls.describe("trajectory", () => {
       comment: undefined,
     });
   });
+  ls.test.each([
+    {
+      inputs: {},
+      trajectoryMatchMode: "unordered" as const,
+      feedbackKey: "trajectory_unordered_match",
+      score: false,
+    },
+    {
+      inputs: {},
+      trajectoryMatchMode: "superset" as const,
+      feedbackKey: "trajectory_superset_match",
+      score: true,
+    },
+    {
+      inputs: {},
+      trajectoryMatchMode: "subset" as const,
+      feedbackKey: "trajectory_subset_match",
+      score: false,
+    },
+    {
+      inputs: {},
+      trajectoryMatchMode: "strict" as const,
+      feedbackKey: "trajectory_strict_match",
+      score: false,
+    },
+  ])(
+    "trajectory match with overrides",
+    async ({ trajectoryMatchMode, feedbackKey, score }) => {
+      const outputs = [
+        { role: "user", content: "Hi there, what time is my flight?" },
+        {
+          role: "assistant",
+          tool_calls: [
+            {
+              type: "function",
+              id: "d3b6d04c-87b5-4e94-a11f-d8bc7c033188",
+              function: {
+                name: "fetch_user_flight_information",
+                arguments: "{}",
+              },
+            },
+          ],
+          content: "",
+        },
+        {
+          role: "tool",
+          name: "fetch_user_flight_information",
+          tool_call_id: "d3b6d04c-87b5-4e94-a11f-d8bc7c033188",
+          content: JSON.stringify([
+            {
+              ticket_no: "7240005432906569",
+              book_ref: "C46E9F",
+              flight_id: 19250,
+              flight_no: "LX0112",
+              departure_airport: "CDG",
+              arrival_airport: "BSL",
+              scheduled_departure: "2025-03-22T18:34:40Z",
+              scheduled_arrival: "2025-03-22T20:34:40Z",
+              seat_no: "18E",
+              fare_conditions: "Economy",
+            },
+          ]),
+        },
+        {
+          role: "assistant",
+          content:
+            "Your flight LX0112 from CDG to BSL is scheduled to depart in an hour and arrive in two hours.",
+        },
+        {
+          role: "user",
+          content:
+            "Update it to the next flight after that and bump me to first class if there is availability.",
+        },
+        {
+          role: "assistant",
+          tool_calls: [
+            {
+              type: "function",
+              id: "f6ff5419-c03f-4543-b67d-72693c94b2ca",
+              function: {
+                name: "search_flights",
+                arguments: JSON.stringify({
+                  start_time: "2025-03-22T18:34:40Z",
+                  departure_airport: "CDG",
+                  arrival_airport: "BSL",
+                }),
+              },
+            },
+          ],
+          content: "",
+        },
+        {
+          role: "tool",
+          name: "search_flights",
+          tool_call_id: "f6ff5419-c03f-4543-b67d-72693c94b2ca",
+          content: JSON.stringify([
+            {
+              flight_id: 19229,
+              flight_no: "LX0112",
+              scheduled_departure: "2025-03-22T19:34:40Z",
+              scheduled_arrival: "2025-03-22T21:34:40Z",
+              departure_airport: "CDG",
+              arrival_airport: "BSL",
+              status: "Scheduled",
+              aircraft_code: "SU9",
+            },
+            {
+              flight_id: 19232,
+              flight_no: "LX0112",
+              scheduled_departure: "2025-03-22T20:34:40Z",
+              scheduled_arrival: "2025-03-22T22:34:40Z",
+              departure_airport: "CDG",
+              arrival_airport: "BSL",
+              status: "Scheduled",
+              aircraft_code: "SU9",
+            },
+          ]),
+        },
+        {
+          role: "assistant",
+          content: "",
+          tool_calls: [
+            {
+              type: "function",
+              id: "4a286aff-199a-4152-99b1-df1ca07c920e",
+              function: {
+                name: "lookup_policy",
+                arguments: JSON.stringify({ query: "flight upgrades" }),
+              },
+            },
+            {
+              type: "function",
+              id: "00000000-0000-0000-0000-000000000000",
+              function: {
+                name: "lookup_policy",
+                arguments: JSON.stringify({ query: "first class" }),
+              },
+            },
+          ],
+        },
+        {
+          role: "tool",
+          name: "lookup_policy",
+          tool_call_id: "4a286aff-199a-4152-99b1-df1ca07c920e",
+          content:
+            "Upgrades to first class are not currently available as they are being saved for VIPs.",
+        },
+        {
+          role: "tool",
+          name: "lookup_policy",
+          tool_call_id: "00000000-0000-0000-0000-000000000000",
+          content:
+            "Upgrades to first class are not currently available as they are being saved for VIPs.",
+        },
+        {
+          role: "assistant",
+          content:
+            "The next flight after that is LX0112 from CDG to BSL is in 4 hours. However, we do not currently allow upgrades to first class. Confirming that I should book it for you anyway?",
+        },
+      ];
+
+      const referenceOutputs = [
+        { role: "user", content: "Hi there, what time is my flight?" },
+        {
+          role: "assistant",
+          tool_calls: [
+            {
+              type: "function",
+              id: "d3b6d04c-87b5-4e94-a11f-d8bc7c033188",
+              function: {
+                name: "fetch_user_flight_information",
+                arguments: "{}",
+              },
+            },
+          ],
+          content: "",
+        },
+        {
+          role: "tool",
+          name: "fetch_user_flight_information",
+          tool_call_id: "d3b6d04c-87b5-4e94-a11f-d8bc7c033188",
+          content:
+            '[{"ticket_no": "7240005432906569", "book_ref": "C46E9F", "flight_id": 19250, "flight_no": "LX0112", "departure_airport": "CDG", "arrival_airport": "BSL", "scheduled_departure": "2025-03-20T15:00:00-07:00", "scheduled_arrival": "2025-03-20T16:00:00-07:00", "seat_no": "18E", "fare_conditions": "Economy"}]',
+        },
+        {
+          role: "assistant",
+          content:
+            "Your flight LX0112 from CDG to BSL is scheduled to depart in an hour and arrive in two hours.",
+        },
+        {
+          role: "user",
+          content:
+            "Update it to the next flight after that and bump me to first class if there is availability.",
+        },
+        {
+          role: "assistant",
+          name: "flight_agent",
+          tool_calls: [
+            {
+              type: "function",
+              id: "cb2f81d3-382a-46ce-8fa0-a7ece7a75de1",
+              function: {
+                name: "lookup_policy",
+                arguments: '{"query": "upgrade to first class"}',
+              },
+            },
+            {
+              type: "function",
+              id: "00000000-0000-0000-0000-000000000000",
+              function: {
+                name: "lookup_policy",
+                arguments: JSON.stringify({ query: "foo" }),
+              },
+            },
+          ],
+          content: "",
+        },
+        {
+          role: "tool",
+          name: "lookup_policy",
+          tool_call_id: "cb2f81d3-382a-46ce-8fa0-a7ece7a75de1",
+          content: "...",
+        },
+        {
+          role: "tool",
+          name: "lookup_policy",
+          tool_call_id: "00000000-0000-0000-0000-000000000000",
+          content: "...",
+        },
+        {
+          role: "assistant",
+          name: "flight_agent",
+          content:
+            "Ok, it looks like upgrades to first class are possible. What date would you like to change your flight to?",
+        },
+      ];
+      const evaluatorNoOverrides = createTrajectoryMatchEvaluator({
+        trajectoryMatchMode,
+      });
+
+      const evaluatorNoOverridesResult = await evaluatorNoOverrides({
+        outputs,
+        referenceOutputs,
+      });
+      expect(evaluatorNoOverridesResult.score).toBe(false);
+
+      const lookupPolicyQueryMatcher = (
+        toolArgs: Record<string, any>,
+        referenceToolArgs: Record<string, any>
+      ) => {
+        if (
+          referenceToolArgs.query &&
+          referenceToolArgs.query.includes("upgrade")
+        ) {
+          return toolArgs.query?.includes("upgrade") ?? false;
+        }
+        return true;
+      };
+
+      const evaluator = createTrajectoryMatchEvaluator({
+        trajectoryMatchMode,
+        toolArgsMatchOverrides: {
+          lookup_policy: lookupPolicyQueryMatcher,
+        },
+      });
+
+      const evaluatorResult = await evaluator({
+        outputs,
+        referenceOutputs,
+      });
+      expect(evaluatorResult.score).toBe(score);
+      expect(evaluatorResult.key).toBe(feedbackKey);
+    }
+  );
+
+  ls.test.each([
+    { trajectoryMatchMode: "unordered", inputs: {} },
+    { trajectoryMatchMode: "superset", inputs: {} },
+    { trajectoryMatchMode: "subset", inputs: {} },
+    { trajectoryMatchMode: "strict", inputs: {} },
+  ])(
+    "trajectory match with nested field overrides",
+    async ({ trajectoryMatchMode }) => {
+      const outputs = [
+        { role: "user", content: "Hi there, what time is my flight?" },
+        {
+          role: "assistant",
+          tool_calls: [
+            {
+              type: "function",
+              id: "d3b6d04c-87b5-4e94-a11f-d8bc7c033188",
+              function: {
+                name: "fetch_user_flight_information",
+                arguments: JSON.stringify({ user_id: "123" }),
+              },
+            },
+          ],
+          content: "",
+        },
+        {
+          role: "tool",
+          name: "fetch_user_flight_information",
+          tool_call_id: "d3b6d04c-87b5-4e94-a11f-d8bc7c033188",
+          content: JSON.stringify([
+            {
+              ticket_no: "7240005432906569",
+              book_ref: "C46E9F",
+              flight_id: 19250,
+              flight_no: "LX0112",
+              departure_airport: "CDG",
+              arrival_airport: "BSL",
+              scheduled_departure: "2025-03-22T18:34:40Z",
+              scheduled_arrival: "2025-03-22T20:34:40Z",
+              seat_no: "18E",
+              fare_conditions: "Economy",
+            },
+          ]),
+        },
+        {
+          role: "assistant",
+          content:
+            "Your flight LX0112 from CDG to BSL is scheduled to depart in an hour and arrive in two hours.",
+        },
+        {
+          role: "user",
+          content:
+            "Update it to the next flight after that and bump me to first class if there is availability.",
+        },
+        {
+          role: "assistant",
+          content: "",
+          tool_calls: [
+            {
+              type: "function",
+              id: "4a286aff-199a-4152-99b1-df1ca07c920e",
+              function: {
+                name: "lookup_policy",
+                arguments: JSON.stringify({
+                  query: "flight upgrades",
+                  time: {
+                    start: "2025-03-22T18:34:40Z",
+                    end: "2025-03-22T20:34:40Z",
+                  },
+                }),
+              },
+            },
+            {
+              type: "function",
+              id: "00000000-0000-0000-0000-000000000000",
+              function: {
+                name: "lookup_policy",
+                arguments: JSON.stringify({
+                  query: "first class",
+                  time: {
+                    start: "2025-03-22T18:34:40Z",
+                    end: "2025-03-22T20:34:40Z",
+                  },
+                }),
+              },
+            },
+          ],
+        },
+        {
+          role: "tool",
+          name: "lookup_policy",
+          tool_call_id: "4a286aff-199a-4152-99b1-df1ca07c920e",
+          content:
+            "Upgrades to first class are not currently available as they are being saved for VIPs.",
+        },
+        {
+          role: "tool",
+          name: "lookup_policy",
+          tool_call_id: "00000000-0000-0000-0000-000000000000",
+          content:
+            "Upgrades to first class are not currently available as they are being saved for VIPs.",
+        },
+        {
+          role: "assistant",
+          content:
+            "The next flight after that is LX0112 from CDG to BSL is in 4 hours. However, we do not currently allow upgrades to first class. Confirming that I should book it for you anyway?",
+        },
+      ];
+      const referenceOutputs = [
+        { role: "user", content: "Hi there, what time is my flight?" },
+        {
+          role: "assistant",
+          tool_calls: [
+            {
+              type: "function",
+              id: "d3b6d04c-87b5-4e94-a11f-d8bc7c033188",
+              function: {
+                name: "fetch_user_flight_information",
+                arguments: JSON.stringify({ user_id: "123" }),
+              },
+            },
+          ],
+          content: "",
+        },
+        {
+          role: "tool",
+          name: "fetch_user_flight_information",
+          tool_call_id: "d3b6d04c-87b5-4e94-a11f-d8bc7c033188",
+          content:
+            '[{"ticket_no": "7240005432906569", "book_ref": "C46E9F", "flight_id": 19250, "flight_no": "LX0112", "departure_airport": "CDG", "arrival_airport": "BSL", "scheduled_departure": "2025-03-20T15:00:00-07:00", "scheduled_arrival": "2025-03-20T16:00:00-07:00", "seat_no": "18E", "fare_conditions": "Economy"}]',
+        },
+        {
+          role: "assistant",
+          content:
+            "Your flight LX0112 from CDG to BSL is scheduled to depart in an hour and arrive in two hours.",
+        },
+        {
+          role: "user",
+          content:
+            "Update it to the next flight after that and bump me to first class if there is availability.",
+        },
+        {
+          role: "assistant",
+          name: "flight_agent",
+          tool_calls: [
+            {
+              type: "function",
+              id: "cb2f81d3-382a-46ce-8fa0-a7ece7a75de1",
+              function: {
+                name: "lookup_policy",
+                arguments:
+                  '{"query": "foo", "time": {"start": "2025-03-22T18:34:40Z", "end": "baz"}}',
+              },
+            },
+            {
+              type: "function",
+              id: "00000000-0000-0000-0000-000000000000",
+              function: {
+                name: "lookup_policy",
+                arguments: JSON.stringify({
+                  query: "bar",
+                  time: { start: "2025-03-22T18:34:40Z", end: "baz" },
+                }),
+              },
+            },
+          ],
+          content: "",
+        },
+        {
+          role: "tool",
+          name: "lookup_policy",
+          tool_call_id: "cb2f81d3-382a-46ce-8fa0-a7ece7a75de1",
+          content: "...",
+        },
+        {
+          role: "tool",
+          name: "lookup_policy",
+          tool_call_id: "00000000-0000-0000-0000-000000000000",
+          content: "...",
+        },
+        {
+          role: "assistant",
+          name: "flight_agent",
+          content:
+            "Ok, it looks like upgrades to first class are possible. What date would you like to change your flight to?",
+        },
+      ];
+
+      const evaluatorNoOverrides = createTrajectoryMatchEvaluator({
+        trajectoryMatchMode,
+      });
+
+      const evaluatorNoOverridesResult = await evaluatorNoOverrides({
+        outputs,
+        referenceOutputs,
+      });
+      expect(evaluatorNoOverridesResult.score).toBe(false);
+
+      const evaluator = createTrajectoryMatchEvaluator({
+        trajectoryMatchMode,
+        toolArgsMatchOverrides: {
+          lookup_policy: ["time.start"],
+        },
+      });
+
+      const evaluatorResult = await evaluator({
+        outputs,
+        referenceOutputs,
+      });
+      expect(evaluatorResult.score).toBe(true);
+    }
+  );
 });
