@@ -670,7 +670,7 @@ async def test_trajectory_match_with_langchain_messages_failure(
         ("strict", False),
     ],
 )
-def test_trajectory_match_with_overrides(trajectory_match_mode, score):
+async def test_trajectory_match_with_overrides(trajectory_match_mode, score):
     outputs = [
         {"role": "user", "content": "Hi there, what time is my flight?"},
         {
@@ -881,7 +881,7 @@ def test_trajectory_match_with_overrides(trajectory_match_mode, score):
         trajectory_match_mode=trajectory_match_mode,
     )
 
-    evaluator_no_overrides_result = evaluator_no_overrides(
+    evaluator_no_overrides_result = await evaluator_no_overrides(
         outputs=outputs, reference_outputs=reference_outputs
     )
     assert not evaluator_no_overrides_result["score"]
@@ -900,7 +900,9 @@ def test_trajectory_match_with_overrides(trajectory_match_mode, score):
             "lookup_policy": lookup_policy_query_matcher,
         },
     )
-    evaluator_result = evaluator(outputs=outputs, reference_outputs=reference_outputs)
+    evaluator_result = await evaluator(
+        outputs=outputs, reference_outputs=reference_outputs
+    )
     assert evaluator_result["score"] == score
 
 
@@ -915,7 +917,7 @@ def test_trajectory_match_with_overrides(trajectory_match_mode, score):
         ("strict"),
     ],
 )
-def test_trajectory_match_with_nested_field_overrides(trajectory_match_mode):
+async def test_trajectory_match_with_nested_field_overrides(trajectory_match_mode):
     outputs = [
         {"role": "user", "content": "Hi there, what time is my flight?"},
         {
@@ -1098,7 +1100,7 @@ def test_trajectory_match_with_nested_field_overrides(trajectory_match_mode):
         trajectory_match_mode=trajectory_match_mode,
     )
 
-    evaluator_no_overrides_result = evaluator_no_overrides(
+    evaluator_no_overrides_result = await evaluator_no_overrides(
         outputs=outputs, reference_outputs=reference_outputs
     )
     assert not evaluator_no_overrides_result["score"]
@@ -1110,5 +1112,7 @@ def test_trajectory_match_with_nested_field_overrides(trajectory_match_mode):
             "lookup_policy": ["time.start"],
         },
     )
-    evaluator_result = evaluator(outputs=outputs, reference_outputs=reference_outputs)
+    evaluator_result = await evaluator(
+        outputs=outputs, reference_outputs=reference_outputs
+    )
     assert evaluator_result["score"]
