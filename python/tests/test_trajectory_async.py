@@ -900,7 +900,9 @@ async def test_trajectory_match_with_overrides(trajectory_match_mode, score):
             "lookup_policy": lookup_policy_query_matcher,
         },
     )
-    evaluator_result = evaluator(outputs=outputs, reference_outputs=reference_outputs)
+    evaluator_result = await evaluator(
+        outputs=outputs, reference_outputs=reference_outputs
+    )
     assert evaluator_result["score"] == score
 
 
@@ -1110,5 +1112,7 @@ async def test_trajectory_match_with_nested_field_overrides(trajectory_match_mod
             "lookup_policy": ["time.start"],
         },
     )
-    evaluator_result = evaluator(outputs=outputs, reference_outputs=reference_outputs)
+    evaluator_result = await evaluator(
+        outputs=outputs, reference_outputs=reference_outputs
+    )
     assert evaluator_result["score"]
