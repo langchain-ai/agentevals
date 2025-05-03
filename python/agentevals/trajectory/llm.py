@@ -19,7 +19,7 @@ from agentevals.types import FewShotExample
 from agentevals.utils import _run_evaluator, _arun_evaluator
 
 from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_core.runnables import RunnableLike
+from langchain_core.runnables import Runnable
 
 from typing import TYPE_CHECKING
 
@@ -98,7 +98,7 @@ def _format_inputs(
 def create_trajectory_llm_as_judge(
     *,
     prompt: str
-    | RunnableLike
+    | Runnable
     | Callable[
         ..., list[ChatCompletionMessage]
     ] = TRAJECTORY_ACCURACY_PROMPT_WITH_REFERENCE,
@@ -176,7 +176,7 @@ def create_trajectory_llm_as_judge(
 def create_async_trajectory_llm_as_judge(
     *,
     prompt: str
-    | RunnableLike
+    | Runnable
     | Callable[
         ..., list[ChatCompletionMessage]
     ] = TRAJECTORY_ACCURACY_PROMPT_WITH_REFERENCE,
