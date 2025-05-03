@@ -8,7 +8,7 @@ resolution-markers = [
 
 [[package]]
 name = "agentevals"
-version = "0.0.6"
+version = "0.0.7"
 source = { virtual = "." }
 dependencies = [
     { name = "openevals" },
@@ -26,7 +26,7 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "openevals", specifier = ">=0.0.19" }]
+requires-dist = [{ name = "openevals", specifier = ">=0.0.20" }]
 
 [package.metadata.requires-dev]
 dev = [
@@ -1153,7 +1153,7 @@ wheels = [
 
 [[package]]
 name = "openevals"
-version = "0.0.19"
+version = "0.0.20"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "langchain" },
@@ -1161,9 +1161,9 @@ dependencies = [
     { name = "langsmith" },
     { name = "rich" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b9/96/12a770c32f17d19a3c329d852c0b79425564d7edcb571207318ac6012ff6/openevals-0.0.19.tar.gz", hash = "sha256:fb3b6bcd17042b8fe509c92beeb787bd1defd2359b52464995bd36360f582948", size = 92604 }
+sdist = { url = "https://files.pythonhosted.org/packages/73/6f/ba7b3b82427ce68016f194e025932897cfa8236a8f3023bb7e8b8d95db4e/openevals-0.0.20.tar.gz", hash = "sha256:276e28cb8c7b1374442f1433afa55acab293710a562ff946ee6761e4396879a5", size = 93751 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/04/3c/57eb656b8d8d3f754b0246a47f94b068f5cc5b9e397f337a78b57ab81024/openevals-0.0.19-py3-none-any.whl", hash = "sha256:e2973d23c52d99e432a8719a4ce1a5123d001535691916df765096341869898d", size = 61788 },
+    { url = "https://files.pythonhosted.org/packages/c2/a6/ef9688f294e106d30e4c3ae5a3773d1c32f6f4e002e8e07ab5aaddfbe04c/openevals-0.0.20-py3-none-any.whl", hash = "sha256:1f85539fdc03d01eed6242c1fcb9060da160abf977b607019bb21a41d5dac38d", size = 62166 },
 ]
 
 [[package]]
