@@ -20,7 +20,7 @@ export type TrajectoryLLMAsJudgeParams = Omit<
   "prompt"
 > & { prompt?: string };
 
-export type ToolArgsMatchMode = "exact" | "ignore";
+export type ToolArgsMatchMode = "exact" | "ignore" | "subset" | "superset";
 
 export type ToolArgsMatcher = (
   toolCall: Record<string, unknown>,

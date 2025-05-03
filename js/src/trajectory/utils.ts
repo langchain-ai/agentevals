@@ -134,11 +134,36 @@ function _ignoreMatch(
   return true;
 }
 
+function _subsetMatch(
+  toolCall: Record<string, unknown>,
+  referenceToolCall: Record<string, unknown>
+): boolean {
+  // Every key-value pair in toolCall must exist in referenceToolCall with the same value
+  return Object.entries(toolCall).every(
+    ([key, value]) =>
+      key in referenceToolCall && _deepEqual(referenceToolCall[key], value)
+  );
+}
+
+function _supersetMatch(
+  toolCall: Record<string, unknown>,
+  referenceToolCall: Record<string, unknown>
+): boolean {
+  // Every key-value pair in referenceToolCall must exist in toolCall with the same value
+  return Object.entries(referenceToolCall).every(
+    ([key, value]) => key in toolCall && _deepEqual(toolCall[key], value)
+  );
+}
+
 function _getMatcherForComparisonMode(
   mode: ToolArgsMatchMode
 ): ToolArgsMatcher {
   if (mode === "exact") {
     return _exactMatch;
+  } else if (mode === "subset") {
+    return _subsetMatch;
+  } else if (mode === "superset") {
+    return _supersetMatch;
   } else {
     return _ignoreMatch;
   }

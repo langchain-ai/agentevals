@@ -16,6 +16,7 @@ dev = [
     "openai>=1.61.1",
     "pytest>=8.3.4",
     "pytest-asyncio>=0.25.3",
+    "python-dotenv>=1.1.0",
     "ruff>=0.9.5",
 ]
 

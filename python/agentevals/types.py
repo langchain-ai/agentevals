@@ -23,7 +23,7 @@ class ExtractedLangGraphThreadTrajectory(TypedDict):
     outputs: GraphTrajectory
 
 
-ToolArgsMatchMode = Literal["exact", "ignore"]
+ToolArgsMatchMode = Literal["exact", "ignore", "subset", "superset"]
 
 ToolArgsMatchOverrides = dict[
     str, Union[ToolArgsMatchMode, list[str], Callable[[dict, dict], bool]]

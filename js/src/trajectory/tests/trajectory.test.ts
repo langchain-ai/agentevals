@@ -1335,4 +1335,160 @@ ls.describe("trajectory", () => {
       expect(evaluatorResult.score).toBe(true);
     }
   );
+
+  ls.test.each([
+    { inputs: {}, toolArgsMatchMode: "exact", score: false },
+    { inputs: {}, toolArgsMatchMode: "ignore", score: true },
+    { inputs: {}, toolArgsMatchMode: "subset", score: false },
+    { inputs: {}, toolArgsMatchMode: "superset", score: true },
+  ])("tool_args_match_mode superset", async ({ toolArgsMatchMode, score }) => {
+    const outputs = [
+      { role: "user", content: "Hi there, what time is my flight?" },
+      {
+        role: "assistant",
+        content: "",
+        tool_calls: [
+          {
+            type: "function",
+            id: "123",
+            function: {
+              name: "get_flight_info",
+              arguments: JSON.stringify({ is_cool: true, flight_no: "LX0112" }),
+            },
+          },
+        ],
+      },
+      { role: "assistant", content: "Your flight is at 10:00 AM." },
+    ];
+    const referenceOutputs = [
+      { role: "user", content: "Hi there, what time is my flight?" },
+      {
+        role: "assistant",
+        content: "",
+        tool_calls: [
+          {
+            type: "function",
+            id: "321",
+            function: {
+              name: "get_flight_info",
+              arguments: JSON.stringify({ flight_no: "LX0112" }),
+            },
+          },
+        ],
+      },
+      { role: "assistant", content: "Your flight is at 10:00 AM." },
+    ];
+    const evaluator = createTrajectoryMatchEvaluator({
+      toolArgsMatchMode: toolArgsMatchMode as any,
+    });
+    const evaluatorResult = await evaluator({
+      outputs,
+      referenceOutputs,
+    });
+    expect(evaluatorResult.score).toBe(score);
+  });
+
+  ls.test.each([
+    { inputs: {}, toolArgsMatchMode: "exact", score: false },
+    { inputs: {}, toolArgsMatchMode: "ignore", score: true },
+    { inputs: {}, toolArgsMatchMode: "subset", score: true },
+    { inputs: {}, toolArgsMatchMode: "superset", score: false },
+  ])("tool_args_match_mode subset", async ({ toolArgsMatchMode, score }) => {
+    const outputs = [
+      { role: "user", content: "Hi there, what time is my flight?" },
+      {
+        role: "assistant",
+        content: "",
+        tool_calls: [
+          {
+            type: "function",
+            id: "123",
+            function: {
+              name: "get_flight_info",
+              arguments: JSON.stringify({ flight_no: "LX0112" }),
+            },
+          },
+        ],
+      },
+      { role: "assistant", content: "Your flight is at 10:00 AM." },
+    ];
+    const referenceOutputs = [
+      { role: "user", content: "Hi there, what time is my flight?" },
+      {
+        role: "assistant",
+        content: "",
+        tool_calls: [
+          {
+            type: "function",
+            id: "321",
+            function: {
+              name: "get_flight_info",
+              arguments: JSON.stringify({ flight_no: "LX0112", foo: "bar" }),
+            },
+          },
+        ],
+      },
+      { role: "assistant", content: "Your flight is at 10:00 AM." },
+    ];
+    const evaluator = createTrajectoryMatchEvaluator({
+      toolArgsMatchMode: toolArgsMatchMode as any,
+    });
+    const evaluatorResult = await evaluator({
+      outputs,
+      referenceOutputs,
+    });
+    expect(evaluatorResult.score).toBe(score);
+  });
+
+  ls.test.each([
+    { inputs: {}, toolArgsMatchMode: "exact", score: true },
+    { inputs: {}, toolArgsMatchMode: "ignore", score: true },
+    { inputs: {}, toolArgsMatchMode: "subset", score: true },
+    { inputs: {}, toolArgsMatchMode: "superset", score: true },
+  ])("tool_args_match_mode exact", async ({ toolArgsMatchMode, score }) => {
+    const outputs = [
+      { role: "user", content: "Hi there, what time is my flight?" },
+      {
+        role: "assistant",
+        content: "",
+        tool_calls: [
+          {
+            type: "function",
+            id: "123",
+            function: {
+              name: "get_flight_info",
+              arguments: JSON.stringify({ flight_no: "LX0112" }),
+            },
+          },
+        ],
+      },
+      { role: "assistant", content: "Your flight is at 10:00 AM." },
+    ];
+    const referenceOutputs = [
+      { role: "user", content: "Hi there, what time is my flight?" },
+      {
+        role: "assistant",
+        content: "",
+        tool_calls: [
+          {
+            type: "function",
+            id: "321",
+            function: {
+              name: "get_flight_info",
+              arguments: JSON.stringify({ flight_no: "LX0112" }),
+            },
+          },
+        ],
+      },
+      { role: "assistant", content: "Your flight is at 10:00 AM." },
+    ];
+    const evaluator = createTrajectoryMatchEvaluator({
+      toolArgsMatchMode: toolArgsMatchMode as any,
+    });
+    const evaluatorResult = await evaluator({
+      outputs,
+      referenceOutputs,
+    });
+    expect(evaluatorResult.score).toBe(score);
+  });
 });

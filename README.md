@@ -53,6 +53,7 @@ outputs = [
     {"role": "user", "content": "What is the weather in SF?"},
     {
         "role": "assistant",
+        "content": "",
         "tool_calls": [
             {
                 "function": {
@@ -225,6 +226,7 @@ outputs = [
     {"role": "user", "content": "What is the weather in SF?"},
     {
         "role": "assistant",
+        "content": "",
         "tool_calls": [
             {
                 "function": {
@@ -247,6 +249,7 @@ reference_outputs = [
     {"role": "user", "content": "What is the weather in San Francisco?"},
     {
         "role": "assistant",
+        "content": "",
         "tool_calls": [
             {
                 "function": {
@@ -287,29 +290,39 @@ print(result)
 import { createTrajectoryMatchEvaluator } from "agentevals";
 
 const outputs = [
-    { role: "user", content: "What is the weather in SF?" },
-    {
-      role: "assistant",
-      tool_calls: [{
-        function: {
-          name: "get_weather",
-          arguments: JSON.stringify({ city: "San Francisco" })
-        },
-      }, {
-        function: {
-          name: "accuweather_forecast",
-          arguments: JSON.stringify({"city": "San Francisco"}),
-        },
-      }]
-    },
-    { role: "tool", content: "It's 80 degrees and sunny in SF." },
-    { role: "assistant", content: "The weather in SF is 80 degrees and sunny." },
+  { role: "user", content: "What is the weather in SF?" },
+  {
+    role: "assistant",
+    content: "",
+    tool_calls: [{
+      function: {
+        name: "get_weather",
+        arguments: JSON.stringify({ city: "San Francisco" })
+      },
+    }, {
+      function: {
+        name: "accuweather_forecast",
+        arguments: JSON.stringify({"city": "San Francisco"}),
+      },
+    }]
+  },
+  { role: "tool", content: "It's 80 degrees and sunny in SF." },
+  { role: "assistant", content: "The weather in SF is 80 degrees and sunny." },
 ];
 
 const referenceOutputs = [
-    { role: "user", content: "What is the weather in San Francisco?" },
-    { role: "assistant", tool_calls: [{ function: { name: "get_weather", arguments: JSON.stringify({ city: "San Francisco" }) } }] },
-    { role: "tool", content: "It's 80 degrees and sunny in San Francisco." },
+  { role: "user", content: "What is the weather in San Francisco?" },
+  {
+    role: "assistant",
+    content: "",
+    tool_calls: [{
+      function: {
+        name: "get_weather",
+        arguments: JSON.stringify({ city: "San Francisco" })
+      }
+    }]
+  },
+  { role: "tool", content: "It's 80 degrees and sunny in San Francisco." },
 ];
 
 const evaluator = createTrajectoryMatchEvaluator({
@@ -352,6 +365,7 @@ outputs = [
     {"role": "user", "content": "What is the weather in SF and is there anything fun happening?"},
     {
         "role": "assistant",
+        "content": "",
         "tool_calls": [{
             "function": {
                 "name": "get_weather",
@@ -362,6 +376,7 @@ outputs = [
     {"role": "tool", "content": "It's 80 degrees and sunny in SF."},
     {
         "role": "assistant",
+        "content": "",
         "tool_calls": [{
             "function": {
                 "name": "get_fun_activities",
@@ -376,6 +391,7 @@ reference_outputs = [
     {"role": "user", "content": "What is the weather in SF and is there anything fun happening?"},
     {
         "role": "assistant",
+        "content": "",
         "tool_calls": [
             {
                 "function": {
@@ -426,6 +442,7 @@ const outputs = [
   { role: "user", content: "What is the weather in SF and is there anything fun happening?" },
   {
     role: "assistant",
+    content: "",
     tool_calls: [{
       function: {
         name: "get_weather",
@@ -436,6 +453,7 @@ const outputs = [
   { role: "tool", content: "It's 80 degrees and sunny in SF." },
   {
     role: "assistant",
+    content: "",
     tool_calls: [{
       function: {
         name: "get_fun_activities",
@@ -451,6 +469,7 @@ const referenceOutputs = [
   { role: "user", content: "What is the weather in SF and is there anything fun happening?" },
   {
     role: "assistant",
+    content: "",
     tool_calls: [
       {
         function: {
@@ -510,6 +529,7 @@ outputs = [
     {"role": "user", "content": "What is the weather in SF and London?"},
     {
         "role": "assistant",
+        "content": "",
         "tool_calls": [{
             "function": {
                 "name": "get_weather",
@@ -530,6 +550,7 @@ reference_outputs = [
     {"role": "user", "content": "What is the weather in SF and London?"},
     {
         "role": "assistant",
+        "content": "",
         "tool_calls": [
             {
                 "function": {
@@ -573,6 +594,7 @@ const outputs = [
   { role: "user", content: "What is the weather in SF and London?" },
   {
     role: "assistant",
+    content: "",
     tool_calls: [{
       function: {
         name: "get_weather",
@@ -594,6 +616,7 @@ const referenceOutputs = [
   { role: "user", content: "What is the weather in SF and London?" },
   {
     role: "assistant",
+    content: "",
     tool_calls: [
       {
         function: {
@@ -636,6 +659,7 @@ console.log(result)
 When checking equality between tool calls, the above evaluators will require that all tool call arguments are the exact same by default. You can configure this behavior in the following ways:
 
 - Treating any two tool calls for the same tool as equivalent by setting `tool_args_match_mode="ignore"` (Python) or `toolArgsMatchMode: "ignore"` (TypeScript)
+- Treating a tool call as equivalent if it contain as subset/superset of args compared to a reference tool call of the same name with `tool_args_match_mode="subset"/"superset"` (Python) or `toolArgsMatchMode: "subset"/"superset` (TypeScript)
 - Setting custom matchers for all calls of a given tool using the `tool_args_match_overrides` (Python) or `toolArgsMatchOverrides` (TypeScript) param
 
 You can set both of these parameters at the same time. `tool_args_match_overrides` will take precendence over `tool_args_match_mode`.
@@ -643,7 +667,7 @@ You can set both of these parameters at the same time. `tool_args_match_override
 `tool_args_match_overrides`/`toolArgsMatchOverrides` takes a dictionary whose keys are tool names and whose values are either `"exact"`, `"ignore"`, a list of fields within the tool call that must match exactly, or a comparator function that takes two arguments and returns whether they are equal:
 
 ```python
-ToolArgsMatchMode = Literal["exact", "ignore"]
+ToolArgsMatchMode = Literal["exact", "ignore", "subset", "superset"]
 
 ToolArgsMatchOverrides = dict[str, Union[ToolArgsMatchMode, list[str],  Callable[[dict, dict], bool]]]
 ```
@@ -661,6 +685,7 @@ outputs = [
     {"role": "user", "content": "What is the weather in SF?"},
     {
         "role": "assistant",
+        "content": "",
         "tool_calls": [
             {
                 "function": {
@@ -677,6 +702,7 @@ reference_outputs = [
     {"role": "user", "content": "What is the weather in San Francisco?"},
     {
         "role": "assistant",
+        "content": "",
         "tool_calls": [
             {
                 "function": {
@@ -722,32 +748,34 @@ print(result)
 import { createTrajectoryMatchEvaluator } from "agentevals";
 
 const outputs = [
-    { role: "user", content: "What is the weather in SF?" },
-    {
-      role: "assistant",
-      tool_calls: [{
-        function: {
-          name: "get_weather",
-          arguments: JSON.stringify({ city: "san francisco" })
-        },
-      }]
-    },
-    { role: "tool", content: "It's 80 degrees and sunny in SF." },
-    { role: "assistant", content: "The weather in SF is 80 degrees and sunny." },
+  { role: "user", content: "What is the weather in SF?" },
+  {
+    role: "assistant",
+    content: "",
+    tool_calls: [{
+      function: {
+        name: "get_weather",
+        arguments: JSON.stringify({ city: "san francisco" })
+      },
+    }]
+  },
+  { role: "tool", content: "It's 80 degrees and sunny in SF." },
+  { role: "assistant", content: "The weather in SF is 80 degrees and sunny." },
 ];
 
 const referenceOutputs = [
-    { role: "user", content: "What is the weather in San Francisco?" },
-    {
-      role: "assistant",
-      tool_calls: [{
-        function: {
-          name: "get_weather",
-          arguments: JSON.stringify({ city: "San Francisco" })
-        }
-      }]
-    },
-    { role: "tool", content: "It's 80 degrees and sunny in San Francisco." },
+  { role: "user", content: "What is the weather in San Francisco?" },
+  {
+    role: "assistant",
+    content: "",
+    tool_calls: [{
+      function: {
+        name: "get_weather",
+        arguments: JSON.stringify({ city: "San Francisco" })
+      }
+    }]
+  },
+  { role: "tool", content: "It's 80 degrees and sunny in San Francisco." },
 ];
 
 const evaluator = createTrajectoryMatchEvaluator({
@@ -790,6 +818,98 @@ The LLM-as-judge trajectory evaluator that uses an LLM to evaluate the trajector
 
 ```python
 import json
+from agentevals.trajectory.llm import create_trajectory_llm_as_judge, TRAJECTORY_ACCURACY_PROMPT
+
+evaluator = create_trajectory_llm_as_judge(
+  prompt=TRAJECTORY_ACCURACY_PROMPT,
+  model="openai:o3-mini"
+)
+outputs = [
+    {"role": "user", "content": "What is the weather in SF?"},
+    {
+        "role": "assistant",
+        "content": "",
+        "tool_calls": [
+            {
+                "function": {
+                    "name": "get_weather",
+                    "arguments": json.dumps({"city": "SF"}),
+                }
+            }
+        ],
+    },
+    {"role": "tool", "content": "It's 80 degrees and sunny in SF."},
+    {"role": "assistant", "content": "The weather in SF is 80 degrees and sunny."},
+]
+eval_result = evaluator(
+    outputs=outputs,
+)
+
+print(eval_result)
+```
+
+```
+{
+    'key': 'trajectory_accuracy',
+    'score': True,
+    'comment': 'The provided agent trajectory is reasonable...'
+}
+```
+</details>
+
+<details>
+<summary>TypeScript</summary>
+
+```ts
+import {
+  createTrajectoryLLMAsJudge,
+  TRAJECTORY_ACCURACY_PROMPT,
+} from "agentevals";
+
+const evaluator = createTrajectoryLLMAsJudge({
+  prompt: TRAJECTORY_ACCURACY_PROMPT,
+  model: "openai:o3-mini",
+});
+
+const outputs = [
+  {role: "user", content: "What is the weather in SF?"},
+  {
+    role: "assistant",
+    content: "",
+    tool_calls: [
+      {
+        function: {
+          name: "get_weather",
+          arguments: JSON.stringify({ city: "SF" }),
+        }
+      }
+    ],
+  },
+  {role: "tool", content: "It's 80 degrees and sunny in SF."},
+  {role: "assistant", content: "The weather in SF is 80 degrees and sunny."},
+];
+
+const result = await evaluator({ outputs });
+
+console.log(result)
+```
+
+```
+{
+    'key': 'trajectory_accuracy',
+    'score': True,
+    'comment': 'The provided agent trajectory is reasonable...'
+}
+```
+</details>
+
+If you have a reference trajectory, you can add an extra variable to your prompt and pass in the reference trajectory. Below, we use the prebuilt  `TRAJECTORY_ACCURACY_PROMPT_WITH_REFERENCE` prompt, which contains a `reference_outputs` variable:
+
+<details open>
+<summary>Python</summary>
+
+```python
+import json
 from agentevals.trajectory.llm import create_trajectory_llm_as_judge, TRAJECTORY_ACCURACY_PROMPT_WITH_REFERENCE
 
 evaluator = create_trajectory_llm_as_judge(
@@ -800,6 +920,7 @@ outputs = [
     {"role": "user", "content": "What is the weather in SF?"},
     {
         "role": "assistant",
+        "content": "",
         "tool_calls": [
             {
                 "function": {
@@ -816,6 +937,7 @@ reference_outputs = [
     {"role": "user", "content": "What is the weather in SF?"},
     {
         "role": "assistant",
+        "content": "",
         "tool_calls": [
             {
                 "function": {
@@ -863,6 +985,7 @@ const outputs = [
   {role: "user", content: "What is the weather in SF?"},
   {
     role: "assistant",
+    content: "",
     tool_calls: [
       {
         function: {
@@ -879,6 +1002,7 @@ const referenceOutputs = [
   {role: "user", content: "What is the weather in SF?"},
   {
     role: "assistant",
+    content: "",
     tool_calls: [
       {
         function: {
@@ -1521,6 +1645,7 @@ def test_trajectory_accuracy():
         {"role": "user", "content": "What is the weather in SF?"},
         {
             "role": "assistant",
+            "content": "",
             "tool_calls": [
                 {
                     "function": {
@@ -1537,6 +1662,7 @@ def test_trajectory_accuracy():
         {"role": "user", "content": "What is the weather in SF?"},
         {
             "role": "assistant",
+            "content": "",
             "tool_calls": [
                 {
                     "function": {
@@ -1600,6 +1726,7 @@ ls.describe("trajectory accuracy", () => {
         {"role": "user", "content": "What is the weather in SF?"},
         {
             "role": "assistant",
+            "content": "",
             "tool_calls": [
                 {
                     "function": {
@@ -1618,6 +1745,7 @@ ls.describe("trajectory accuracy", () => {
         {"role": "user", "content": "What is the weather in SF?"},
         {
             "role": "assistant",
+            "content": "",
             "tool_calls": [
                 {
                     "function": {
@@ -1700,20 +1828,21 @@ const trajectoryEvaluator = createTrajectoryLLMAsJudge({
 
 await evaluate(
   (inputs) => [
-        {role: "user", content: "What is the weather in SF?"},
-        {
-            role: "assistant",
-            tool_calls: [
-                {
-                    function: {
-                        name: "get_weather",
-                        arguments: json.dumps({"city": "SF"}),
-                    }
-                }
-            ],
-        },
-        {role: "tool", content: "It's 80 degrees and sunny in SF."},
-        {role: "assistant", content: "The weather in SF is 80 degrees and sunny."},
+      {role: "user", content: "What is the weather in SF?"},
+      {
+          role: "assistant",
+          content: "",
+          tool_calls: [
+              {
+                  function: {
+                      name: "get_weather",
+                      arguments: json.dumps({"city": "SF"}),
+                  }
+              }
+          ],
+      },
+      {role: "tool", content: "It's 80 degrees and sunny in SF."},
+      {role: "assistant", content: "The weather in SF is 80 degrees and sunny."},
     ],
   {
     data: datasetName,
