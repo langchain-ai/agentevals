@@ -1,11 +1,6 @@
 import { createLLMAsJudge } from "openevals/llm";
-import type { ChatCompletionMessage } from "openevals/types";
 
 export * from "openevals/types";
-
-export type ChatCompletionMessageWithOptionalContent = ChatCompletionMessage & {
-  content?: string;
-};
 
 // Trajectory extracted from agent
 export type GraphTrajectory = {
