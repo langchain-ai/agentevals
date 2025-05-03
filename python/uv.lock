@@ -8,7 +8,7 @@ resolution-markers = [
 
 [[package]]
 name = "agentevals"
-version = "0.0.5"
+version = "0.0.6"
 source = { virtual = "." }
 dependencies = [
     { name = "openevals" },
@@ -21,12 +21,12 @@ dev = [
     { name = "openai" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
-    { name = "python-dotenv" },
+    { name = "pytest-dotenv" },
     { name = "ruff" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "openevals", specifier = ">=0.0.13" }]
+requires-dist = [{ name = "openevals", specifier = ">=0.0.19" }]
 
 [package.metadata.requires-dev]
 dev = [
@@ -35,7 +35,7 @@ dev = [
     { name = "openai", specifier = ">=1.61.1" },
     { name = "pytest", specifier = ">=8.3.4" },
     { name = "pytest-asyncio", specifier = ">=0.25.3" },
-    { name = "python-dotenv", specifier = ">=1.1.0" },
+    { name = "pytest-dotenv", specifier = ">=0.5.2" },
     { name = "ruff", specifier = ">=0.9.5" },
 ]
 
@@ -780,7 +780,7 @@ wheels = [
 
 [[package]]
 name = "langsmith"
-version = "0.3.18"
+version = "0.3.42"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "httpx" },
@@ -791,9 +791,9 @@ dependencies = [
     { name = "requests-toolbelt" },
     { name = "zstandard" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/bc/1e/642ad730f8b1960e777a199c371c2f4607b1e411ea61516e90dba56912a6/langsmith-0.3.18.tar.gz", hash = "sha256:18ff2d8f2e77b375485e4fb3d0dbf7b30fabbd438c7347c3534470e9b7d187b8", size = 337237 }
+sdist = { url = "https://files.pythonhosted.org/packages/3a/44/fe171c0b0fb0377b191aebf0b7779e0c7b2a53693c6a01ddad737212495d/langsmith-0.3.42.tar.gz", hash = "sha256:2b5cbc450ab808b992362aac6943bb1d285579aa68a3a8be901d30a393458f25", size = 345619 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/cd/78/a114e3697aa7a161b2b1a4ec4162b1ef15f97e7fe4cbd981781211dfca5a/langsmith-0.3.18-py3-none-any.whl", hash = "sha256:7ad65ec26084312a039885ef625ae72a69ad089818b64bacf7ce6daff672353a", size = 351863 },
+    { url = "https://files.pythonhosted.org/packages/89/8e/e8a58e0abaae3f3ac4702e9ca35d1fc6159711556b64ffd0e247771a3f12/langsmith-0.3.42-py3-none-any.whl", hash = "sha256:18114327f3364385dae4026ebfd57d1c1cb46d8f80931098f0f10abe533475ff", size = 360334 },
 ]
 
 [[package]]
@@ -1153,7 +1153,7 @@ wheels = [
 
 [[package]]
 name = "openevals"
-version = "0.0.13"
+version = "0.0.19"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "langchain" },
@@ -1161,9 +1161,9 @@ dependencies = [
     { name = "langsmith" },
     { name = "rich" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/fb/64/c2380bf1c3c1b94552bda796a236d38b6f7e0b1af0cb9ec6307984870846/openevals-0.0.13.tar.gz", hash = "sha256:3c702fa25f1349d82de2cf4d51cfd4efbac6d0d27b7301f9f45374497eafa011", size = 40221 }
+sdist = { url = "https://files.pythonhosted.org/packages/b9/96/12a770c32f17d19a3c329d852c0b79425564d7edcb571207318ac6012ff6/openevals-0.0.19.tar.gz", hash = "sha256:fb3b6bcd17042b8fe509c92beeb787bd1defd2359b52464995bd36360f582948", size = 92604 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/43/91/86fae77ff42a7ee81f0b3e0e6c06c75d44af5015672ea02ac372fc14f487/openevals-0.0.13-py3-none-any.whl", hash = "sha256:13fadf8e52a78c0f5912383cf05ce60b572c5926f1c58ee1133c1a5d4210065a", size = 36750 },
+    { url = "https://files.pythonhosted.org/packages/04/3c/57eb656b8d8d3f754b0246a47f94b068f5cc5b9e397f337a78b57ab81024/openevals-0.0.19-py3-none-any.whl", hash = "sha256:e2973d23c52d99e432a8719a4ce1a5123d001535691916df765096341869898d", size = 61788 },
 ]
 
 [[package]]
@@ -1502,6 +1502,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/f2/a8/ecbc8ede70921dd2f544ab1cadd3ff3bf842af27f87bbdea774c7baa1d38/pytest_asyncio-0.25.3.tar.gz", hash = "sha256:fc1da2cf9f125ada7e710b4ddad05518d4cee187ae9412e9ac9271003497f07a", size = 54239 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/67/17/3493c5624e48fd97156ebaec380dcaafee9506d7e2c46218ceebbb57d7de/pytest_asyncio-0.25.3-py3-none-any.whl", hash = "sha256:9e89518e0f9bd08928f97a3482fdc4e244df17529460bc038291ccaf8f85c7c3", size = 19467 },
+]
+
+[[package]]
+name = "pytest-dotenv"
+version = "0.5.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pytest" },
+    { name = "python-dotenv" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/cd/b0/cafee9c627c1bae228eb07c9977f679b3a7cb111b488307ab9594ba9e4da/pytest-dotenv-0.5.2.tar.gz", hash = "sha256:2dc6c3ac6d8764c71c6d2804e902d0ff810fa19692e95fe138aefc9b1aa73732", size = 3782 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d0/da/9da67c67b3d0963160e3d2cbc7c38b6fae342670cc8e6d5936644b2cf944/pytest_dotenv-0.5.2-py3-none-any.whl", hash = "sha256:40a2cece120a213898afaa5407673f6bd924b1fa7eafce6bda0e8abffe2f710f", size = 3993 },
 ]
 
 [[package]]
