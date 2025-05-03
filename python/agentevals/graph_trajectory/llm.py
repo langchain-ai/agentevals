@@ -3,7 +3,6 @@ from openevals.llm import (
     _create_llm_as_judge_scorer,
     _create_async_llm_as_judge_scorer,
     ChatCompletionMessage,
-    RunnableLike,
     ModelClient,
     SimpleEvaluator,
     SimpleAsyncEvaluator,
@@ -11,6 +10,7 @@ from openevals.llm import (
     Optional,
     Union,
 )
+from langchain_core.runnables import RunnableLike
 
 from agentevals.types import EvaluatorResult, FewShotExample, GraphTrajectory
 from agentevals.utils import _run_evaluator, _arun_evaluator

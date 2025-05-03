@@ -4,7 +4,6 @@ from openevals.llm import (
     _create_llm_as_judge_scorer,
     _create_async_llm_as_judge_scorer,
     ChatCompletionMessage,
-    RunnableLike,
     ModelClient,
     SimpleEvaluator,
     SimpleAsyncEvaluator,
@@ -20,6 +19,7 @@ from agentevals.types import FewShotExample
 from agentevals.utils import _run_evaluator, _arun_evaluator
 
 from langchain_core.language_models.chat_models import BaseChatModel
+from langchain_core.runnables import RunnableLike
 
 from typing import TYPE_CHECKING
 
