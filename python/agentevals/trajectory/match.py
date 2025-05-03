@@ -80,7 +80,14 @@ def create_trajectory_match_evaluator(
     elif trajectory_match_mode == "superset":
         scorer = trajectory_superset_scorer
     else:
-        raise ValueError(f"Invalid trajectory match type: {trajectory_match_mode}")
+        raise ValueError(
+            f"Invalid trajectory match type: `{trajectory_match_mode}`. Must be one of `strict`, `unordered`, `subset`, or `superset`."
+        )
+
+    if tool_args_match_mode not in ["exact", "ignore", "subset", "superset"]:
+        raise ValueError(
+            f"Invalid tool args match mode: `{tool_args_match_mode}`. Must be either `exact`, `ignore`, `subset`, or `superset`."
+        )
 
     def _wrapped_evaluator(
         *,
@@ -161,7 +168,14 @@ def create_async_trajectory_match_evaluator(
     elif trajectory_match_mode == "superset":
         scorer = trajectory_superset_scorer
     else:
-        raise ValueError(f"Invalid trajectory match type: {trajectory_match_mode}")
+        raise ValueError(
+            f"Invalid trajectory match type: `{trajectory_match_mode}`. Must be one of `strict`, `unordered`, `subset`, or `superset`."
+        )
+
+    if tool_args_match_mode not in ["exact", "ignore", "subset", "superset"]:
+        raise ValueError(
+            f"Invalid tool args match mode: `{tool_args_match_mode}`. Must be either `exact`, `ignore`, `subset`, or `superset`."
+        )
 
     async def _wrapped_evaluator(
         *,

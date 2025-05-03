@@ -888,9 +888,9 @@ async def test_trajectory_match_with_overrides(trajectory_match_mode, score):
 
     def lookup_policy_query_matcher(tool_args: dict, reference_tool_args: dict):
         if reference_tool_args.get("query") and "upgrade" in reference_tool_args.get(
-            "query"
+            "query", {}
         ):
-            return "upgrade" in tool_args.get("query")
+            return "upgrade" in tool_args.get("query", {})
         # Ignore for other policy query matches
         return True
 
@@ -1116,3 +1116,176 @@ async def test_trajectory_match_with_nested_field_overrides(trajectory_match_mod
         outputs=outputs, reference_outputs=reference_outputs
     )
     assert evaluator_result["score"]
+
+
+@pytest.mark.langsmith
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "tool_args_match_mode, score",
+    [
+        ("exact", False),
+        ("ignore", True),
+        ("subset", False),
+        ("superset", True),
+    ],
+)
+async def test_tool_args_match_mode_superset(tool_args_match_mode, score):
+    outputs = [
+        {"role": "user", "content": "Hi there, what time is my flight?"},
+        {
+            "role": "assistant",
+            "content": "",
+            "tool_calls": [
+                {
+                    "type": "function",
+                    "id": "123",
+                    "function": {
+                        "name": "get_flight_info",
+                        "arguments": json.dumps(
+                            {"is_cool": True, "flight_no": "LX0112"}
+                        ),
+                    },
+                }
+            ],
+        },
+        {"role": "assistant", "content": "Your flight is at 10:00 AM."},
+    ]
+    reference_outputs = [
+        {"role": "user", "content": "Hi there, what time is my flight?"},
+        {
+            "role": "assistant",
+            "content": "",
+            "tool_calls": [
+                {
+                    "type": "function",
+                    "id": "321",
+                    "function": {
+                        "name": "get_flight_info",
+                        "arguments": json.dumps({"flight_no": "LX0112"}),
+                    },
+                }
+            ],
+        },
+        {"role": "assistant", "content": "Your flight is at 10:00 AM."},
+    ]
+    evaluator = create_async_trajectory_match_evaluator(
+        tool_args_match_mode=tool_args_match_mode,
+    )
+    evaluator_result = await evaluator(
+        outputs=outputs, reference_outputs=reference_outputs
+    )
+    assert evaluator_result["score"] == score
+
+
+@pytest.mark.langsmith
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "tool_args_match_mode, score",
+    [
+        ("exact", False),
+        ("ignore", True),
+        ("subset", True),
+        ("superset", False),
+    ],
+)
+async def test_tool_args_match_mode_subset(tool_args_match_mode, score):
+    outputs = [
+        {"role": "user", "content": "Hi there, what time is my flight?"},
+        {
+            "role": "assistant",
+            "content": "",
+            "tool_calls": [
+                {
+                    "type": "function",
+                    "id": "123",
+                    "function": {
+                        "name": "get_flight_info",
+                        "arguments": json.dumps({"flight_no": "LX0112"}),
+                    },
+                }
+            ],
+        },
+        {"role": "assistant", "content": "Your flight is at 10:00 AM."},
+    ]
+    reference_outputs = [
+        {"role": "user", "content": "Hi there, what time is my flight?"},
+        {
+            "role": "assistant",
+            "content": "",
+            "tool_calls": [
+                {
+                    "type": "function",
+                    "id": "321",
+                    "function": {
+                        "name": "get_flight_info",
+                        "arguments": json.dumps({"flight_no": "LX0112", "foo": "bar"}),
+                    },
+                }
+            ],
+        },
+        {"role": "assistant", "content": "Your flight is at 10:00 AM."},
+    ]
+    evaluator = create_async_trajectory_match_evaluator(
+        tool_args_match_mode=tool_args_match_mode,
+    )
+    evaluator_result = await evaluator(
+        outputs=outputs, reference_outputs=reference_outputs
+    )
+    assert evaluator_result["score"] == score
+
+
+@pytest.mark.langsmith
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "tool_args_match_mode, score",
+    [
+        ("exact", True),
+        ("ignore", True),
+        ("subset", True),
+        ("superset", True),
+    ],
+)
+async def test_tool_args_match_mode_exact(tool_args_match_mode, score):
+    outputs = [
+        {"role": "user", "content": "Hi there, what time is my flight?"},
+        {
+            "role": "assistant",
+            "content": "",
+            "tool_calls": [
+                {
+                    "type": "function",
+                    "id": "123",
+                    "function": {
+                        "name": "get_flight_info",
+                        "arguments": json.dumps({"flight_no": "LX0112"}),
+                    },
+                }
+            ],
+        },
+        {"role": "assistant", "content": "Your flight is at 10:00 AM."},
+    ]
+    reference_outputs = [
+        {"role": "user", "content": "Hi there, what time is my flight?"},
+        {
+            "role": "assistant",
+            "content": "",
+            "tool_calls": [
+                {
+                    "type": "function",
+                    "id": "321",
+                    "function": {
+                        "name": "get_flight_info",
+                        "arguments": json.dumps({"flight_no": "LX0112"}),
+                    },
+                }
+            ],
+        },
+        {"role": "assistant", "content": "Your flight is at 10:00 AM."},
+    ]
+    evaluator = create_async_trajectory_match_evaluator(
+        tool_args_match_mode=tool_args_match_mode,
+    )
+    evaluator_result = await evaluator(
+        outputs=outputs, reference_outputs=reference_outputs
+    )
+    assert evaluator_result["score"] == score

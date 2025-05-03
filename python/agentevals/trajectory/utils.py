@@ -87,6 +87,22 @@ def _exact_match(tool_call: dict, reference_tool_call: dict) -> bool:
     return tool_call == reference_tool_call
 
 
+def _subset_match(tool_call: dict, reference_tool_call: dict) -> bool:
+    # Every key-value pair in tool_call must exist in reference_tool_call
+    return all(
+        key in reference_tool_call and reference_tool_call[key] == value
+        for key, value in tool_call.items()
+    )
+
+
+def _superset_match(tool_call: dict, reference_tool_call: dict) -> bool:
+    # Every key-value pair in reference_tool_call must exist in tool_call
+    return all(
+        key in tool_call and tool_call[key] == value
+        for key, value in reference_tool_call.items()
+    )
+
+
 def _ignore_match(tool_call: dict, reference_tool_call: dict) -> bool:
     return True
 
@@ -96,6 +112,10 @@ def _get_matcher_for_comparison_mode(
 ) -> Callable[[dict, dict], bool]:
     if mode == "exact":
         return _exact_match
+    elif mode == "subset":
+        return _subset_match
+    elif mode == "superset":
+        return _superset_match
     else:
         return _ignore_match
 
