@@ -1,16 +1,15 @@
 from __future__ import annotations
 from warnings import warn
 
-from openevals.utils import (
-    _normalize_to_openai_messages_list,
-)
-
 from agentevals.types import (
     ChatCompletionMessage,
     ToolArgsMatchMode,
     ToolArgsMatchOverrides,
 )
-from agentevals.trajectory.utils import _is_trajectory_superset
+from agentevals.trajectory.utils import (
+    _is_trajectory_superset,
+    _normalize_to_openai_messages_list,
+)
 from agentevals.utils import _run_evaluator, _arun_evaluator
 
 from typing import Any, Optional, Union, TYPE_CHECKING

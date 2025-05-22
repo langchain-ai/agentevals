@@ -1,9 +1,7 @@
 from __future__ import annotations
 from warnings import warn
 
-from openevals.utils import (
-    _normalize_to_openai_messages_list,
-)
+from agentevals.trajectory.utils import _normalize_to_openai_messages_list
 from agentevals.types import ChatCompletionMessage
 from agentevals.trajectory.utils import _is_trajectory_superset
 from agentevals.utils import _run_evaluator, _arun_evaluator

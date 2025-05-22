@@ -13,10 +13,10 @@ from openevals.llm import (
 )
 from openevals.utils import (
     _chat_completion_messages_to_string,
-    _normalize_to_openai_messages_list,
 )
 from agentevals.types import FewShotExample
 from agentevals.utils import _run_evaluator, _arun_evaluator
+from agentevals.trajectory.utils import _normalize_to_openai_messages_list
 
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.runnables import Runnable
