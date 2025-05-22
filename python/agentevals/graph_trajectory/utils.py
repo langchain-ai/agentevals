@@ -61,8 +61,10 @@ def extract_langgraph_trajectory_from_snapshots(
         if is_acc_steps:
             if snapshot.metadata is not None and snapshot.metadata["source"] == "input":
                 inputs.append(snapshot.metadata["writes"])
-            elif i + 1 < len(snapshot_list) and any(
-                t.interrupts for t in snapshot_list[i + 1].tasks
+            elif (
+                i + 1 < len(snapshot_list)
+                and snapshot_list[i + 1].tasks
+                and any(t.interrupts for t in snapshot_list[i + 1].tasks)
             ):
                 inputs.append("__resuming__")  # type: ignore
     inputs.reverse()

@@ -11,6 +11,7 @@ from typing_extensions import TypedDict
 import operator
 import time
 
+from langgraph.types import Command, Send
 from langgraph.graph import StateGraph
 from langgraph.checkpoint.memory import MemorySaver
 
@@ -178,6 +179,97 @@ async def test_trajectory_match_async():
                         "inner:inner_2",
                     ],
                     ["outer_2"],
+                ],
+            },
+        },
+    )["score"]
+
+
+@pytest.mark.langsmith
+def test_trajectory_match_with_command():
+    checkpointer = MemorySaver()
+
+    class State(TypedDict):
+        items: Annotated[list[str], lambda x, y: x + y]
+        processedCount: Annotated[int, lambda x, y: y]
+
+    def dispatcher(state: State):
+        # Use Command with Send to route to multiple processing nodes dynamically
+        sends = [
+            Send(f"process_{index % 2}", {"items": [item], "index": index})
+            for index, item in enumerate(state["items"])
+        ]
+        return Command(
+            update={"processedCount": len(state["items"])},
+            goto=sends,
+        )
+
+    def process_0(state: State):
+        return {"items": [f"processed_0: {', '.join(state['items'])}"]}
+
+    def process_1(state: State):
+        return {"items": [f"processed_1: {', '.join(state['items'])}"]}
+
+    def aggregator(state: State):
+        return {"items": [f"final count: {state['processedCount']}"]}
+
+    graph = StateGraph(State)
+    graph.add_node("dispatcher", dispatcher)
+    graph.add_node("process_0", process_0)
+    graph.add_node("process_1", process_1)
+    graph.add_node("aggregator", aggregator)
+
+    graph.add_edge("__start__", "dispatcher")
+    graph.add_edge(["process_0", "process_1"], "aggregator")
+
+    app = graph.compile(checkpointer=checkpointer)
+
+    config = {"configurable": {"thread_id": "3"}}
+
+    app.invoke(
+        {
+            "items": ["task1", "task2", "task3"],
+        },
+        config,
+    )
+
+    trajectory = extract_langgraph_trajectory_from_thread(app, config)
+
+    assert exact_match(
+        outputs=trajectory,
+        reference_outputs={
+            "inputs": [
+                {
+                    "__start__": {
+                        "items": ["task1", "task2", "task3"],
+                    },
+                },
+            ],
+            "outputs": {
+                "inputs": [],
+                "results": [
+                    {
+                        "items": [
+                            "task1",
+                            "task2",
+                            "task3",
+                            "processed_0: task1",
+                            "processed_1: task2",
+                            "processed_0: task3",
+                            "final count: 3",
+                        ],
+                        "processedCount": 3,
+                    },
+                ],
+                "steps": [
+                    [
+                        "__start__",
+                        "dispatcher",
+                        "process_0",
+                        "process_1",
+                        "process_0",
+                        "aggregator",
+                    ],
                 ],
             },
         },
