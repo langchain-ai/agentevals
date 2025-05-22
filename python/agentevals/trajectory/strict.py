@@ -2,9 +2,7 @@ from __future__ import annotations
 from warnings import warn
 import json
 
-from openevals.utils import (
-    _normalize_to_openai_messages_list,
-)
+from agentevals.trajectory.utils import _normalize_to_openai_messages_list
 from agentevals.types import (
     ChatCompletionMessage,
     ToolArgsMatchMode,

@@ -55,7 +55,7 @@ def _format_thread(
 
 
 def _format_inputs(
-    inputs: list | dict,
+    inputs: Optional[Union[list, dict]],
     outputs: GraphTrajectory,
     reference_outputs: Optional[GraphTrajectory],
 ) -> tuple[str, str]:
@@ -67,7 +67,7 @@ def _format_inputs(
         raise ValueError(
             "Provided `inputs` and `results` within provided `outputs` must have the same length"
         )
-    if len(inputs) != len(outputs["steps"]):
+    if inputs is not None and len(inputs) != len(outputs["steps"]):
         raise ValueError(
             "Provided `inputs` and `steps` within provided `outputs` must have the same length"
         )
@@ -149,8 +149,8 @@ def create_graph_trajectory_llm_as_judge(
             run_name=f"llm_as_{feedback_key}_judge",
             scorer=scorer,
             feedback_key=feedback_key,
-            outputs=outputs,
             inputs=inputs,
+            outputs=outputs,
             thread=formatted_thread,
             reference_outputs=formatted_reference_outputs,
             **kwargs,
@@ -226,7 +226,8 @@ def create_async_graph_trajectory_llm_as_judge(
             run_name=f"llm_as_{feedback_key}_judge",
             scorer=scorer,
             feedback_key=feedback_key,
-            outputs="",
+            inputs=inputs,
+            outputs=outputs,
             thread=formatted_thread,
             reference_outputs=formatted_reference_outputs,
             **kwargs,

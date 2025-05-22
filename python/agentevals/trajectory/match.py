@@ -13,9 +13,7 @@ from agentevals.types import (
 )
 from agentevals.utils import _run_evaluator, _arun_evaluator
 
-from openevals.utils import (
-    _normalize_to_openai_messages_list,
-)
+from agentevals.trajectory.utils import _normalize_to_openai_messages_list
 
 from langchain_core.messages import BaseMessage
 

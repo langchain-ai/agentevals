@@ -19,6 +19,7 @@ dev = [
     { name = "langgraph" },
     { name = "mypy" },
     { name = "openai" },
+    { name = "openevals" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "pytest-dotenv" },
@@ -33,6 +34,7 @@ dev = [
     { name = "langgraph", specifier = ">=0.2.73" },
     { name = "mypy", specifier = ">=1.15.0" },
     { name = "openai", specifier = ">=1.61.1" },
+    { name = "openevals", specifier = ">=0.1.0" },
     { name = "pytest", specifier = ">=8.3.4" },
     { name = "pytest-asyncio", specifier = ">=0.25.3" },
     { name = "pytest-dotenv", specifier = ">=0.5.2" },
@@ -1153,7 +1155,7 @@ wheels = [
 
 [[package]]
 name = "openevals"
-version = "0.0.20"
+version = "0.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "langchain" },
@@ -1161,9 +1163,9 @@ dependencies = [
     { name = "langsmith" },
     { name = "rich" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/73/6f/ba7b3b82427ce68016f194e025932897cfa8236a8f3023bb7e8b8d95db4e/openevals-0.0.20.tar.gz", hash = "sha256:276e28cb8c7b1374442f1433afa55acab293710a562ff946ee6761e4396879a5", size = 93751 }
+sdist = { url = "https://files.pythonhosted.org/packages/ca/3f/245f4e86e60b873ec93b71aaf219c9a6840a74d957e6d9f756ce3be64b9f/openevals-0.1.0.tar.gz", hash = "sha256:3dbb7cc4251ab7f6fcd5cbc8939b8538c5bf333e88ad01e5d8ac287f509891a4", size = 95378 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c2/a6/ef9688f294e106d30e4c3ae5a3773d1c32f6f4e002e8e07ab5aaddfbe04c/openevals-0.0.20-py3-none-any.whl", hash = "sha256:1f85539fdc03d01eed6242c1fcb9060da160abf977b607019bb21a41d5dac38d", size = 62166 },
+    { url = "https://files.pythonhosted.org/packages/5e/10/5a340aa03999f8e1e89b7bb7f34de27d195219f207a2e311e8f1655d1075/openevals-0.1.0-py3-none-any.whl", hash = "sha256:214b53197b1becff74279ea063c8752f8887a81afda700477639c19a0d683647", size = 62693 },
 ]
 
 [[package]]

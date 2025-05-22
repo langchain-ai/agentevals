@@ -2,6 +2,8 @@ __all__ = [
     "_is_trajectory_superset",
     "_extract_tool_calls",
     "_get_matcher_for_tool_name",
+    "_normalize_to_openai_messages_list",
+    "_convert_to_openai_message",
 ]
 
 import json
@@ -11,7 +13,56 @@ from agentevals.types import (
     ToolArgsMatchMode,
     ToolArgsMatchOverrides,
 )
-from typing import Callable, Optional
+from langchain_core.messages import BaseMessage
+from langchain_core.messages.utils import convert_to_openai_messages
+from typing import Callable, Optional, Union
+
+
+# More flexible version of converting to OpenAI messages for trajectories
+def _convert_to_openai_message(
+    message: Union[ChatCompletionMessage, BaseMessage, dict],
+) -> ChatCompletionMessage:
+    if not isinstance(message, BaseMessage):
+        if not isinstance(message, dict):
+            message = dict(message)
+        if message.get("role") in ["ai", "assistant"] and message.get("tool_calls"):
+            message["tool_calls"] = [
+                {**tool_call, "id": tool_call.get("id", "")}
+                for tool_call in message["tool_calls"]
+            ]
+        if message.get("role") == "tool" and message.get("tool_call_id") is None:
+            message["tool_call_id"] = ""
+        if message.get("content") is None:
+            message["content"] = ""
+    converted = convert_to_openai_messages([message])[0]  # type: ignore
+    if isinstance(message, BaseMessage):
+        if message.id is not None and converted.get("id") is None:
+            converted["id"] = message.id
+    else:
+        if message.get("id") is not None and converted.get("id") is None:
+            converted["id"] = message.get("id")
+    return converted  # type: ignore
+
+
+def _normalize_to_openai_messages_list(
+    messages: Optional[
+        Union[
+            list[ChatCompletionMessage], list[BaseMessage], ChatCompletionMessage, dict
+        ]
+    ],
+) -> list[ChatCompletionMessage]:
+    if messages is None:
+        return []
+    if isinstance(messages, dict):
+        if "role" in messages:
+            messages = [messages]  # type: ignore
+        elif "messages" in messages:
+            messages = messages["messages"]  # type: ignore
+        else:
+            raise ValueError("if messages is a dict, it must contain a 'messages' key")
+    if not isinstance(messages, list):
+        messages = [messages]  # type: ignore
+    return [_convert_to_openai_message(message) for message in messages]  # type: ignore
 
 
 def _normalize_tool_call(tool_call: dict) -> dict:
