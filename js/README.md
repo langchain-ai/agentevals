@@ -724,7 +724,7 @@ const graphTrajectoryEvaluator = createGraphTrajectoryLLMAsJudge({
   prompt: CUSTOM_PROMPT,
   model: "openai:o3-mini",
 })
-res = await graphTrajectoryEvaluator({
+const res = await graphTrajectoryEvaluator({
   inputs: extractedTrajectory.inputs,
   outputs: extractedTrajectory.outputs,
 })
