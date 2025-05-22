@@ -1148,7 +1148,7 @@ __metadata:
     langchain: ^0.3.18
     langsmith: ^0.3.11
     openai: ^4.85.1
-    openevals: ^0.0.3
+    openevals: ^0.1.0
     prettier: ^3.5.1
     typescript: ~5.1.6
     vitest: ^3.0.5
@@ -3403,6 +3403,26 @@ __metadata:
   languageName: node
   linkType: hard
 
+"langsmith@npm:^0.3.26":
+  version: 0.3.29
+  resolution: "langsmith@npm:0.3.29"
+  dependencies:
+    "@types/uuid": ^10.0.0
+    chalk: ^4.1.2
+    console-table-printer: ^2.12.1
+    p-queue: ^6.6.2
+    p-retry: 4
+    semver: ^7.6.3
+    uuid: ^10.0.0
+  peerDependencies:
+    openai: "*"
+  peerDependenciesMeta:
+    openai:
+      optional: true
+  checksum: 5e714752d40bd90525436d2d977ed0e750031f946dbc6c5549a1d7ceb5546b48dfcc23a1fb1b758f18d954fe53e6089b7ca600c60f2f72d854aa24d5ff0a41fa
+  languageName: node
+  linkType: hard
+
 "levn@npm:^0.4.1":
   version: 0.4.1
   resolution: "levn@npm:0.4.1"
@@ -3861,16 +3881,24 @@ __metadata:
   languageName: node
   linkType: hard
 
-"openevals@npm:^0.0.3":
-  version: 0.0.3
-  resolution: "openevals@npm:0.0.3"
+"openevals@npm:^0.1.0":
+  version: 0.1.0
+  resolution: "openevals@npm:0.1.0"
   dependencies:
     "@langchain/openai": ^0.4.4
     langchain: ^0.3.18
-    langsmith: ^0.3.11
+    langsmith: ^0.3.26
+    uuid: ^11.1.0
+    zod: ^3.24.2
+    zod-to-json-schema: ^3.24.5
   peerDependencies:
+    "@e2b/code-interpreter": ^1.0.4
     "@langchain/core": ^0.3.40
-  checksum: 241ff323bea8bf81eb4fade2cd3c2544fa393f9979ccb6472435f999964db0f370ec63c79b23272a3740935726bc7fd18893a1a94607dbf6c0f33aacd8ea0cbb
+    typescript: "*"
+  peerDependenciesMeta:
+    typescript:
+      optional: true
+  checksum: 91d774dfff394357efb3efe664c419b29d797a8b203ed891773e593bb821df583b356c670f18db2fe12ff0671aa380850ab94750a934999261a4bdb6d35b5542
   languageName: node
   linkType: hard
 
@@ -5080,6 +5108,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"uuid@npm:^11.1.0":
+  version: 11.1.0
+  resolution: "uuid@npm:11.1.0"
+  bin:
+    uuid: dist/esm/bin/uuid
+  checksum: 840f19758543c4631e58a29439e51b5b669d5f34b4dd2700b6a1d15c5708c7a6e0c3e2c8c4a2eae761a3a7caa7e9884d00c86c02622ba91137bd3deade6b4b4a
+  languageName: node
+  linkType: hard
+
 "uuid@npm:^9.0.0":
   version: 9.0.1
   resolution: "uuid@npm:9.0.1"
@@ -5437,6 +5474,15 @@ __metadata:
   peerDependencies:
     zod: ^3.24.1
   checksum: 7195563f611bc21ea7f44129b8e32780125a9bd98b2e6b8709ac98bd2645729fecd87b8aeeaa8789617ee3f38e6585bab23dd613e2a35c31c6c157908f7a1681
+  languageName: node
+  linkType: hard
+
+"zod-to-json-schema@npm:^3.24.5":
+  version: 3.24.5
+  resolution: "zod-to-json-schema@npm:3.24.5"
+  peerDependencies:
+    zod: ^3.24.1
+  checksum: dc4e5e4c06e9a5494e4b1d8c8363ac907f9d488f36c8e4923e1e5ac4f91f737722f99200cd92a409551e7456d960734d4cabd37935234ca95e290572468ffc08
   languageName: node
   linkType: hard
 
