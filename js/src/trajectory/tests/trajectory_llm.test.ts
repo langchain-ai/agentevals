@@ -5,6 +5,7 @@ import {
   createTrajectoryLLMAsJudge,
   TRAJECTORY_ACCURACY_PROMPT,
 } from "../llm.js";
+import { ChatCompletionMessage } from "../../types.js";
 
 ls.describe("Trajectory LLM", () => {
   ls.test(
@@ -36,7 +37,7 @@ ls.describe("Trajectory LLM", () => {
           role: "assistant",
           content: "The weather in SF is 80 degrees and sunny.",
         },
-      ];
+      ] satisfies ChatCompletionMessage[];
 
       const referenceOutputs = [
         { role: "user", content: "What is the weather in SF?" },
@@ -57,7 +58,7 @@ ls.describe("Trajectory LLM", () => {
           content: "It's 80 degrees and sunny in San Francisco.",
         },
         { role: "assistant", content: "The weather in SF is 80˚ and sunny." },
-      ];
+      ] satisfies ChatCompletionMessage[];
 
       const evalResult = await evaluator({
         inputs,
@@ -75,28 +76,27 @@ ls.describe("Trajectory LLM", () => {
       prompt: TRAJECTORY_ACCURACY_PROMPT,
       model: "openai:o3-mini",
     });
-    const outputs = [
-      { role: "user", content: "What is the weather in SF?" },
-      {
-        role: "assistant",
-        content: "",
-        tool_calls: [
-          {
-            function: {
-              name: "get_weather",
-              arguments: JSON.stringify({ city: "SF" }),
-            },
-          },
-        ],
-      },
-      { role: "tool", content: "It's 80 degrees and sunny in SF." },
-      {
-        role: "assistant",
-        content: "The weather in SF is 80 degrees and sunny.",
-      },
-    ];
     const evalResult = await evaluator({
-      outputs,
+      outputs: [
+        { role: "user", content: "What is the weather in SF?" },
+        {
+          role: "assistant",
+          content: "",
+          tool_calls: [
+            {
+              function: {
+                name: "get_weather",
+                arguments: JSON.stringify({ city: "SF" }),
+              },
+            },
+          ],
+        },
+        { role: "tool", content: "It's 80 degrees and sunny in SF." },
+        {
+          role: "assistant",
+          content: "The weather in SF is 80 degrees and sunny.",
+        },
+      ],
     });
 
     expect(evalResult.key).toBe("trajectory_accuracy");
@@ -127,7 +127,7 @@ ls.describe("Trajectory LLM", () => {
         role: "assistant",
         content: "The weather in SF is 80 degrees and sunny.",
       },
-    ];
+    ] satisfies ChatCompletionMessage[];
     const evalResult = await evaluator({
       outputs,
     });
@@ -194,7 +194,7 @@ According to this reference trajectory:
           role: "assistant",
           content: "The weather in SF is 80 degrees and sunny.",
         },
-      ];
+      ] satisfies ChatCompletionMessage[];
 
       const referenceOutputs = [
         { role: "user", content: "What is the weather in SF?" },
@@ -215,7 +215,7 @@ According to this reference trajectory:
           content: "It's 80 degrees and sunny in San Francisco.",
         },
         { role: "assistant", content: "The weather in SF is 80˚ and sunny." },
-      ];
+      ] satisfies ChatCompletionMessage[];
 
       const evalResult = await evaluator({
         inputs,
