@@ -1,10 +1,16 @@
 /* eslint-disable no-promise-executor-return */
 import { expect, test } from "vitest";
-import { Annotation, StateGraph, MemorySaver } from "@langchain/langgraph";
+import {
+  Annotation,
+  StateGraph,
+  MemorySaver,
+  Command,
+  Send,
+} from "@langchain/langgraph";
 
 import { extractLangGraphTrajectoryFromThread } from "../utils.js";
 
-test("trajectory match", async () => {
+test("extract trajectory", async () => {
   const checkpointer = new MemorySaver();
 
   const inner = new StateGraph(
@@ -90,6 +96,99 @@ test("trajectory match", async () => {
           "inner:inner2",
         ],
         ["outer2"],
+      ],
+    },
+  });
+});
+
+test("extract trajectory from graph with Command", async () => {
+  const checkpointer = new MemorySaver();
+
+  const graph = new StateGraph(
+    Annotation.Root({
+      items: Annotation<string[]>({
+        reducer: (a, b) => a.concat(b),
+        default: () => [],
+      }),
+      processedCount: Annotation<number>({
+        reducer: (_, b) => b,
+        default: () => 0,
+      }),
+    })
+  )
+    .addNode(
+      "dispatcher",
+      (state) => {
+        // Use Command with Send to route to multiple processing nodes dynamically
+        const sends = state.items.map(
+          (item, index) =>
+            new Send(`process_${index % 2}`, { items: [item], index })
+        );
+        return new Command({
+          update: { processedCount: state.items.length },
+          goto: sends,
+        });
+      },
+      {
+        ends: ["process_0", "process_1"],
+      }
+    )
+    .addNode("process_0", (state) => {
+      return { items: [`processed_0: ${state.items?.join(", ")}`] };
+    })
+    .addNode("process_1", (state) => {
+      return { items: [`processed_1: ${state.items?.join(", ")}`] };
+    })
+    .addNode("aggregator", (state) => {
+      return { items: [`final count: ${state.processedCount}`] };
+    })
+    .addEdge("__start__", "dispatcher")
+    .addEdge(["process_0", "process_1"], "aggregator")
+    .compile({ checkpointer });
+
+  const config = { configurable: { thread_id: "3" } };
+
+  await graph.invoke(
+    {
+      items: ["task1", "task2", "task3"],
+    },
+    config
+  );
+
+  const trajectory = await extractLangGraphTrajectoryFromThread(graph, config);
+
+  expect(trajectory).toEqual({
+    inputs: [
+      {
+        __start__: {
+          items: ["task1", "task2", "task3"],
+        },
+      },
+    ],
+    outputs: {
+      results: [
+        {
+          items: [
+            "task1",
+            "task2",
+            "task3",
+            "processed_0: task1",
+            "processed_1: task2",
+            "processed_0: task3",
+            "final count: 3",
+          ],
+          processedCount: 3,
+        },
+      ],
+      steps: [
+        [
+          "__start__",
+          "dispatcher",
+          "process_0",
+          "process_1",
+          "process_0",
+          "aggregator",
+        ],
       ],
     },
   });
