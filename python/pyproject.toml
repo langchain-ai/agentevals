@@ -1,6 +1,6 @@
 [project]
 name = "agentevals"
-version = "0.0.7"
+version = "0.0.8"
 license = {text = "MIT"}
 description = "Open-source evaluators for LLM agents"
 readme = "README.md"
