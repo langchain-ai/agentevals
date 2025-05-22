@@ -15,10 +15,11 @@ export type ExtractedLangGraphThreadTrajectory = {
   outputs: GraphTrajectory;
 };
 
-export type TrajectoryLLMAsJudgeParams = Omit<
-  Parameters<typeof createLLMAsJudge>[0],
-  "prompt"
-> & { prompt?: string };
+export type TrajectoryLLMAsJudgeParams = Partial<
+  Omit<Parameters<typeof createLLMAsJudge>[0], "prompt">
+> & {
+  prompt?: Parameters<typeof createLLMAsJudge>[0]["prompt"];
+};
 
 export type ToolArgsMatchMode = "exact" | "ignore" | "subset" | "superset";
 

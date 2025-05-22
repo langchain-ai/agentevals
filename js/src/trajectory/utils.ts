@@ -228,7 +228,7 @@ export function _chatCompletionMessagesToString(
     // Handle tool/function calls
     if (message.tool_calls) {
       const toolCallsStr = message.tool_calls
-        .map((call) => {
+        .map((call: { function: { name: string; arguments: string } }) => {
           const func = call.function ?? {};
           return `<tool_call>\n<name>${func.name ?? ""}</name>\n<arguments>${func.arguments ?? ""}</arguments>\n</tool_call>`;
         })
