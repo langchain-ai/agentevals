@@ -677,10 +677,10 @@ const graphTrajectoryEvaluator = createGraphTrajectoryLLMAsJudge({
     model: "openai:o3-mini",
 })
 
-const res = await graphTrajectoryEvaluator(
-    inputs=extractedTrajectory.inputs,
-    outputs=extractedTrajectory.outputs,
-)
+const res = await graphTrajectoryEvaluator({
+    inputs: extractedTrajectory.inputs,
+    outputs: extractedTrajectory.outputs,
+})
 
 console.log(res);
 ```
@@ -724,10 +724,10 @@ const graphTrajectoryEvaluator = createGraphTrajectoryLLMAsJudge({
   prompt: CUSTOM_PROMPT,
   model: "openai:o3-mini",
 })
-res = await graphTrajectoryEvaluator(
+res = await graphTrajectoryEvaluator({
   inputs: extractedTrajectory.inputs,
   outputs: extractedTrajectory.outputs,
-)
+})
 ```
 
 In order to format them properly into the prompt, `reference_outputs` should be passed in as a `GraphTrajectory` object like `outputs`.
