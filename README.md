@@ -117,7 +117,7 @@ const outputs = [
     role: "assistant",
     content: "The weather in SF is 80 degrees and sunny.",
   },
-] satsifies ChatCompletionMessage[];
+] satisfies ChatCompletionMessage[];
 
 const evalResult = await trajectoryEvaluator({
   outputs,

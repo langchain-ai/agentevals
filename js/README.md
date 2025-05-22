@@ -56,7 +56,7 @@ const outputs = [
     role: "assistant",
     content: "The weather in SF is 80 degrees and sunny.",
   },
-] satsifies ChatCompletionMessage[];
+] satisfies ChatCompletionMessage[];
 
 const evalResult = await trajectoryEvaluator({
   outputs,
@@ -694,9 +694,9 @@ const graphTrajectoryEvaluator = createGraphTrajectoryLLMAsJudge({
 })
 
 const res = await graphTrajectoryEvaluator({
-    inputs: extractedTrajectory.inputs,
-    outputs: extractedTrajectory.outputs,
-})
+  inputs: extractedTrajectory.inputs,
+  outputs: extractedTrajectory.outputs,
+});
 
 console.log(res);
 ```
@@ -743,7 +743,7 @@ const graphTrajectoryEvaluator = createGraphTrajectoryLLMAsJudge({
 const res = await graphTrajectoryEvaluator({
   inputs: extractedTrajectory.inputs,
   outputs: extractedTrajectory.outputs,
-})
+});
 ```
 
 In order to format them properly into the prompt, `reference_outputs` should be passed in as a `GraphTrajectory` object like `outputs`.
