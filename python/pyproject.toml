@@ -11,7 +11,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "langgraph>=0.2.73",
+    "langgraph>=0.5.4",
     "mypy>=1.15.0",
     "openai>=1.61.1",
     "openevals>=0.1.0",

@@ -60,7 +60,15 @@ def extract_langgraph_trajectory_from_snapshots(
                 trajectory["steps"][-1].append(f"{subgraph_path}{task.name}")
         if is_acc_steps:
             if snapshot.metadata is not None and snapshot.metadata["source"] == "input":
-                inputs.append(snapshot.metadata["writes"])
+                # Pre 0.5.x LangGraph versions
+                if (
+                    "writes" in snapshot.metadata
+                    and snapshot.metadata["writes"] is not None
+                ):
+                    inputs.append(snapshot.metadata["writes"])
+                else:
+                    for task in snapshot.tasks:
+                        inputs.append({task.name: task.result})
             elif i + 1 < len(snapshot_list) and any(
                 t.interrupts for t in snapshot_list[i + 1].tasks
             ):
