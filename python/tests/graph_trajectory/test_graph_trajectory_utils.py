@@ -1,4 +1,3 @@
-import os
 import pytest
 
 from agentevals.graph_trajectory.utils import (
