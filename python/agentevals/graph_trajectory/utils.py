@@ -67,8 +67,7 @@ def extract_langgraph_trajectory_from_snapshots(
                 ):
                     inputs.append(snapshot.metadata["writes"])
                 else:
-                    for task in snapshot.tasks:
-                        inputs.append({task.name: task.result})
+                    inputs.extend({task.name: task.result} for task in snapshot.tasks)
             elif i + 1 < len(snapshot_list) and any(
                 t.interrupts for t in snapshot_list[i + 1].tasks
             ):
