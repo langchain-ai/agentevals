@@ -1,6 +1,7 @@
 import { BaseMessage } from "@langchain/core/messages";
 import {
   ChatCompletionMessage,
+  FlexibleChatCompletionMessage,
   EvaluatorResult,
   ToolArgsMatchMode,
   ToolArgsMatchOverrides,
@@ -9,14 +10,8 @@ import { _normalizeToOpenAIMessagesList, _runEvaluator } from "../utils.js";
 import { _getMatcherForToolName } from "./utils.js";
 
 export async function _scorer(params: {
-  outputs:
-    | ChatCompletionMessage[]
-    | BaseMessage[]
-    | { messages: (BaseMessage | ChatCompletionMessage)[] };
-  referenceOutputs:
-    | ChatCompletionMessage[]
-    | BaseMessage[]
-    | { messages: (BaseMessage | ChatCompletionMessage)[] };
+  outputs: ChatCompletionMessage[];
+  referenceOutputs: ChatCompletionMessage[];
   toolArgsMatchMode: ToolArgsMatchMode;
   toolArgsMatchOverrides?: ToolArgsMatchOverrides;
 }): Promise<boolean> {
@@ -26,9 +21,8 @@ export async function _scorer(params: {
     toolArgsMatchMode,
     toolArgsMatchOverrides,
   } = params;
-  const normalizedOutputs = _normalizeToOpenAIMessagesList(outputs);
-  const normalizedReferenceOutputs =
-    _normalizeToOpenAIMessagesList(referenceOutputs);
+  const normalizedOutputs = outputs;
+  const normalizedReferenceOutputs = referenceOutputs;
 
   if (!normalizedOutputs || !normalizedReferenceOutputs) {
     throw new Error(
@@ -112,20 +106,40 @@ export async function _scorer(params: {
 export async function trajectoryStrictMatch(params: {
   outputs:
     | ChatCompletionMessage[]
+    | FlexibleChatCompletionMessage[]
     | BaseMessage[]
-    | { messages: (BaseMessage | ChatCompletionMessage)[] };
+    | {
+        messages: (
+          | BaseMessage
+          | ChatCompletionMessage
+          | FlexibleChatCompletionMessage
+        )[];
+      };
   referenceOutputs:
     | ChatCompletionMessage[]
+    | FlexibleChatCompletionMessage[]
     | BaseMessage[]
-    | { messages: (BaseMessage | ChatCompletionMessage)[] };
+    | {
+        messages: (
+          | BaseMessage
+          | ChatCompletionMessage
+          | FlexibleChatCompletionMessage
+        )[];
+      };
   toolCallArgsExactMatch: boolean;
 }): Promise<EvaluatorResult> {
+  const normalizedOutputs = _normalizeToOpenAIMessagesList(params.outputs);
+  const normalizedReferenceOutputs = _normalizeToOpenAIMessagesList(
+    params.referenceOutputs
+  );
+
   return _runEvaluator(
     "trajectory_strict_match",
     _scorer,
     "trajectory_strict_match",
     {
-      ...params,
+      outputs: normalizedOutputs,
+      referenceOutputs: normalizedReferenceOutputs,
       toolArgsMatchMode: params.toolCallArgsExactMatch ? "exact" : "ignore",
     }
   );

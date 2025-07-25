@@ -4,7 +4,7 @@ import { expect } from "vitest";
 
 import { HumanMessage, AIMessage, ToolMessage } from "@langchain/core/messages";
 import { createTrajectoryMatchEvaluator } from "../match.js";
-import { ChatCompletionMessage } from "../../types.js";
+import { FlexibleChatCompletionMessage } from "../../types.js";
 
 ls.describe("trajectory", () => {
   ls.test.each([
@@ -29,64 +29,62 @@ ls.describe("trajectory", () => {
       feedbackKey: "trajectory_subset_match",
     },
   ])("trajectory exact match", async ({ trajectoryMatchMode, feedbackKey }) => {
-    const outputs = [
-      {
-        role: "user",
-        content: "What is the weather in SF?",
-      },
-      {
-        role: "assistant",
-        content: "",
-        tool_calls: [
-          {
-            function: {
-              name: "get_weather",
-              arguments: JSON.stringify({ city: "San Francisco" }),
-            },
-          },
-        ],
-      },
-      {
-        role: "tool",
-        content: "It's 80 degrees and sunny in SF.",
-      },
-      {
-        role: "assistant",
-        content: "The weather in SF is 80 degrees and sunny.",
-      },
-    ] satisfies ChatCompletionMessage[];
-    const referenceOutputs = [
-      {
-        role: "user",
-        content: "What is the weather in SF?",
-      },
-      {
-        role: "assistant",
-        content: "",
-        tool_calls: [
-          {
-            function: {
-              name: "get_weather",
-              arguments: JSON.stringify({ city: "San Francisco" }),
-            },
-          },
-        ],
-      },
-      {
-        role: "tool",
-        content: "It's 80˚ and sunny in San Francisco.",
-      },
-      {
-        role: "assistant",
-        content: "The weather in San Francisco is 80˚ and sunny.",
-      },
-    ] satisfies ChatCompletionMessage[];
     const evaluator = createTrajectoryMatchEvaluator({
       trajectoryMatchMode,
     });
     const result = await evaluator({
-      outputs,
-      referenceOutputs,
+      outputs: [
+        {
+          role: "user",
+          content: "What is the weather in SF?",
+        },
+        {
+          role: "assistant",
+          content: "",
+          tool_calls: [
+            {
+              function: {
+                name: "get_weather",
+                arguments: JSON.stringify({ city: "San Francisco" }),
+              },
+            },
+          ],
+        },
+        {
+          role: "tool",
+          content: "It's 80 degrees and sunny in SF.",
+        },
+        {
+          role: "assistant",
+          content: "The weather in SF is 80 degrees and sunny.",
+        },
+      ],
+      referenceOutputs: [
+        {
+          role: "user",
+          content: "What is the weather in SF?",
+        },
+        {
+          role: "assistant",
+          content: "",
+          tool_calls: [
+            {
+              function: {
+                name: "get_weather",
+                arguments: JSON.stringify({ city: "San Francisco" }),
+              },
+            },
+          ],
+        },
+        {
+          role: "tool",
+          content: "It's 80˚ and sunny in San Francisco.",
+        },
+        {
+          role: "assistant",
+          content: "The weather in San Francisco is 80˚ and sunny.",
+        },
+      ],
     });
     expect(result).toBeDefined();
     expect(result.key).toBe(feedbackKey);
@@ -154,7 +152,7 @@ ls.describe("trajectory", () => {
           content:
             "The weather in SF is 80 degrees and sunny. In London, it's 90 degrees and rainy.",
         },
-      ] satisfies ChatCompletionMessage[];
+      ] satisfies FlexibleChatCompletionMessage[];
       const referenceOutputs = [
         {
           role: "user",
@@ -191,7 +189,7 @@ ls.describe("trajectory", () => {
           content:
             "The weather in London is 90˚ and rainy. In SF, it's 80˚ and sunny.",
         },
-      ] satisfies ChatCompletionMessage[];
+      ] satisfies FlexibleChatCompletionMessage[];
       const evaluator = createTrajectoryMatchEvaluator({
         trajectoryMatchMode,
       });
@@ -276,7 +274,7 @@ ls.describe("trajectory", () => {
           content:
             "The weather in SF is 80 degrees and sunny. In London, it's 90 degrees and rainy.",
         },
-      ] satisfies ChatCompletionMessage[];
+      ] satisfies FlexibleChatCompletionMessage[];
       const referenceOutputs = [
         {
           role: "user",
@@ -313,7 +311,7 @@ ls.describe("trajectory", () => {
           content:
             "The weather in London is 90˚ and rainy. In SF, it's 80˚ and sunny.",
         },
-      ] satisfies ChatCompletionMessage[];
+      ] satisfies FlexibleChatCompletionMessage[];
       const evaluator = createTrajectoryMatchEvaluator({
         trajectoryMatchMode,
       });
@@ -382,7 +380,7 @@ ls.describe("trajectory", () => {
           content:
             "The weather in SF is 80 degrees and sunny. In London, it's 9000 degrees and hallucinating.",
         },
-      ] satisfies ChatCompletionMessage[];
+      ] satisfies FlexibleChatCompletionMessage[];
       const referenceOutputs = [
         {
           role: "user",
@@ -419,7 +417,7 @@ ls.describe("trajectory", () => {
           content:
             "The weather in London is 90˚ and rainy. In SF, it's 80˚ and sunny.",
         },
-      ] satisfies ChatCompletionMessage[];
+      ] satisfies FlexibleChatCompletionMessage[];
       const evaluator = createTrajectoryMatchEvaluator({
         trajectoryMatchMode,
       });
@@ -487,7 +485,7 @@ ls.describe("trajectory", () => {
           role: "assistant",
           content: "The weather in SF is 80 degrees and sunny.",
         },
-      ] satisfies ChatCompletionMessage[];
+      ] satisfies FlexibleChatCompletionMessage[];
       const referenceOutputs = [
         {
           role: "user",
@@ -513,7 +511,7 @@ ls.describe("trajectory", () => {
           role: "assistant",
           content: "The weather in SF is 80˚ and sunny.",
         },
-      ] satisfies ChatCompletionMessage[];
+      ] satisfies FlexibleChatCompletionMessage[];
       const evaluator = createTrajectoryMatchEvaluator({
         trajectoryMatchMode,
       });
@@ -592,7 +590,7 @@ ls.describe("trajectory", () => {
           content:
             "The weather in SF is 80˚ and sunny. In London, it's 90˚ and rainy.",
         },
-      ] satisfies ChatCompletionMessage[];
+      ] satisfies FlexibleChatCompletionMessage[];
       const referenceOutputs = [
         {
           role: "user",
@@ -620,7 +618,7 @@ ls.describe("trajectory", () => {
           content:
             "The weather in SF is 80 degrees and sunny. In London, it's 90 degrees and rainy.",
         },
-      ] satisfies ChatCompletionMessage[];
+      ] satisfies FlexibleChatCompletionMessage[];
       const evaluator = createTrajectoryMatchEvaluator({
         trajectoryMatchMode,
       });
@@ -1009,7 +1007,7 @@ ls.describe("trajectory", () => {
           content:
             "The next flight after that is LX0112 from CDG to BSL is in 4 hours. However, we do not currently allow upgrades to first class. Confirming that I should book it for you anyway?",
         },
-      ] satisfies ChatCompletionMessage[];
+      ] satisfies FlexibleChatCompletionMessage[];
 
       const referenceOutputs = [
         { role: "user", content: "Hi there, what time is my flight?" },
@@ -1085,7 +1083,7 @@ ls.describe("trajectory", () => {
           content:
             "Ok, it looks like upgrades to first class are possible. What date would you like to change your flight to?",
         },
-      ] satisfies ChatCompletionMessage[];
+      ] satisfies FlexibleChatCompletionMessage[];
       const evaluatorNoOverrides = createTrajectoryMatchEvaluator({
         trajectoryMatchMode,
       });
@@ -1231,7 +1229,7 @@ ls.describe("trajectory", () => {
           content:
             "The next flight after that is LX0112 from CDG to BSL is in 4 hours. However, we do not currently allow upgrades to first class. Confirming that I should book it for you anyway?",
         },
-      ] satisfies ChatCompletionMessage[];
+      ] satisfies FlexibleChatCompletionMessage[];
       const referenceOutputs = [
         { role: "user", content: "Hi there, what time is my flight?" },
         {
@@ -1310,7 +1308,7 @@ ls.describe("trajectory", () => {
           content:
             "Ok, it looks like upgrades to first class are possible. What date would you like to change your flight to?",
         },
-      ] satisfies ChatCompletionMessage[];
+      ] satisfies FlexibleChatCompletionMessage[];
 
       const evaluatorNoOverrides = createTrajectoryMatchEvaluator({
         trajectoryMatchMode,
@@ -1360,7 +1358,7 @@ ls.describe("trajectory", () => {
         ],
       },
       { role: "assistant", content: "Your flight is at 10:00 AM." },
-    ] satisfies ChatCompletionMessage[];
+    ] satisfies FlexibleChatCompletionMessage[];
     const referenceOutputs = [
       { role: "user", content: "Hi there, what time is my flight?" },
       {
@@ -1378,7 +1376,7 @@ ls.describe("trajectory", () => {
         ],
       },
       { role: "assistant", content: "Your flight is at 10:00 AM." },
-    ] satisfies ChatCompletionMessage[];
+    ] satisfies FlexibleChatCompletionMessage[];
     const evaluator = createTrajectoryMatchEvaluator({
       toolArgsMatchMode: toolArgsMatchMode as any,
     });
@@ -1412,7 +1410,7 @@ ls.describe("trajectory", () => {
         ],
       },
       { role: "assistant", content: "Your flight is at 10:00 AM." },
-    ] satisfies ChatCompletionMessage[];
+    ] satisfies FlexibleChatCompletionMessage[];
     const referenceOutputs = [
       { role: "user", content: "Hi there, what time is my flight?" },
       {
@@ -1430,7 +1428,7 @@ ls.describe("trajectory", () => {
         ],
       },
       { role: "assistant", content: "Your flight is at 10:00 AM." },
-    ] satisfies ChatCompletionMessage[];
+    ] satisfies FlexibleChatCompletionMessage[];
     const evaluator = createTrajectoryMatchEvaluator({
       toolArgsMatchMode: toolArgsMatchMode as any,
     });
@@ -1464,7 +1462,7 @@ ls.describe("trajectory", () => {
         ],
       },
       { role: "assistant", content: "Your flight is at 10:00 AM." },
-    ] satisfies ChatCompletionMessage[];
+    ] satisfies FlexibleChatCompletionMessage[];
     const referenceOutputs = [
       { role: "user", content: "Hi there, what time is my flight?" },
       {
@@ -1482,7 +1480,7 @@ ls.describe("trajectory", () => {
         ],
       },
       { role: "assistant", content: "Your flight is at 10:00 AM." },
-    ] satisfies ChatCompletionMessage[];
+    ] satisfies FlexibleChatCompletionMessage[];
     const evaluator = createTrajectoryMatchEvaluator({
       toolArgsMatchMode: toolArgsMatchMode as any,
     });

@@ -1,6 +1,7 @@
 import { BaseMessage } from "@langchain/core/messages";
 import {
   ChatCompletionMessage,
+  FlexibleChatCompletionMessage,
   ToolArgsMatchMode,
   ToolArgsMatchOverrides,
 } from "../types.js";
@@ -100,12 +101,26 @@ export function createTrajectoryMatchEvaluator({
   }: {
     outputs:
       | ChatCompletionMessage[]
+      | FlexibleChatCompletionMessage[]
       | BaseMessage[]
-      | { messages: (BaseMessage | ChatCompletionMessage)[] };
+      | {
+          messages: (
+            | BaseMessage
+            | ChatCompletionMessage
+            | FlexibleChatCompletionMessage
+          )[];
+        };
     referenceOutputs:
       | ChatCompletionMessage[]
+      | FlexibleChatCompletionMessage[]
       | BaseMessage[]
-      | { messages: (BaseMessage | ChatCompletionMessage)[] };
+      | {
+          messages: (
+            | BaseMessage
+            | ChatCompletionMessage
+            | FlexibleChatCompletionMessage
+          )[];
+        };
     [key: string]: unknown;
   }) {
     const normalizedOutputs = _normalizeToOpenAIMessagesList(outputs);

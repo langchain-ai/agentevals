@@ -1,6 +1,7 @@
 import { BaseMessage } from "@langchain/core/messages";
 import {
   ChatCompletionMessage,
+  FlexibleChatCompletionMessage,
   EvaluatorResult,
   ToolArgsMatchMode,
   ToolArgsMatchOverrides,
@@ -46,13 +47,25 @@ export const _scorer = async (params: {
  */
 export async function trajectoryUnorderedMatch(params: {
   outputs:
-    | ChatCompletionMessage[]
+    | FlexibleChatCompletionMessage[]
     | BaseMessage[]
-    | { messages: (BaseMessage | ChatCompletionMessage)[] };
+    | {
+        messages: (
+          | BaseMessage
+          | ChatCompletionMessage
+          | FlexibleChatCompletionMessage
+        )[];
+      };
   referenceOutputs:
-    | ChatCompletionMessage[]
+    | FlexibleChatCompletionMessage[]
     | BaseMessage[]
-    | { messages: (BaseMessage | ChatCompletionMessage)[] };
+    | {
+        messages: (
+          | BaseMessage
+          | ChatCompletionMessage
+          | FlexibleChatCompletionMessage
+        )[];
+      };
 }): Promise<EvaluatorResult> {
   const { outputs, referenceOutputs } = params;
   const outputsList = _normalizeToOpenAIMessagesList(outputs);

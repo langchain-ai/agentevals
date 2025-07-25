@@ -3404,8 +3404,8 @@ __metadata:
   linkType: hard
 
 "langsmith@npm:^0.3.26":
-  version: 0.3.29
-  resolution: "langsmith@npm:0.3.29"
+  version: 0.3.48
+  resolution: "langsmith@npm:0.3.48"
   dependencies:
     "@types/uuid": ^10.0.0
     chalk: ^4.1.2
@@ -3415,11 +3415,20 @@ __metadata:
     semver: ^7.6.3
     uuid: ^10.0.0
   peerDependencies:
+    "@opentelemetry/api": "*"
+    "@opentelemetry/exporter-trace-otlp-proto": "*"
+    "@opentelemetry/sdk-trace-base": "*"
     openai: "*"
   peerDependenciesMeta:
+    "@opentelemetry/api":
+      optional: true
+    "@opentelemetry/exporter-trace-otlp-proto":
+      optional: true
+    "@opentelemetry/sdk-trace-base":
+      optional: true
     openai:
       optional: true
-  checksum: 5e714752d40bd90525436d2d977ed0e750031f946dbc6c5549a1d7ceb5546b48dfcc23a1fb1b758f18d954fe53e6089b7ca600c60f2f72d854aa24d5ff0a41fa
+  checksum: bb535aec6ae05cd8f07bb4f32ccffa06f91793360bcd5045cab1387e52322756c5592dbdcb67e5b5358818da1913958cd63716ce6d4d3e9e016cfd3737bd57fe
   languageName: node
   linkType: hard
 

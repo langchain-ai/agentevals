@@ -2,6 +2,28 @@ import { createLLMAsJudge } from "openevals/llm";
 
 export * from "openevals/types";
 
+// More tolerant version of ChatCompletionMessage that allows missing tool_call_id
+export type FlexibleChatCompletionMessage = Record<string, any> &
+  (
+    | {
+        content: any;
+        role: "user" | "system" | "developer";
+        id?: string;
+      }
+    | {
+        role: "assistant";
+        content: any;
+        tool_calls?: any[];
+        id?: string;
+      }
+    | {
+        role: "tool";
+        content: any;
+        tool_call_id?: string; // Made optional for backward compatibility
+        id?: string;
+      }
+  );
+
 // Trajectory extracted from agent
 export type GraphTrajectory = {
   inputs?: (Record<string, unknown> | null)[];

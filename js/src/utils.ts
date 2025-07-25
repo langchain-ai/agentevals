@@ -6,6 +6,7 @@ import {
 } from "openevals/utils";
 import {
   ChatCompletionMessage,
+  FlexibleChatCompletionMessage,
   MultiResultScorerReturnType,
   SingleResultScorerReturnType,
 } from "./types.js";
@@ -21,15 +22,48 @@ export const _convertToOpenAIMessage = (
   }
 };
 
+export const _convertToChatCompletionMessage = (
+  message: BaseMessage | ChatCompletionMessage | FlexibleChatCompletionMessage
+): ChatCompletionMessage => {
+  let converted: FlexibleChatCompletionMessage;
+
+  if (isBaseMessage(message)) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    converted = _convertMessagesToOpenAIParams([message])[0] as any;
+  } else {
+    converted = message as FlexibleChatCompletionMessage;
+  }
+
+  // For tool messages without tool_call_id, generate one for compatibility
+  if (converted.role === "tool" && !converted.tool_call_id) {
+    converted = {
+      ...converted,
+      tool_call_id: "generated-" + Math.random().toString(36).substring(2),
+    };
+  }
+
+  return converted as ChatCompletionMessage;
+};
+
 export const _normalizeToOpenAIMessagesList = (
   messages?:
-    | (BaseMessage | ChatCompletionMessage)[]
-    | { messages: (BaseMessage | ChatCompletionMessage)[] }
+    | (BaseMessage | ChatCompletionMessage | FlexibleChatCompletionMessage)[]
+    | {
+        messages: (
+          | BaseMessage
+          | ChatCompletionMessage
+          | FlexibleChatCompletionMessage
+        )[];
+      }
 ): ChatCompletionMessage[] => {
   if (!messages) {
     return [];
   }
-  let messagesList: (BaseMessage | ChatCompletionMessage)[];
+  let messagesList: (
+    | BaseMessage
+    | ChatCompletionMessage
+    | FlexibleChatCompletionMessage
+  )[];
   if (!Array.isArray(messages)) {
     if ("messages" in messages && Array.isArray(messages.messages)) {
       messagesList = messages.messages;
@@ -41,7 +75,7 @@ export const _normalizeToOpenAIMessagesList = (
   } else {
     messagesList = messages;
   }
-  return messagesList.map(_convertToOpenAIMessage);
+  return messagesList.map(_convertToChatCompletionMessage);
 };
 
 export const processScore = (
