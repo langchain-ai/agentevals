@@ -28,7 +28,7 @@ Once you've done this, you can run your first trajectory evaluator. We represent
 ```ts
 import {
   createTrajectoryLLMAsJudge,
-  type ChatCompletionMessage,
+  type FlexibleChatCompletionMessage,
   TRAJECTORY_ACCURACY_PROMPT,
 } from "agentevals";
 
@@ -56,7 +56,7 @@ const outputs = [
     role: "assistant",
     content: "The weather in SF is 80 degrees and sunny.",
   },
-] satisfies ChatCompletionMessage[];
+] satisfies FlexibleChatCompletionMessage[];
 
 const evalResult = await trajectoryEvaluator({
   outputs,
@@ -133,7 +133,7 @@ in the same order with the same tool calls. Note that it does allow for differen
 ```ts
 import {
   createTrajectoryMatchEvaluator,
-  type ChatCompletionMessage,
+  type FlexibleChatCompletionMessage,
 } from "agentevals";
 
 const outputs = [
@@ -155,7 +155,7 @@ const outputs = [
   },
   { role: "tool", content: "It's 80 degrees and sunny in SF." },
   { role: "assistant", content: "The weather in SF is 80 degrees and sunny." },
-] satisfies ChatCompletionMessage[];
+] satisfies FlexibleChatCompletionMessage[];
 
 const referenceOutputs = [
   { role: "user", content: "What is the weather in San Francisco?" },
@@ -170,7 +170,7 @@ const referenceOutputs = [
     }]
   },
   { role: "tool", content: "It's 80 degrees and sunny in San Francisco." },
-] satisfies ChatCompletionMessage[];
+] satisfies FlexibleChatCompletionMessage[];
 
 const evaluator = createTrajectoryMatchEvaluator({
   trajectoryMatchMode: "strict",
@@ -202,7 +202,7 @@ The `"unordered"` `trajectory_match_mode` compares two trajectories and ensures 
 ```ts
 import {
   createTrajectoryMatchEvaluator,
-  type ChatCompletionMessage,
+  type FlexibleChatCompletionMessage,
 } from "agentevals";
 
 const outputs = [
@@ -230,7 +230,7 @@ const outputs = [
   },
   { role: "tool", content: "Nothing fun is happening, you should stay indoors and read!" },
   { role: "assistant", content: "The weather in SF is 80 degrees and sunny, but there is nothing fun happening." },
-] satisifes ChatCompletionMessage[];
+] satisifes FlexibleChatCompletionMessage[];
 
 const referenceOutputs = [
   { role: "user", content: "What is the weather in SF and is there anything fun happening?" },
@@ -255,7 +255,7 @@ const referenceOutputs = [
   { role: "tool", content: "Nothing fun is happening, you should stay indoors and read!" },
   { role: "tool", content: "It's 80 degrees and sunny in SF." },
   { role: "assistant", content: "In SF, it's 80˚ and sunny, but there is nothing fun happening." },
-] satisfies ChatCompletionMessage[];
+] satisfies FlexibleChatCompletionMessage[];
 
 const evaluator = createTrajectoryMatchEvaluator({
   trajectoryMatchMode: "unordered",
@@ -287,7 +287,7 @@ The `"subset"` and `"superset"` modes match partial trajectories (ensuring that 
 ```ts
 import {
   createTrajectoryMatchEvaluator,
-  type ChatCompletionMessage
+  type FlexibleChatCompletionMessage
 } from "agentevals";
 
 const outputs = [
@@ -310,7 +310,7 @@ const outputs = [
   { role: "tool", content: "It's 80 degrees and sunny in SF, and 90 degrees and rainy in London." },
   { role: "tool", content: "Unknown." },
   { role: "assistant", content: "The weather in SF is 80 degrees and sunny. In London, it's 90 degrees and rainy."},
-] satisfies ChatCompletionMessage[];
+] satisfies FlexibleChatCompletionMessage[];
 
 const referenceOutputs = [
   { role: "user", content: "What is the weather in SF and London?" },
@@ -328,7 +328,7 @@ const referenceOutputs = [
   },
   { role: "tool", content: "It's 80 degrees and sunny in San Francisco, and 90 degrees and rainy in London." },
   { role: "assistant", content: "The weather in SF is 80˚ and sunny. In London, it's 90˚ and rainy." },
-] satisfies ChatCompletionMessage[];
+] satisfies FlexibleChatCompletionMessage[];
 
 const evaluator = createTrajectoryMatchEvaluator({
   trajectoryMatchMode: "superset", // or "subset"
@@ -376,7 +376,7 @@ Here's an example that allows case insensitivity for the arguments to a tool nam
 ```ts
 import {
   createTrajectoryMatchEvaluator,
-  type ChatCompletionMessage,
+  type FlexibleChatCompletionMessage,
 } from "agentevals";
 
 const outputs = [
@@ -393,7 +393,7 @@ const outputs = [
   },
   { role: "tool", content: "It's 80 degrees and sunny in SF." },
   { role: "assistant", content: "The weather in SF is 80 degrees and sunny." },
-] satisfies ChatCompletionMessage[];
+] satisfies FlexibleChatCompletionMessage[];
 
 const referenceOutputs = [
   { role: "user", content: "What is the weather in San Francisco?" },
@@ -408,7 +408,7 @@ const referenceOutputs = [
     }]
   },
   { role: "tool", content: "It's 80 degrees and sunny in San Francisco." },
-] satisfies ChatCompletionMessage[];
+] satisfies FlexibleChatCompletionMessage[];
 
 const evaluator = createTrajectoryMatchEvaluator({
   trajectoryMatchMode: "strict",
@@ -447,7 +447,7 @@ The LLM-as-judge trajectory evaluator that uses an LLM to evaluate the trajector
 import {
   createTrajectoryLLMAsJudge,
   TRAJECTORY_ACCURACY_PROMPT,
-  type ChatCompletionMessage,
+  type FlexibleChatCompletionMessage,
 } from "agentevals";
 
 const evaluator = createTrajectoryLLMAsJudge({
@@ -471,7 +471,7 @@ const outputs = [
   },
   {role: "tool", content: "It's 80 degrees and sunny in SF."},
   {role: "assistant", content: "The weather in SF is 80 degrees and sunny."},
-] satisfies ChatCompletionMessage[];
+] satisfies FlexibleChatCompletionMessage[];
 
 const result = await evaluator({ outputs });
 
@@ -492,7 +492,7 @@ If you have a reference trajectory, you can add an extra variable to your prompt
 import {
   createTrajectoryLLMAsJudge,
   TRAJECTORY_ACCURACY_PROMPT_WITH_REFERENCE,
-  type ChatCompletionMessage,
+  type FlexibleChatCompletionMessage,
 } from "agentevals";
 
 const evaluator = createTrajectoryLLMAsJudge({
@@ -516,7 +516,7 @@ const outputs = [
   },
   {role: "tool", content: "It's 80 degrees and sunny in SF."},
   {role: "assistant", content: "The weather in SF is 80 degrees and sunny."},
-] satisfies ChatCompletionMessage[];
+] satisfies FlexibleChatCompletionMessage[];
 
 const referenceOutputs = [
   {role: "user", content: "What is the weather in SF?"},
@@ -534,7 +534,7 @@ const referenceOutputs = [
   },
   {role: "tool", content: "It's 80 degrees and sunny in San Francisco."},
   {role: "assistant", content: "The weather in SF is 80˚ and sunny."},
-] satisfies ChatCompletionMessage[];
+] satisfies FlexibleChatCompletionMessage[];
 
 const result = await evaluator({
   outputs,

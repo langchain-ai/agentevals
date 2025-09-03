@@ -5,7 +5,7 @@ import {
   createTrajectoryLLMAsJudge,
   TRAJECTORY_ACCURACY_PROMPT,
 } from "../llm.js";
-import { ChatCompletionMessage } from "../../types.js";
+import { FlexibleChatCompletionMessage } from "../../types.js";
 
 ls.describe("Trajectory LLM", () => {
   ls.test(
@@ -37,7 +37,7 @@ ls.describe("Trajectory LLM", () => {
           role: "assistant",
           content: "The weather in SF is 80 degrees and sunny.",
         },
-      ] satisfies ChatCompletionMessage[];
+      ] satisfies FlexibleChatCompletionMessage[];
 
       const referenceOutputs = [
         { role: "user", content: "What is the weather in SF?" },
@@ -58,7 +58,7 @@ ls.describe("Trajectory LLM", () => {
           content: "It's 80 degrees and sunny in San Francisco.",
         },
         { role: "assistant", content: "The weather in SF is 80˚ and sunny." },
-      ] satisfies ChatCompletionMessage[];
+      ] satisfies FlexibleChatCompletionMessage[];
 
       const evalResult = await evaluator({
         inputs,
@@ -127,7 +127,7 @@ ls.describe("Trajectory LLM", () => {
         role: "assistant",
         content: "The weather in SF is 80 degrees and sunny.",
       },
-    ] satisfies ChatCompletionMessage[];
+    ] satisfies FlexibleChatCompletionMessage[];
     const evalResult = await evaluator({
       outputs,
     });
@@ -194,7 +194,7 @@ According to this reference trajectory:
           role: "assistant",
           content: "The weather in SF is 80 degrees and sunny.",
         },
-      ] satisfies ChatCompletionMessage[];
+      ] satisfies FlexibleChatCompletionMessage[];
 
       const referenceOutputs = [
         { role: "user", content: "What is the weather in SF?" },
@@ -215,7 +215,7 @@ According to this reference trajectory:
           content: "It's 80 degrees and sunny in San Francisco.",
         },
         { role: "assistant", content: "The weather in SF is 80˚ and sunny." },
-      ] satisfies ChatCompletionMessage[];
+      ] satisfies FlexibleChatCompletionMessage[];
 
       const evalResult = await evaluator({
         inputs,

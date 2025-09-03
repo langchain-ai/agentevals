@@ -5,6 +5,7 @@ import { _runEvaluator, _normalizeToOpenAIMessagesList } from "../utils.js";
 import { _chatCompletionMessagesToString } from "./utils.js";
 import {
   ChatCompletionMessage,
+  FlexibleChatCompletionMessage,
   EvaluatorResult,
   TrajectoryLLMAsJudgeParams,
 } from "../types.js";
@@ -57,12 +58,26 @@ Grade the following trajectory:
 function _formatInputs(params: {
   outputs:
     | ChatCompletionMessage[]
+    | FlexibleChatCompletionMessage[]
     | BaseMessage[]
-    | { messages: (BaseMessage | ChatCompletionMessage)[] };
+    | {
+        messages: (
+          | BaseMessage
+          | ChatCompletionMessage
+          | FlexibleChatCompletionMessage
+        )[];
+      };
   referenceOutputs?:
     | ChatCompletionMessage[]
+    | FlexibleChatCompletionMessage[]
     | BaseMessage[]
-    | { messages: (BaseMessage | ChatCompletionMessage)[] };
+    | {
+        messages: (
+          | BaseMessage
+          | ChatCompletionMessage
+          | FlexibleChatCompletionMessage
+        )[];
+      };
 }): [string, string] {
   const { outputs, referenceOutputs } = params;
   const normalizedOutputs = _normalizeToOpenAIMessagesList(outputs);
@@ -130,12 +145,26 @@ export const createTrajectoryLLMAsJudge = ({
   }: {
     outputs:
       | ChatCompletionMessage[]
+      | FlexibleChatCompletionMessage[]
       | BaseMessage[]
-      | { messages: (BaseMessage | ChatCompletionMessage)[] };
+      | {
+          messages: (
+            | BaseMessage
+            | ChatCompletionMessage
+            | FlexibleChatCompletionMessage
+          )[];
+        };
     referenceOutputs?:
       | ChatCompletionMessage[]
+      | FlexibleChatCompletionMessage[]
       | BaseMessage[]
-      | { messages: (BaseMessage | ChatCompletionMessage)[] };
+      | {
+          messages: (
+            | BaseMessage
+            | ChatCompletionMessage
+            | FlexibleChatCompletionMessage
+          )[];
+        };
     [key: string]: unknown;
   }): Promise<EvaluatorResult> => {
     const [formattedOutputs, formattedReferenceOutputs] = _formatInputs({
