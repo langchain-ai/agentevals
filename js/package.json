@@ -14,14 +14,14 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@langchain/openai": "^0.4.4",
-    "langchain": "^0.3.18",
-    "langsmith": "^0.3.11",
+    "@langchain/openai": ">=0.4.4",
+    "langchain": ">=0.3.18",
+    "langsmith": ">=0.3.11",
     "openevals": "^0.1.0"
   },
   "peerDependencies": {
-    "@langchain/core": "^0.3.40",
-    "@langchain/langgraph": "^0.2.46"
+    "@langchain/core": ">=0.3.73",
+    "@langchain/langgraph": ">=0.2.46"
   },
   "devDependencies": {
     "@langchain/core": "^0.3.40",
