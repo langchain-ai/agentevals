@@ -304,48 +304,55 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@langchain/langgraph-checkpoint@npm:~0.0.15":
-  version: 0.0.15
-  resolution: "@langchain/langgraph-checkpoint@npm:0.0.15"
+"@langchain/langgraph-checkpoint@npm:^0.1.1":
+  version: 0.1.1
+  resolution: "@langchain/langgraph-checkpoint@npm:0.1.1"
   dependencies:
-    uuid: "npm:^10.0.0"
+    uuid: ^10.0.0
   peerDependencies:
-    "@langchain/core": ">=0.2.31 <0.4.0"
-  checksum: c6a05b2fee4b3eec3170c67b86b434c2087a150ebb6027d2d3b90046b53c81477e4fccfb5db9de6fb1c01bde80ca1521fab2776dfc49c6b469b1b8794285bb09
+    "@langchain/core": ">=0.2.31 <0.4.0 || ^1.0.0-alpha"
+  checksum: 178081c5b9563053fd130c617ff866d8c3883975edb43515f1b78373aab614faa9de315d5e4c953e1cbe4daefb4f1c02863f9c6b38ef95dc832d6aa121fb603b
   languageName: node
   linkType: hard
 
-"@langchain/langgraph-sdk@npm:~0.0.32":
-  version: 0.0.43
-  resolution: "@langchain/langgraph-sdk@npm:0.0.43"
+"@langchain/langgraph-sdk@npm:~0.1.0":
+  version: 0.1.0
+  resolution: "@langchain/langgraph-sdk@npm:0.1.0"
   dependencies:
-    "@types/json-schema": "npm:^7.0.15"
-    p-queue: "npm:^6.6.2"
-    p-retry: "npm:4"
-    uuid: "npm:^9.0.0"
+    "@types/json-schema": ^7.0.15
+    p-queue: ^6.6.2
+    p-retry: 4
+    uuid: ^9.0.0
   peerDependencies:
     "@langchain/core": ">=0.2.31 <0.4.0"
     react: ^18 || ^19
+    react-dom: ^18 || ^19
   peerDependenciesMeta:
     "@langchain/core":
       optional: true
     react:
       optional: true
-  checksum: 8fcae3c0f1fb9f81bb6434837b5b7e012addcb28b1ca79458664d146614defa0963bd66080e9b0cb89b9dd4375b2d2b7bb90fca02332883c02f4b73925a2f366
+    react-dom:
+      optional: true
+  checksum: adbf0949e59d3f0c4fcc5000e311957fc070b105b0b834ab265e5bfc6fd2f1bff84776ce86b8883fbbd2f1a421967c9d434cd01c8a64b892bcacdc26c0672997
   languageName: node
   linkType: hard
 
-"@langchain/langgraph@npm:^0.2.46":
-  version: 0.2.46
-  resolution: "@langchain/langgraph@npm:0.2.46"
+"@langchain/langgraph@npm:^0.4.9":
+  version: 0.4.9
+  resolution: "@langchain/langgraph@npm:0.4.9"
   dependencies:
-    "@langchain/langgraph-checkpoint": "npm:~0.0.15"
-    "@langchain/langgraph-sdk": "npm:~0.0.32"
-    uuid: "npm:^10.0.0"
-    zod: "npm:^3.23.8"
+    "@langchain/langgraph-checkpoint": ^0.1.1
+    "@langchain/langgraph-sdk": ~0.1.0
+    uuid: ^10.0.0
+    zod: ^3.25.32
   peerDependencies:
-    "@langchain/core": ">=0.2.36 <0.3.0 || >=0.3.9 < 0.4.0"
-  checksum: 8929903a261216c2d211c560c79332108dfe760f4dcc2fc47c5550cf1dadd6365a5afaf5a6eeed962945a6f6d582da58dfd6f657c5ee8a58274fead216e005ce
+    "@langchain/core": ">=0.3.58 < 0.4.0"
+    zod-to-json-schema: ^3.x
+  peerDependenciesMeta:
+    zod-to-json-schema:
+      optional: true
+  checksum: d6de148ea88eedf90eb0618adc741bad0d70af37c6f68dd6abcb41ad349166893e28e3917ed80ffac53e03f34d9f14e58d8ff314acf5f07160640a327fd4f08f
   languageName: node
   linkType: hard
 
@@ -1143,7 +1150,7 @@ __metadata:
   resolution: "agentevals@workspace:."
   dependencies:
     "@langchain/core": ^0.3.73
-    "@langchain/langgraph": ^0.2.46
+    "@langchain/langgraph": ^0.4.9
     "@langchain/openai": ">=0.4.4"
     "@langchain/scripts": 0.1.3
     "@tsconfig/recommended": ^1.0.8
@@ -1165,7 +1172,7 @@ __metadata:
     prettier: ^3.5.1
     typescript: ~5.1.6
     vitest: ^3.0.5
-    zod: ^3.24.2
+    zod: ^4.1.5
   peerDependencies:
     "@langchain/core": ">=0.3.73"
     "@langchain/langgraph": ">=0.2.46"
@@ -5607,7 +5614,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zod@npm:^3.22.4, zod@npm:^3.23.8, zod@npm:^3.24.2":
+"zod@npm:^3.22.4, zod@npm:^3.24.2":
   version: 3.24.2
   resolution: "zod@npm:3.24.2"
   checksum: c02455c09678c5055c636d64f9fcda2424fea0aa46ac7d9681e7f41990bc55f488bcd84b9d7cfef0f6e906f51f55b245239d92a9f726248aa74c5b84edf00c2d
@@ -5618,5 +5625,12 @@ __metadata:
   version: 3.25.76
   resolution: "zod@npm:3.25.76"
   checksum: c9a403a62b329188a5f6bd24d5d935d2bba345f7ab8151d1baa1505b5da9f227fb139354b043711490c798e91f3df75991395e40142e6510a4b16409f302b849
+  languageName: node
+  linkType: hard
+
+"zod@npm:^4.1.5":
+  version: 4.1.5
+  resolution: "zod@npm:4.1.5"
+  checksum: e5519b3d5e5cfb07cdfd129e888dc12e8d7f07ab7b1354acc0c807481faf705379735be08bd4421d8f2e8d09133d5fc06ea52010c0035b2a04dcda67970c825d
   languageName: node
   linkType: hard
