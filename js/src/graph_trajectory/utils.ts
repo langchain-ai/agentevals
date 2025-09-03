@@ -59,7 +59,9 @@ export const extractLangGraphTrajectoryFromSnapshots = (
     }
     if (isAccumulatingSteps) {
       if (snapshot.metadata != null && snapshot.metadata.source === "input") {
-        inputs.push(snapshot.metadata.writes);
+        inputs.push(
+          ...snapshot.tasks.map((task) => ({ [task.name]: task.result }))
+        );
       } else if (
         i + 1 < snapshots.length &&
         snapshots[i + 1].tasks?.find((task) => task.interrupts?.length > 0)

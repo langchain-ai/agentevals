@@ -38,7 +38,7 @@ export const _convertToChatCompletionMessage = (
   if (converted.role === "tool" && !converted.tool_call_id) {
     converted = {
       ...converted,
-      tool_call_id: "generated-" + Math.random().toString(36).substring(2),
+      tool_call_id: `generated-${Math.random().toString(36).substring(2)}`,
     };
   }
 
