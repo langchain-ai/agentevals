@@ -49,6 +49,7 @@ test("trajectory match", async () => {
   // test invoke w/ nested interrupt
   const config = { configurable: { thread_id: "1" } };
   expect(await app.invoke({ myKey: "" }, config)).toEqual({
+    __interrupt__: [],
     myKey: " and parallel",
   });
 

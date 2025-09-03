@@ -59,7 +59,17 @@ export const extractLangGraphTrajectoryFromSnapshots = (
     }
     if (isAccumulatingSteps) {
       if (snapshot.metadata != null && snapshot.metadata.source === "input") {
-        inputs.push(snapshot.metadata.writes);
+        if (
+          "writes" in snapshot.metadata &&
+          snapshot.metadata.writes != null &&
+          typeof snapshot.metadata.writes === "object"
+        ) {
+          inputs.push(snapshot.metadata.writes as Record<string, unknown>);
+        } else {
+          inputs.push(
+            ...snapshot.tasks.map((task) => ({ [task.name]: task.result }))
+          );
+        }
       } else if (
         i + 1 < snapshots.length &&
         snapshots[i + 1].tasks?.find((task) => task.interrupts?.length > 0)
