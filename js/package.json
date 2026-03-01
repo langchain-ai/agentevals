@@ -20,7 +20,7 @@
     "openevals": "^0.1.0"
   },
   "peerDependencies": {
-    "@langchain/core": ">=0.3.73",
+    "@langchain/core": ">=0.3.80",
     "@langchain/langgraph": ">=0.2.46"
   },
   "devDependencies": {
@@ -44,6 +44,21 @@
     "typescript": "~5.1.6",
     "vitest": "^3.0.5",
     "zod": "^4.1.5"
+  },
+  "resolutions": {
+    "form-data": "^4.0.4",
+    "tar": "^7.5.8",
+    "axios": "^1.8.2",
+    "langsmith": "^0.4.6",
+    "lodash": "^4.17.23",
+    "js-yaml": "^4.1.1",
+    "vite": "^6.4.1",
+    "esbuild": "^0.25.0",
+    "@langchain/scripts/glob": "^10.5.0",
+    "cacache/glob": "^10.5.0",
+    "dpdm/glob": "^10.5.0",
+    "node-gyp/glob": "^10.5.0",
+    "rimraf@5.0.10/glob": "^10.5.0"
   },
   "files": [
     "dist/",
