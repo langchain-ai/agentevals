@@ -61,8 +61,7 @@ export const _convertToChatCompletionMessage = (
   let converted: FlexibleChatCompletionMessage;
 
   if (isBaseMessage(message)) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    converted = _convertMessagesToOpenAIParams([message])[0] as any;
+    converted = _convertMessagesShim(message);
   } else {
     converted = message as FlexibleChatCompletionMessage;
   }
