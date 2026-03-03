@@ -1,4 +1,4 @@
-import { BaseMessage } from "@langchain/core/messages";
+import type { BaseMessage } from "@langchain/core/messages";
 import { _createLLMAsJudgeScorer } from "openevals/llm";
 
 import { _runEvaluator, _normalizeToOpenAIMessagesList } from "../utils.js";
@@ -9,6 +9,32 @@ import {
   EvaluatorResult,
   TrajectoryLLMAsJudgeParams,
 } from "../types.js";
+
+type TrajectoryEvaluatorFunction = (params: {
+  outputs:
+    | ChatCompletionMessage[]
+    | FlexibleChatCompletionMessage[]
+    | BaseMessage[]
+    | {
+        messages: (
+          | BaseMessage
+          | ChatCompletionMessage
+          | FlexibleChatCompletionMessage
+        )[];
+      };
+  referenceOutputs?:
+    | ChatCompletionMessage[]
+    | FlexibleChatCompletionMessage[]
+    | BaseMessage[]
+    | {
+        messages: (
+          | BaseMessage
+          | ChatCompletionMessage
+          | FlexibleChatCompletionMessage
+        )[];
+      };
+  [key: string]: unknown;
+}) => Promise<EvaluatorResult>;
 
 export const TRAJECTORY_ACCURACY_PROMPT_WITH_REFERENCE = `You are an expert data labeler.
 Your task is to grade the accuracy of an AI agent's internal trajectory.
@@ -125,7 +151,7 @@ export const createTrajectoryLLMAsJudge = ({
   choices,
   useReasoning = true,
   fewShotExamples,
-}: TrajectoryLLMAsJudgeParams) => {
+}: TrajectoryLLMAsJudgeParams): TrajectoryEvaluatorFunction => {
   const scorer = _createLLMAsJudgeScorer({
     prompt,
     judge,

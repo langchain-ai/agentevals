@@ -1,4 +1,5 @@
-import { BaseMessage, isBaseMessage } from "@langchain/core/messages";
+import type { BaseMessage } from "@langchain/core/messages";
+import { isBaseMessage } from "@langchain/core/messages";
 import * as openAIImports from "@langchain/openai";
 import {
   _runEvaluator as baseRunEvaluator,
@@ -10,6 +11,18 @@ import {
   MultiResultScorerReturnType,
   SingleResultScorerReturnType,
 } from "./types.js";
+
+type NormalizeToOpenAIMessagesListFunction = (
+  messages?:
+    | (BaseMessage | ChatCompletionMessage | FlexibleChatCompletionMessage)[]
+    | {
+        messages: (
+          | BaseMessage
+          | ChatCompletionMessage
+          | FlexibleChatCompletionMessage
+        )[];
+      }
+) => ChatCompletionMessage[];
 
 const {
   // @ts-expect-error Shim for older versions of @langchain/openai
@@ -65,38 +78,29 @@ export const _convertToChatCompletionMessage = (
   return converted as ChatCompletionMessage;
 };
 
-export const _normalizeToOpenAIMessagesList = (
-  messages?:
-    | (BaseMessage | ChatCompletionMessage | FlexibleChatCompletionMessage)[]
-    | {
-        messages: (
-          | BaseMessage
-          | ChatCompletionMessage
-          | FlexibleChatCompletionMessage
-        )[];
-      }
-): ChatCompletionMessage[] => {
-  if (!messages) {
-    return [];
-  }
-  let messagesList: (
-    | BaseMessage
-    | ChatCompletionMessage
-    | FlexibleChatCompletionMessage
-  )[];
-  if (!Array.isArray(messages)) {
-    if ("messages" in messages && Array.isArray(messages.messages)) {
-      messagesList = messages.messages;
-    } else {
-      throw new Error(
-        `If passing messages as an object, it must contain a "messages" key`
-      );
+export const _normalizeToOpenAIMessagesList: NormalizeToOpenAIMessagesListFunction =
+  (messages) => {
+    if (!messages) {
+      return [];
     }
-  } else {
-    messagesList = messages;
-  }
-  return messagesList.map(_convertToChatCompletionMessage);
-};
+    let messagesList: (
+      | BaseMessage
+      | ChatCompletionMessage
+      | FlexibleChatCompletionMessage
+    )[];
+    if (!Array.isArray(messages)) {
+      if ("messages" in messages && Array.isArray(messages.messages)) {
+        messagesList = messages.messages;
+      } else {
+        throw new Error(
+          `If passing messages as an object, it must contain a "messages" key`
+        );
+      }
+    } else {
+      messagesList = messages;
+    }
+    return messagesList.map(_convertToChatCompletionMessage);
+  };
 
 export const processScore = (
   _: string,
