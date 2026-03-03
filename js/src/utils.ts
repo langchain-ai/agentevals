@@ -1,5 +1,6 @@
-import { BaseMessage, isBaseMessage } from "@langchain/core/messages";
-import { _convertMessagesToOpenAIParams } from "@langchain/openai";
+import type { BaseMessage } from "@langchain/core/messages";
+import { isBaseMessage } from "@langchain/core/messages";
+import * as openAIImports from "@langchain/openai";
 import {
   _runEvaluator as baseRunEvaluator,
   EvaluationResultType,
@@ -11,12 +12,44 @@ import {
   SingleResultScorerReturnType,
 } from "./types.js";
 
+type NormalizeToOpenAIMessagesListFunction = (
+  messages?:
+    | (BaseMessage | ChatCompletionMessage | FlexibleChatCompletionMessage)[]
+    | {
+        messages: (
+          | BaseMessage
+          | ChatCompletionMessage
+          | FlexibleChatCompletionMessage
+        )[];
+      }
+) => ChatCompletionMessage[];
+
+const {
+  // @ts-expect-error Shim for older versions of @langchain/openai
+  _convertMessagesToOpenAIParams,
+  convertMessagesToCompletionsMessageParams,
+} = openAIImports;
+
+function _convertMessagesShim(message: BaseMessage) {
+  if (typeof _convertMessagesToOpenAIParams === "function") {
+    return _convertMessagesToOpenAIParams([
+      message,
+    ])[0] as ChatCompletionMessage;
+  }
+  return convertMessagesToCompletionsMessageParams({
+    messages: [message],
+  })[0] as ChatCompletionMessage;
+}
+
 export const _convertToOpenAIMessage = (
   message: BaseMessage | ChatCompletionMessage
 ): ChatCompletionMessage => {
   if (isBaseMessage(message)) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return _convertMessagesToOpenAIParams([message])[0] as any;
+    const converted = _convertMessagesShim(message);
+    if (message.id && !converted.id) {
+      converted.id = message.id;
+    }
+    return converted;
   } else {
     return message;
   }
@@ -28,8 +61,7 @@ export const _convertToChatCompletionMessage = (
   let converted: FlexibleChatCompletionMessage;
 
   if (isBaseMessage(message)) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    converted = _convertMessagesToOpenAIParams([message])[0] as any;
+    converted = _convertMessagesShim(message);
   } else {
     converted = message as FlexibleChatCompletionMessage;
   }
@@ -45,38 +77,29 @@ export const _convertToChatCompletionMessage = (
   return converted as ChatCompletionMessage;
 };
 
-export const _normalizeToOpenAIMessagesList = (
-  messages?:
-    | (BaseMessage | ChatCompletionMessage | FlexibleChatCompletionMessage)[]
-    | {
-        messages: (
-          | BaseMessage
-          | ChatCompletionMessage
-          | FlexibleChatCompletionMessage
-        )[];
-      }
-): ChatCompletionMessage[] => {
-  if (!messages) {
-    return [];
-  }
-  let messagesList: (
-    | BaseMessage
-    | ChatCompletionMessage
-    | FlexibleChatCompletionMessage
-  )[];
-  if (!Array.isArray(messages)) {
-    if ("messages" in messages && Array.isArray(messages.messages)) {
-      messagesList = messages.messages;
-    } else {
-      throw new Error(
-        `If passing messages as an object, it must contain a "messages" key`
-      );
+export const _normalizeToOpenAIMessagesList: NormalizeToOpenAIMessagesListFunction =
+  (messages) => {
+    if (!messages) {
+      return [];
     }
-  } else {
-    messagesList = messages;
-  }
-  return messagesList.map(_convertToChatCompletionMessage);
-};
+    let messagesList: (
+      | BaseMessage
+      | ChatCompletionMessage
+      | FlexibleChatCompletionMessage
+    )[];
+    if (!Array.isArray(messages)) {
+      if ("messages" in messages && Array.isArray(messages.messages)) {
+        messagesList = messages.messages;
+      } else {
+        throw new Error(
+          `If passing messages as an object, it must contain a "messages" key`
+        );
+      }
+    } else {
+      messagesList = messages;
+    }
+    return messagesList.map(_convertToChatCompletionMessage);
+  };
 
 export const processScore = (
   _: string,

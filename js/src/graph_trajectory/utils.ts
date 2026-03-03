@@ -1,9 +1,9 @@
 import type { StateSnapshot, Pregel } from "@langchain/langgraph/web";
 import { isBaseMessage } from "@langchain/core/messages";
 import type { RunnableConfig } from "@langchain/core/runnables";
-import { _convertMessagesToOpenAIParams } from "@langchain/openai";
 
 import type { GraphTrajectory } from "../types.js";
+import { _convertToOpenAIMessage } from "../utils.js";
 
 export const extractLangGraphTrajectoryFromSnapshots = (
   snapshots: StateSnapshot[]
@@ -34,7 +34,7 @@ export const extractLangGraphTrajectoryFromSnapshots = (
         if (isBaseMessage(lastMessage)) {
           // Just append the last message in the output to the results to reduce context size
           trajectory.results.push({
-            messages: _convertMessagesToOpenAIParams([lastMessage]),
+            messages: [_convertToOpenAIMessage(lastMessage)],
           });
         } else {
           trajectory.results.push({ messages: [lastMessage] });
@@ -52,9 +52,11 @@ export const extractLangGraphTrajectoryFromSnapshots = (
       }
       for (const task of snapshot.tasks) {
         if (task.interrupts?.length) {
-          trajectory.steps.at(-1)?.push("__interrupt__");
+          trajectory.steps[trajectory.steps.length - 1]?.push("__interrupt__");
         }
-        trajectory.steps.at(-1)?.push(`${subgraphPath}${task.name}`);
+        trajectory.steps[trajectory.steps.length - 1]?.push(
+          `${subgraphPath}${task.name}`
+        );
       }
     }
     if (isAccumulatingSteps) {
