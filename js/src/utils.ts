@@ -1,5 +1,5 @@
 import { BaseMessage, isBaseMessage } from "@langchain/core/messages";
-import { _convertMessagesToOpenAIParams } from "@langchain/openai";
+import * as openAIImports from "@langchain/openai";
 import {
   _runEvaluator as baseRunEvaluator,
   EvaluationResultType,
@@ -11,12 +11,32 @@ import {
   SingleResultScorerReturnType,
 } from "./types.js";
 
+const {
+  // @ts-expect-error Shim for older versions of @langchain/openai
+  _convertMessagesToOpenAIParams,
+  convertMessagesToCompletionsMessageParams,
+} = openAIImports;
+
+function _convertMessagesShim(message: BaseMessage) {
+  if (typeof _convertMessagesToOpenAIParams === "function") {
+    return _convertMessagesToOpenAIParams([
+      message,
+    ])[0] as ChatCompletionMessage;
+  }
+  return convertMessagesToCompletionsMessageParams({
+    messages: [message],
+  })[0] as ChatCompletionMessage;
+}
+
 export const _convertToOpenAIMessage = (
   message: BaseMessage | ChatCompletionMessage
 ): ChatCompletionMessage => {
   if (isBaseMessage(message)) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return _convertMessagesToOpenAIParams([message])[0] as any;
+    const converted = _convertMessagesShim(message);
+    if (message.id && !converted.id) {
+      converted.id = message.id;
+    }
+    return converted;
   } else {
     return message;
   }
