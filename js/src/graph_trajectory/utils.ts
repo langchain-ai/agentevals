@@ -52,9 +52,11 @@ export const extractLangGraphTrajectoryFromSnapshots = (
       }
       for (const task of snapshot.tasks) {
         if (task.interrupts?.length) {
-          trajectory.steps.at(-1)?.push("__interrupt__");
+          trajectory.steps[trajectory.steps.length - 1]?.push("__interrupt__");
         }
-        trajectory.steps.at(-1)?.push(`${subgraphPath}${task.name}`);
+        trajectory.steps[trajectory.steps.length - 1]?.push(
+          `${subgraphPath}${task.name}`
+        );
       }
     }
     if (isAccumulatingSteps) {
