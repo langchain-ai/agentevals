@@ -1,42 +1,13 @@
 import { BaseMessage } from "@langchain/core/messages";
-import {
+import { createTrajectoryMatchEvaluator } from "openevals";
+import type {
+  EvaluatorResult,
   ChatCompletionMessage,
   FlexibleChatCompletionMessage,
-  EvaluatorResult,
-  ToolArgsMatchMode,
-  ToolArgsMatchOverrides,
-} from "../types.js";
-import { _normalizeToOpenAIMessagesList, _runEvaluator } from "../utils.js";
-import { _isTrajectorySuperset } from "./utils.js";
-
-export const _scorer = async (params: {
-  outputs: ChatCompletionMessage[];
-  referenceOutputs: ChatCompletionMessage[];
-  toolArgsMatchMode: ToolArgsMatchMode;
-  toolArgsMatchOverrides?: ToolArgsMatchOverrides;
-}): Promise<boolean> => {
-  const isSuperset = await _isTrajectorySuperset(
-    params.outputs,
-    params.referenceOutputs,
-    params.toolArgsMatchMode,
-    params.toolArgsMatchOverrides
-  );
-  return isSuperset;
-};
+} from "openevals";
 
 /**
- * @deprecated Use `createTrajectoryMatchEvaluator` with `trajectoryMatchMode: "superset"` instead.
- * Evaluate whether an agent trajectory and called tools is a superset of a reference trajectory and called tools.
- * This means the agent called a superset of the tools specified in the reference trajectory.
- *
- * @param params - The parameters for trajectory superset evaluation
- * @param params.outputs - Actual trajectory the agent followed.
- *    May be a list of OpenAI messages, a list of LangChain messages, or a dictionary containing
- *    a "messages" key with one of the above.
- * @param params.reference_outputs - Ideal reference trajectory the agent should have followed.
- *    May be a list of OpenAI messages, a list of LangChain messages, or a dictionary containing
- *    a "messages" key with one of the above.
- * @returns EvaluatorResult containing a score of true if trajectory (including called tools) matches, false otherwise
+ * @deprecated Use `createTrajectoryMatchEvaluator` from openevals with `trajectoryMatchMode: "superset"` instead.
  */
 export async function trajectorySuperset(params: {
   outputs:
@@ -60,14 +31,12 @@ export async function trajectorySuperset(params: {
         )[];
       };
 }): Promise<EvaluatorResult> {
-  const { outputs, referenceOutputs } = params;
-  const outputsList = _normalizeToOpenAIMessagesList(outputs);
-  const referenceOutputsList = _normalizeToOpenAIMessagesList(referenceOutputs);
-
-  return _runEvaluator("trajectory_superset", _scorer, "trajectory_superset", {
-    ...params,
-    outputs: outputsList,
-    referenceOutputs: referenceOutputsList,
+  const evaluator = createTrajectoryMatchEvaluator({
+    trajectoryMatchMode: "superset",
     toolArgsMatchMode: "ignore",
+  });
+  return evaluator({
+    outputs: params.outputs,
+    referenceOutputs: params.referenceOutputs,
   });
 }

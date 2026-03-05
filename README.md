@@ -202,6 +202,8 @@ LangSmith's pytest integration for running evals, which is documented [here](htt
 
 ## Agent trajectory match
 
+> **Note:** The trajectory match and LLM-as-judge evaluators described in this section are now available directly in [`openevals`](https://github.com/langchain-ai/openevals). `agentevals` re-exports them for backwards compatibility. For new projects, we recommend importing from `openevals` directly.
+
 Agent trajectory match evaluators are used to judge the trajectory of an agent's execution either against an expected trajectory or using an LLM.
 These evaluators expect you to format your agent's trajectory as a list of OpenAI format dicts or as a list of LangChain `BaseMessage` classes, and handle message formatting
 under the hood.
