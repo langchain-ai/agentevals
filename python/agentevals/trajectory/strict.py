@@ -27,29 +27,39 @@ def _scorer(
 ):
     outputs = _normalize_to_openai_messages_list(outputs)
     reference_outputs = _normalize_to_openai_messages_list(reference_outputs)
-    if outputs is None or reference_outputs is None:
+    if not isinstance(outputs, list) or not isinstance(reference_outputs, list):
         raise ValueError(
-            "Strict trajectory match requires both outputs and reference_outputs"
+            "Strict trajectory match requires both outputs and reference_outputs to be lists"
         )
     if len(outputs) != len(reference_outputs):
-        return False
-    for output, reference_output in zip(outputs, reference_outputs):
+        error_message = f'Trajectory length mismatch: expected {len(reference_outputs)} steps but got {len(outputs)} steps.'
+        return False, error_message
+    for i, (output, reference_output) in enumerate(zip(outputs, reference_outputs)):
         if output["role"] != reference_output["role"]:
-            return False
+            error_message = f'Role mismatch at step {i}: expected {reference_output["role"]} but got {output["role"]}'
+            return False, error_message
         elif ("tool_calls" in output and output["tool_calls"] is not None) != (
             "tool_calls" in reference_output
             and reference_output["tool_calls"] is not None
         ):
             # One has tool calls while the other doesn't
-            return False
+            output_has_tool_calls = "tool_calls" in output and output["tool_calls"] is not None
+            reference_has_tool_calls = "tool_calls" in reference_output and reference_output["tool_calls"] is not None
+            error_message = f'Tool call mismatch at step {i}: expected {"tool calls" if reference_has_tool_calls else "no tool calls"} but got {"tool calls" if output_has_tool_calls else "no tool calls"}'
+            return False, error_message
         elif "tool_calls" in output and output["tool_calls"] is not None:
             # Both have tool calls, compare them
-            if not isinstance(output["tool_calls"], list) or not isinstance(
-                reference_output["tool_calls"], list
-            ):
-                return False
-            if len(output["tool_calls"]) != len(reference_output["tool_calls"]):
-                return False
+            if not isinstance(reference_output["tool_calls"], list):
+                raise ValueError(
+                    f'Invalid tool call format in reference trajectory at step {i}: expected a list of tool calls but got {type(reference_output["tool_calls"])}'
+                )
+            elif not isinstance(output["tool_calls"], list):
+                error_message = f'Invalid tool call format at step {i}: expected a list of tool calls but got {type(output["tool_calls"])}'
+                return False, error_message
+            elif len(output["tool_calls"]) != len(reference_output["tool_calls"]):
+                error_message = f'Tool call count mismatch at step {outputs.index(output)}: expected {len(reference_output["tool_calls"])} but got {len(output["tool_calls"])}'
+                return False, error_message
+
             # Create a copy of reference tool calls to track matches
             seen = [False] * len(reference_output["tool_calls"])
             for output_call in output["tool_calls"]:
@@ -72,8 +82,9 @@ def _scorer(
                             seen[i] = True
                             break
                 if not found_match:
-                    return False
-    return True
+                    error_message = f'Tool call mismatch at step {i}: no matching tool call found for {output_call["function"]["name"]} with arguments {output_call["function"]["arguments"]}'
+                    return False, error_message
+    return True, None
 
 
 def trajectory_strict_match(
