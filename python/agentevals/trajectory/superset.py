@@ -7,6 +7,7 @@ from agentevals.types import (
     ToolArgsMatchOverrides,
 )
 from agentevals.trajectory.utils import (
+    _extract_tool_calls,
     _is_trajectory_superset,
     _normalize_to_openai_messages_list,
 )
@@ -33,7 +34,15 @@ def _scorer(
     is_superset = _is_trajectory_superset(
         outputs, reference_outputs, tool_args_match_mode, tool_args_match_overrides
     )
-    return is_superset
+    if not is_superset:
+        out_names = [c["name"] for c in _extract_tool_calls(outputs)]
+        ref_names = [c["name"] for c in _extract_tool_calls(reference_outputs)]
+        missing = [n for n in ref_names if n not in out_names]
+        return (
+            False,
+            f"Trajectory superset check failed: output is missing required tool calls from reference: {missing}.",
+        )
+    return True
 
 
 def trajectory_superset(
