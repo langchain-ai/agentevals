@@ -1248,3 +1248,152 @@ def test_tool_args_match_mode_exact(tool_args_match_mode, score):
     )
     evaluator_result = evaluator(outputs=outputs, reference_outputs=reference_outputs)
     assert evaluator_result["score"] == score
+
+
+@pytest.mark.langsmith
+@pytest.mark.parametrize(
+    "match_mode, expected_reason_substring",
+    [
+        ("strict", "Trajectory length mismatch"),
+        ("unordered", "Output trajectory missing required tool calls"),
+        ("superset", "Output trajectory missing required tool calls"),
+        ("subset", "Output has extra tool calls that are not in the reference"),
+    ],
+)
+def test_trajectory_match_failure_includes_reasoning(
+    match_mode, expected_reason_substring
+):
+    evaluator = create_trajectory_match_evaluator(trajectory_match_mode=match_mode)
+
+    if match_mode == "subset":
+        outputs = [
+            {"role": "user", "content": "Weather?"},
+            {
+                "role": "assistant",
+                "content": "",
+                "tool_calls": [
+                    {
+                        "type": "function",
+                        "id": "a",
+                        "function": {
+                            "name": "get_weather",
+                            "arguments": json.dumps({"city": "SF"}),
+                        },
+                    },
+                    {
+                        "type": "function",
+                        "id": "b",
+                        "function": {
+                            "name": "get_weather",
+                            "arguments": json.dumps({"city": "London"}),
+                        },
+                    },
+                ],
+            },
+        ]
+        reference_outputs = [
+            {"role": "user", "content": "Weather?"},
+            {
+                "role": "assistant",
+                "content": "",
+                "tool_calls": [
+                    {
+                        "type": "function",
+                        "id": "c",
+                        "function": {
+                            "name": "get_weather",
+                            "arguments": json.dumps({"city": "SF"}),
+                        },
+                    }
+                ],
+            },
+        ]
+    elif match_mode == "strict":
+        outputs = [
+            {"role": "user", "content": "Weather?"},
+            {
+                "role": "assistant",
+                "content": "",
+                "tool_calls": [
+                    {
+                        "type": "function",
+                        "id": "a",
+                        "function": {
+                            "name": "get_weather",
+                            "arguments": json.dumps({"city": "SF"}),
+                        },
+                    }
+                ],
+            },
+        ]
+        reference_outputs = [
+            {"role": "user", "content": "Weather?"},
+            {
+                "role": "assistant",
+                "content": "",
+                "tool_calls": [
+                    {
+                        "type": "function",
+                        "id": "c",
+                        "function": {
+                            "name": "get_weather",
+                            "arguments": json.dumps({"city": "SF"}),
+                        },
+                    }
+                ],
+            },
+            {
+                "role": "tool",
+                "name": "get_weather",
+                "tool_call_id": "c",
+                "content": "Sunny",
+            },
+        ]
+    else:
+        outputs = [
+            {"role": "user", "content": "Weather?"},
+            {
+                "role": "assistant",
+                "content": "",
+                "tool_calls": [
+                    {
+                        "type": "function",
+                        "id": "a",
+                        "function": {
+                            "name": "get_weather",
+                            "arguments": json.dumps({"city": "SF"}),
+                        },
+                    }
+                ],
+            },
+        ]
+        reference_outputs = [
+            {"role": "user", "content": "Weather?"},
+            {
+                "role": "assistant",
+                "content": "",
+                "tool_calls": [
+                    {
+                        "type": "function",
+                        "id": "c",
+                        "function": {
+                            "name": "get_weather",
+                            "arguments": json.dumps({"city": "SF"}),
+                        },
+                    },
+                    {
+                        "type": "function",
+                        "id": "d",
+                        "function": {
+                            "name": "get_weather",
+                            "arguments": json.dumps({"city": "London"}),
+                        },
+                    },
+                ],
+            },
+        ]
+
+    result = evaluator(outputs=outputs, reference_outputs=reference_outputs)
+    assert not result["score"]
+    assert result["comment"] is not None
+    assert expected_reason_substring in result["comment"]
