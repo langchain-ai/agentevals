@@ -48,7 +48,7 @@
   },
   "resolutions": {
     "form-data": "^4.0.4",
-    "tar": "^7.5.8",
+    "tar": "^7.5.11",
     "axios": "^1.8.2",
     "lodash": "^4.17.23",
     "js-yaml": "^4.1.1",
@@ -58,7 +58,9 @@
     "cacache/glob": "^10.5.0",
     "dpdm/glob": "^10.5.0",
     "node-gyp/glob": "^10.5.0",
-    "rimraf@5.0.10/glob": "^10.5.0"
+    "rimraf/glob": "^10.5.0",
+    "picomatch": "^4.0.4",
+    "minimatch": "^9.0.7"
   },
   "files": [
     "dist/",

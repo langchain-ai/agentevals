@@ -31,3 +31,16 @@ addopts = [
 pythonpath = [
   "."
 ]
+
+[tool.uv]
+# Security vulnerability mitigations — constraint lower bounds for transitive deps.
+constraint-dependencies = [
+    # Python >=3.10 constraints (these packages dropped 3.9 support)
+    "langchain-core>=1.2.22; python_version>='3.10'",          # CVE-2026-34070 (high), CVE-2026-26013 (low)
+    "langgraph>=1.0.10; python_version>='3.10'",               # CVE-2026-28277 (medium)
+    "langgraph-checkpoint>=4.0.0; python_version>='3.10'",     # CVE-2026-27794 (medium), CVE-2025-64439 (high)
+    "orjson>=3.11.6; python_version>='3.10'",                  # CVE-2025-67221 (high)
+    "requests>=2.33.0; python_version>='3.10'",                  # CVE-2026-25645 (medium)
+    # Universal constraints
+    "pygments>=2.20.0",                                        # CVE-2026-4539 (low)
+]
