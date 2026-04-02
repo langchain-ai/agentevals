@@ -230,9 +230,16 @@ def test_trajectory_with_different_message_count(feedback_key, match_mode, score
             content="The weather in London is 90˚ and rainy. In SF, it's 80˚ and sunny.",
         ),
     ]
-    assert evaluator(
+    result = evaluator(
         inputs=inputs, outputs=outputs, reference_outputs=reference_outputs
-    ) == EvaluatorResult(key=feedback_key, score=score, comment=None, metadata=None)
+    )
+    assert result["key"] == feedback_key
+    assert result["score"] == score
+    assert result["metadata"] is None
+    if score:
+        assert result["comment"] is None
+    else:
+        assert result["comment"] is not None
 
 
 @pytest.mark.langsmith
@@ -301,9 +308,16 @@ def test_trajectory_subset_tool_call(feedback_key, match_mode, score):
             content="The weather in London is 90˚ and rainy. In SF, it's 80˚ and sunny.",
         ),
     ]
-    assert evaluator(
+    result = evaluator(
         inputs=inputs, outputs=outputs, reference_outputs=reference_outputs
-    ) == EvaluatorResult(key=feedback_key, score=score, comment=None, metadata=None)
+    )
+    assert result["key"] == feedback_key
+    assert result["score"] == score
+    assert result["metadata"] is None
+    if score:
+        assert result["comment"] is None
+    else:
+        assert result["comment"] is not None
 
 
 @pytest.mark.langsmith
@@ -357,9 +371,13 @@ def test_exact_matcher_with_different_called_tools(feedback_key, match_mode):
             role="assistant", content="The weather in SF is 80˚ and sunny."
         ),
     ]
-    assert evaluator(
+    result = evaluator(
         inputs=inputs, outputs=outputs, reference_outputs=reference_outputs
-    ) == EvaluatorResult(key=feedback_key, score=False, comment=None, metadata=None)
+    )
+    assert result["key"] == feedback_key
+    assert result["score"] is False
+    assert result["comment"] is not None
+    assert result["metadata"] is None
 
 
 @pytest.mark.langsmith
@@ -434,9 +452,16 @@ def test_trajectory_with_extra_tool_calls_and_override(feedback_key, match_mode,
             content="The weather in SF is 80 degrees and sunny. In London, it's 90 degrees and rainy.",
         ),
     ]
-    assert evaluator(
+    result = evaluator(
         inputs=inputs, outputs=outputs, reference_outputs=reference_outputs
-    ) == EvaluatorResult(key=feedback_key, score=score, comment=None, metadata=None)
+    )
+    assert result["key"] == feedback_key
+    assert result["score"] == score
+    assert result["metadata"] is None
+    if score:
+        assert result["comment"] is None
+    else:
+        assert result["comment"] is not None
 
 
 @pytest.mark.langsmith
@@ -513,9 +538,16 @@ def test_trajectory_with_subset_tool_calls_and_override(
             content="The weather in SF is 80˚ and sunny. In London, it's 90˚ and rainy.",
         ),
     ]
-    assert evaluator(
+    result = evaluator(
         inputs=inputs, outputs=outputs, reference_outputs=reference_outputs
-    ) == EvaluatorResult(key=feedback_key, score=score, comment=None, metadata=None)
+    )
+    assert result["key"] == feedback_key
+    assert result["score"] == score
+    assert result["metadata"] is None
+    if score:
+        assert result["comment"] is None
+    else:
+        assert result["comment"] is not None
 
 
 @pytest.mark.langsmith
@@ -628,9 +660,13 @@ def test_trajectory_match_with_langchain_messages_failure(feedback_key, match_mo
         ),
         AIMessage(content="The weather in SF is 80˚ and sunny."),
     ]
-    assert evaluator(
+    result = evaluator(
         inputs=inputs, outputs=outputs, reference_outputs=reference_outputs
-    ) == EvaluatorResult(key=feedback_key, score=False, comment=None, metadata=None)
+    )
+    assert result["key"] == feedback_key
+    assert result["score"] is False
+    assert result["comment"] is not None
+    assert result["metadata"] is None
 
 
 @pytest.mark.langsmith
