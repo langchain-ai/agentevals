@@ -135,7 +135,7 @@ console.log(evalResult);
 ```
 </details>
 
-You can see that the evaluator returns a score of `true` since the overall trajectory is a reasonable path for the agent to take to answer the user's question.
+You can see that the evaluator returns a score of `true` since the overall trajectory is a reasonable path for the agent to take to answer the user's question. For evaluator outputs, `comment` contains the model's reasoning or a diagnostic explanation. In trajectory match evaluators, successful matches typically return `comment: None` in Python and omit the field or leave it undefined in TypeScript, while failed matches include a non-empty mismatch reason.
 
 For more details on this evaluator, including how to customize it, see the section on [trajectory LLM-as-judge](#trajectory-llm-as-judge).
 
@@ -143,13 +143,13 @@ For more details on this evaluator, including how to customize it, see the secti
 
 - [Installation](#installation)
 - [Evaluators](#evaluators)
-  - [Agent Trajectory Match](#agent-trajectory-match)
+  - [Agent trajectory match](#agent-trajectory-match)
     - [Strict match](#strict-match)
     - [Unordered match](#unordered-match)
-    - [Subset/superset match](#subset-and-superset-match)
+    - [Subset and superset match](#subset-and-superset-match)
     - [Tool args match modes](#tool-args-match-modes)
   - [Trajectory LLM-as-judge](#trajectory-llm-as-judge)
-  - [Graph Trajectory](#graph-trajectory)
+  - [Graph trajectory](#graph-trajectory)
     - [Graph trajectory LLM-as-judge](#graph-trajectory-llm-as-judge)
     - [Graph trajectory strict match](#graph-trajectory-strict-match)
 - [Python Async Support](#python-async-support)
@@ -279,7 +279,7 @@ print(result)
 {
     'key': 'trajectory_strict_match',
     'score': False,
-    'comment': None,
+    'comment': 'Trajectory length mismatch: output trajectory has 4 messages, reference trajectory has 3 messages.',
 }
 ```
 </details>
