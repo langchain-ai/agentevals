@@ -14,7 +14,7 @@ export async function _scorer(params: {
   referenceOutputs: ChatCompletionMessage[];
   toolArgsMatchMode: ToolArgsMatchMode;
   toolArgsMatchOverrides?: ToolArgsMatchOverrides;
-}): Promise<boolean> {
+}): Promise<boolean | [false, string]> {
   const {
     outputs,
     referenceOutputs,
@@ -31,7 +31,10 @@ export async function _scorer(params: {
   }
 
   if (normalizedOutputs.length !== normalizedReferenceOutputs.length) {
-    return false;
+    return [
+      false,
+      `Trajectory length mismatch: output trajectory has ${normalizedOutputs.length} messages, reference trajectory has ${normalizedReferenceOutputs.length} messages.`,
+    ];
   }
 
   for (let i = 0; i < normalizedOutputs.length; i++) {
@@ -39,19 +42,28 @@ export async function _scorer(params: {
     const referenceOutput = normalizedReferenceOutputs[i];
 
     if (output.role !== referenceOutput.role) {
-      return false;
+      return [
+        false,
+        `Role mismatch at step ${i}: expected ${referenceOutput.role} but got ${output.role}`,
+      ];
     }
 
     const outputHasToolCalls = output.tool_calls != null;
     const referenceHasToolCalls = referenceOutput.tool_calls != null;
 
     if (outputHasToolCalls !== referenceHasToolCalls) {
-      return false;
+      return [
+        false,
+        `Tool call mismatch at step ${i}: expected ${referenceHasToolCalls ? "tool calls" : "no tool calls"} but got ${outputHasToolCalls ? "tool calls" : "no tool calls"}`,
+      ];
     }
 
     if (outputHasToolCalls) {
       if (output.tool_calls!.length !== referenceOutput.tool_calls!.length) {
-        return false;
+        return [
+          false,
+          `Tool call count mismatch at step ${i}: expected ${referenceOutput.tool_calls!.length} but got ${output.tool_calls!.length}`,
+        ];
       }
       const referenceCalls = referenceOutput.tool_calls ?? [];
       const seen = new Array(referenceCalls.length).fill(false);
@@ -82,7 +94,10 @@ export async function _scorer(params: {
           }
         }
         if (!foundMatch) {
-          return false;
+          return [
+            false,
+            `Tool call mismatch at step ${i}: no matching tool call found for ${outputCall.function?.name} with arguments ${outputCall.function?.arguments}`,
+          ];
         }
       }
     }

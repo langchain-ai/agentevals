@@ -188,6 +188,7 @@ console.log(result);
 {
     'key': 'trajectory_strict_match',
     'score': false,
+    'comment': 'Trajectory length mismatch: output trajectory has 4 messages, reference trajectory has 3 messages.',
 }
 ```
 
@@ -273,6 +274,7 @@ console.log(result)
 {
     'key': 'trajectory_unordered_match',
     'score': true,
+    'comment': undefined,
 }
 ```
 
@@ -346,6 +348,7 @@ console.log(result)
 {
     'key': 'trajectory_superset_match',
     'score': true,
+    'comment': undefined,
 }
 ```
 
