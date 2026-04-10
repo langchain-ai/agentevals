@@ -52,7 +52,7 @@
     "axios": "^1.8.2",
     "lodash": "^4.17.23",
     "js-yaml": "^4.1.1",
-    "vite": "^6.4.1",
+    "vite": "^6.4.2",
     "esbuild": "^0.25.0",
     "@langchain/scripts/glob": "^10.5.0",
     "cacache/glob": "^10.5.0",
