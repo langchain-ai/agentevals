@@ -16,7 +16,10 @@ from openevals.utils import (
 )
 from agentevals.types import FewShotExample
 from agentevals.utils import _run_evaluator, _arun_evaluator
-from agentevals.trajectory.utils import _normalize_to_openai_messages_list
+from agentevals.trajectory.utils import (
+    _flatten_thinking_blocks,
+    _normalize_to_openai_messages_list,
+)
 
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.runnables import Runnable
@@ -81,7 +84,9 @@ def _format_inputs(
     ],
 ) -> tuple[str, str]:
     outputs = _normalize_to_openai_messages_list(outputs)
+    outputs = _flatten_thinking_blocks(outputs)
     reference_outputs = _normalize_to_openai_messages_list(reference_outputs)
+    reference_outputs = _flatten_thinking_blocks(reference_outputs)
     if reference_outputs:
         formatted_reference_outputs = _chat_completion_messages_to_string(
             reference_outputs
