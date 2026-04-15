@@ -1201,7 +1201,7 @@ __metadata:
     eslint-plugin-no-instanceof: ^1.0.1
     eslint-plugin-prettier: ^4.2.1
     langchain: ">=1.2.28"
-    langsmith: ">=0.5.18"
+    langsmith: ">=0.5.19"
     openai: ^6.25.0
     openevals: ^0.1.4
     prettier: ^3.5.1
@@ -2518,12 +2518,12 @@ __metadata:
   linkType: hard
 
 "follow-redirects@npm:^1.15.11":
-  version: 1.15.11
-  resolution: "follow-redirects@npm:1.15.11"
+  version: 1.16.0
+  resolution: "follow-redirects@npm:1.16.0"
   peerDependenciesMeta:
     debug:
       optional: true
-  checksum: 20bf55e9504f59e6cc3743ba27edb2ebf41edea1baab34799408f2c050f73f0c612728db21c691276296d2795ea8a812dc532a98e8793619fcab91abe06d017f
+  checksum: e90dce4607b1f6b8b9883287f912585573c19088209ad82341d550a795b4ba514522b73b1b340cf618279df27975cd46504d09149be60291ba6767384c1fd8f8
   languageName: node
   linkType: hard
 
@@ -3330,9 +3330,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"langsmith@npm:>=0.5.18":
-  version: 0.5.18
-  resolution: "langsmith@npm:0.5.18"
+"langsmith@npm:>=0.5.19":
+  version: 0.5.19
+  resolution: "langsmith@npm:0.5.19"
   dependencies:
     p-queue: 6.6.2
     uuid: 10.0.0
@@ -3353,7 +3353,7 @@ __metadata:
       optional: true
     ws:
       optional: true
-  checksum: 07a22f4380076893088d51d0b7fdaecf74e4199b09a33dbb63b2709cc4b33d5fa1c73ee35ce2c954358ae566ae7d43ca0ae0d37a1b64d6739336b94796ad7b7b
+  checksum: 91ef8407a4b9da6b2bece97255ce5584b58e7f8ca7e914587f62449ae714ea07f30c1ad629a1e65d99da21d55f538b532719bd7af3d34ce421445e24b3199788
   languageName: node
   linkType: hard
 
