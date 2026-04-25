@@ -7,6 +7,7 @@ from agentevals.types import (
     ToolArgsMatchOverrides,
 )
 from agentevals.trajectory.utils import (
+    _extract_tool_calls,
     _is_trajectory_superset,
     _normalize_to_openai_messages_list,
 )
@@ -30,12 +31,24 @@ def _scorer(
         raise ValueError(
             "Trajectory unordered match requires both outputs and reference_outputs"
         )
-    unordered_match = _is_trajectory_superset(
+    fwd = _is_trajectory_superset(
         outputs, reference_outputs, tool_args_match_mode, tool_args_match_overrides
-    ) and _is_trajectory_superset(
+    )
+    bwd = _is_trajectory_superset(
         reference_outputs, outputs, tool_args_match_mode, tool_args_match_overrides
     )
-    return unordered_match
+    if fwd and bwd:
+        return True
+    out_names = [c["name"] for c in _extract_tool_calls(outputs)]
+    ref_names = [c["name"] for c in _extract_tool_calls(reference_outputs)]
+    parts = []
+    if not fwd:
+        missing = [n for n in ref_names if n not in out_names]
+        parts.append(f"missing tool calls: {missing}")
+    if not bwd:
+        extra = [n for n in out_names if n not in ref_names]
+        parts.append(f"extra tool calls: {extra}")
+    return (False, "Unordered trajectory match failed: " + "; ".join(parts) + ".")
 
 
 def trajectory_unordered_match(
