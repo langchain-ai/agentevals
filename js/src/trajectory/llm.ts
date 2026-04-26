@@ -2,7 +2,10 @@ import type { BaseMessage } from "@langchain/core/messages";
 import { _createLLMAsJudgeScorer } from "openevals/llm";
 
 import { _runEvaluator, _normalizeToOpenAIMessagesList } from "../utils.js";
-import { _chatCompletionMessagesToString } from "./utils.js";
+import {
+  _chatCompletionMessagesToString,
+  _flattenThinkingBlocks,
+} from "./utils.js";
 import {
   ChatCompletionMessage,
   FlexibleChatCompletionMessage,
@@ -81,7 +84,7 @@ Grade the following trajectory:
 {outputs}
 </trajectory>`;
 
-function _formatInputs(params: {
+export function _formatInputs(params: {
   outputs:
     | ChatCompletionMessage[]
     | FlexibleChatCompletionMessage[]
@@ -106,9 +109,11 @@ function _formatInputs(params: {
       };
 }): [string, string] {
   const { outputs, referenceOutputs } = params;
-  const normalizedOutputs = _normalizeToOpenAIMessagesList(outputs);
-  const normalizedReferenceOutputs = _normalizeToOpenAIMessagesList(
-    referenceOutputs ?? []
+  const normalizedOutputs = _flattenThinkingBlocks(
+    _normalizeToOpenAIMessagesList(outputs)
+  );
+  const normalizedReferenceOutputs = _flattenThinkingBlocks(
+    _normalizeToOpenAIMessagesList(referenceOutputs ?? [])
   );
 
   const formattedReferenceOutputs = normalizedReferenceOutputs

@@ -1,4 +1,8 @@
 from agentevals.trajectory.match import create_trajectory_match_evaluator
+from agentevals.trajectory.utils import (
+    _flatten_thinking_blocks,
+    _normalize_to_openai_messages_list,
+)
 
 from agentevals.types import EvaluatorResult, ChatCompletionMessage
 
@@ -1248,3 +1252,121 @@ def test_tool_args_match_mode_exact(tool_args_match_mode, score):
     )
     evaluator_result = evaluator(outputs=outputs, reference_outputs=reference_outputs)
     assert evaluator_result["score"] == score
+
+
+@pytest.mark.langsmith
+def test_flatten_thinking_blocks_anthropic():
+    messages = [
+        ChatCompletionMessage(
+            role="assistant",
+            content=[
+                {"type": "thinking", "thinking": "I should look this up"},
+                {"type": "text", "text": "Let me check that for you."},
+            ],
+        ),
+    ]
+    result = _flatten_thinking_blocks(messages)
+    assert result[0]["content"] == (
+        "<thinking>I should look this up</thinking>\nLet me check that for you."
+    )
+    assert result[0]["role"] == "assistant"
+
+
+@pytest.mark.langsmith
+def test_flatten_thinking_blocks_reasoning():
+    messages = [
+        ChatCompletionMessage(
+            role="assistant",
+            content=[
+                {"type": "reasoning", "reasoning": "Step 1: analyze the request"},
+                {"type": "text", "text": "Here is my answer."},
+            ],
+        ),
+    ]
+    result = _flatten_thinking_blocks(messages)
+    assert result[0]["content"] == (
+        "<thinking>Step 1: analyze the request</thinking>\nHere is my answer."
+    )
+
+
+@pytest.mark.langsmith
+def test_flatten_thinking_blocks_redacted():
+    messages = [
+        ChatCompletionMessage(
+            role="assistant",
+            content=[
+                {"type": "redacted_thinking", "data": "opaque"},
+                {"type": "text", "text": "Final answer."},
+            ],
+        ),
+    ]
+    result = _flatten_thinking_blocks(messages)
+    assert result[0]["content"] == "Final answer."
+
+
+@pytest.mark.langsmith
+def test_flatten_thinking_blocks_string_passthrough():
+    messages = [
+        ChatCompletionMessage(role="assistant", content="Just a normal message"),
+        ChatCompletionMessage(role="user", content="Hello"),
+    ]
+    result = _flatten_thinking_blocks(messages)
+    assert result[0]["content"] == "Just a normal message"
+    assert result[1]["content"] == "Hello"
+
+
+@pytest.mark.langsmith
+def test_flatten_thinking_blocks_only_thinking():
+    messages = [
+        ChatCompletionMessage(
+            role="assistant",
+            content=[
+                {"type": "thinking", "thinking": "Just reasoning, no output"},
+            ],
+        ),
+    ]
+    result = _flatten_thinking_blocks(messages)
+    assert result[0]["content"] == ("<thinking>Just reasoning, no output</thinking>")
+
+
+@pytest.mark.langsmith
+def test_flatten_thinking_blocks_with_langchain_messages():
+    messages = [
+        HumanMessage(content="What is the weather?"),
+        AIMessage(
+            content=[
+                {"type": "thinking", "thinking": "Let me think about this"},
+                {"type": "text", "text": "Checking now."},
+            ],
+        ),
+    ]
+    normalized = _normalize_to_openai_messages_list(messages)
+    result = _flatten_thinking_blocks(normalized)
+    assert isinstance(result[1]["content"], str)
+    assert "<thinking>" in result[1]["content"]
+    assert "Checking now." in result[1]["content"]
+
+
+@pytest.mark.langsmith
+def test_flatten_thinking_blocks_preserves_tool_calls():
+    messages = [
+        ChatCompletionMessage(
+            role="assistant",
+            content=[
+                {"type": "thinking", "thinking": "I need the weather tool"},
+                {"type": "text", "text": "Let me check."},
+            ],
+            tool_calls=[
+                {
+                    "function": {
+                        "name": "get_weather",
+                        "arguments": json.dumps({"city": "SF"}),
+                    }
+                }
+            ],
+        ),
+    ]
+    result = _flatten_thinking_blocks(messages)
+    assert isinstance(result[0]["content"], str)
+    assert result[0]["tool_calls"] is not None
+    assert len(result[0]["tool_calls"]) == 1
