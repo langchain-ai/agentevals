@@ -322,7 +322,11 @@ ls.describe("trajectory", () => {
       expect(result).toBeDefined();
       expect(result.key).toBe(feedbackKey);
       expect(result.score).toBe(score);
-      expect(result.comment).toBeUndefined();
+      if (score) {
+        expect(result.comment).toBeUndefined();
+      } else {
+        expect(result.comment).toBeDefined();
+      }
     }
   );
 
@@ -428,7 +432,11 @@ ls.describe("trajectory", () => {
       expect(result).toBeDefined();
       expect(result.key).toBe(feedbackKey);
       expect(result.score).toBe(score);
-      expect(result.comment).toBeUndefined();
+      if (score) {
+        expect(result.comment).toBeUndefined();
+      } else {
+        expect(result.comment).toBeDefined();
+      }
     }
   );
 
@@ -522,7 +530,7 @@ ls.describe("trajectory", () => {
       expect(result).toBeDefined();
       expect(result.key).toBe(feedbackKey);
       expect(result.score).toBe(score);
-      expect(result.comment).toBeUndefined();
+      expect(result.comment).toBeDefined();
     }
   );
 
@@ -629,7 +637,11 @@ ls.describe("trajectory", () => {
       expect(result).toBeDefined();
       expect(result.key).toBe(feedbackKey);
       expect(result.score).toBe(score);
-      expect(result.comment).toBeUndefined();
+      if (score) {
+        expect(result.comment).toBeUndefined();
+      } else {
+        expect(result.comment).toBeDefined();
+      }
     }
   );
 
@@ -778,7 +790,7 @@ ls.describe("trajectory", () => {
       expect(result).toBeDefined();
       expect(result.key).toBe(feedbackKey);
       expect(result.score).toBe(false);
-      expect(result.comment).toBeUndefined();
+      expect(result.comment).toBeDefined();
     }
   );
 
@@ -842,11 +854,13 @@ ls.describe("trajectory", () => {
       referenceOutputs,
     });
 
-    expect(result).toEqual({
-      key: "trajectory_strict_match",
-      score,
-      comment: undefined,
-    });
+    expect(result.key).toBe("trajectory_strict_match");
+    expect(result.score).toBe(score);
+    if (score) {
+      expect(result.comment).toBeUndefined();
+    } else {
+      expect(result.comment).toBeDefined();
+    }
   });
   ls.test.each([
     {
