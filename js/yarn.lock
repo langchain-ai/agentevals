@@ -1194,7 +1194,7 @@ __metadata:
     eslint-plugin-no-instanceof: ^1.0.1
     eslint-plugin-prettier: ^4.2.1
     langchain: ">=1.2.28"
-    langsmith: ">=0.5.19"
+    langsmith: ">=0.6.0"
     openai: ^6.25.0
     openevals: ^0.1.4
     prettier: ^3.5.1
