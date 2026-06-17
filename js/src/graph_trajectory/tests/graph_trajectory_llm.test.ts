@@ -125,6 +125,7 @@ Your task is to grade the accuracy of an AI agent's internal steps in resolving 
       });
       expect(res.key).toBe("graph_trajectory_accuracy");
       expect(res.score).toBe(false);
-    }
+    },
+    15_000
   );
 });
