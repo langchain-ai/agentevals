@@ -5,6 +5,9 @@
   "type": "module",
   "scripts": {
     "build": "yarn lc_build --create-entrypoints --pre --tree-shaking",
+    "bump-version": "node scripts/bump-version.js",
+    "check-npm-version": "node scripts/check-npm-version.js",
+    "check-version": "node scripts/check-version.js",
     "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
     "lint:dpdm": "dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
     "lint": "yarn lint:eslint && yarn lint:dpdm",
@@ -43,7 +46,7 @@
     "openai": "^6.25.0",
     "prettier": "^3.5.1",
     "typescript": "~5.1.6",
-    "vitest": "^3.0.5",
+    "vitest": "^4.1.0",
     "zod": "^4.1.5"
   },
   "resolutions": {
