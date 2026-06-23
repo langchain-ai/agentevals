@@ -11,6 +11,26 @@ from langchain_core.tools import tool
 import pytest
 
 
+def test_system_passed_to_scorer(monkeypatch):
+    captured = {}
+
+    def fake_create_llm_as_judge_scorer(**kwargs):
+        captured.update(kwargs)
+        return lambda **kwargs: {"score": True}
+
+    monkeypatch.setattr(
+        "agentevals.graph_trajectory.llm._create_llm_as_judge_scorer",
+        fake_create_llm_as_judge_scorer,
+    )
+
+    create_graph_trajectory_llm_as_judge(
+        model="openai:o3-mini",
+        system="Use the graph trajectory rubric.",
+    )
+
+    assert captured["system"] == "Use the graph trajectory rubric."
+
+
 @tool
 def search(query: str):
     """Call to surf the web."""

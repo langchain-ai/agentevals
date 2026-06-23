@@ -103,6 +103,7 @@ def create_trajectory_llm_as_judge(
         ..., list[ChatCompletionMessage]
     ] = TRAJECTORY_ACCURACY_PROMPT_WITH_REFERENCE,
     model: Optional[str] = None,
+    system: Optional[str] = None,
     feedback_key: str = "trajectory_accuracy",
     judge: Optional[
         Union[
@@ -143,6 +144,7 @@ def create_trajectory_llm_as_judge(
         prompt=prompt,
         judge=judge,
         model=model,
+        system=system,
         continuous=continuous,
         choices=choices,
         use_reasoning=use_reasoning,
@@ -181,6 +183,7 @@ def create_async_trajectory_llm_as_judge(
         ..., list[ChatCompletionMessage]
     ] = TRAJECTORY_ACCURACY_PROMPT_WITH_REFERENCE,
     model: Optional[str] = None,
+    system: Optional[str] = None,
     feedback_key: str = "trajectory_accuracy",
     judge: Optional[
         Union[
@@ -221,6 +224,7 @@ def create_async_trajectory_llm_as_judge(
         prompt=prompt,
         judge=judge,
         model=model,
+        system=system,
         continuous=continuous,
         choices=choices,
         use_reasoning=use_reasoning,
