@@ -24,7 +24,7 @@ function _normalizeToolCall(toolCall: Record<string, any>): {
   return toolCall as { name: string; args: Record<string, unknown> };
 }
 
-function _extractToolCalls(
+export function _extractToolCalls(
   messages: ChatCompletionMessage[]
 ): { name: string; args: Record<string, unknown> }[] {
   const toolCalls: { name: string; args: Record<string, unknown> }[] = [];
