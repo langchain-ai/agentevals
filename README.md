@@ -148,6 +148,7 @@ For more details on this evaluator, including how to customize it, see the secti
     - [Unordered match](#unordered-match)
     - [Subset/superset match](#subset-and-superset-match)
     - [Tool args match modes](#tool-args-match-modes)
+  - [Tool permission](#tool-permission)
   - [Trajectory LLM-as-judge](#trajectory-llm-as-judge)
   - [Graph Trajectory](#graph-trajectory)
     - [Graph trajectory LLM-as-judge](#graph-trajectory-llm-as-judge)
@@ -821,6 +822,88 @@ console.log(result);
 </details>
 
 This flexibility allows you to handle cases where you want looser equality for LLM generated arguments (`"san francisco"` to equal `"San Francisco"`) for only specific tool calls.
+
+## Tool permission
+
+Tool permission evaluators check whether an agent only called tools it was **authorized** to, against a permission policy — an allowlist and/or a denylist — independent of any reference trajectory. Where `create_trajectory_match_evaluator` compares called tools to a reference, this enforces **least privilege**: any tool call outside the granted policy lowers the score. It is deterministic and requires no LLM.
+
+Use `create_trajectory_tool_permission_evaluator`/`createTrajectoryToolPermissionEvaluator` (and `create_async_trajectory_tool_permission_evaluator` in Python). The score is the fraction of tool calls that were authorized (`1.0` when no tools were called), and a denial always takes precedence over an allow.
+
+<details open>
+<summary>Python</summary>
+
+```python
+from agentevals.trajectory.tool_permission import create_trajectory_tool_permission_evaluator
+
+evaluator = create_trajectory_tool_permission_evaluator(
+    allowed_tools=["search_kb", "reply_to_customer"],
+    denied_tools=["issue_refund"],
+)
+
+outputs = [
+    {"role": "user", "content": "Can I get a refund?"},
+    {
+        "role": "assistant",
+        "content": "",
+        "tool_calls": [
+            {"function": {"name": "search_kb", "arguments": "{}"}},
+            {"function": {"name": "issue_refund", "arguments": "{}"}},
+        ],
+    },
+]
+
+result = evaluator(outputs=outputs)
+
+print(result)
+```
+
+```
+{
+    'key': 'trajectory_tool_permission',
+    'score': 0.5,
+    'comment': None,
+    'metadata': None,
+}
+```
+</details>
+
+<details>
+<summary>TypeScript</summary>
+
+```ts
+import { createTrajectoryToolPermissionEvaluator } from "agentevals";
+
+const evaluator = createTrajectoryToolPermissionEvaluator({
+  allowedTools: ["search_kb", "reply_to_customer"],
+  deniedTools: ["issue_refund"],
+});
+
+const outputs = [
+  { role: "user", content: "Can I get a refund?" },
+  {
+    role: "assistant",
+    content: "",
+    tool_calls: [
+      { function: { name: "search_kb", arguments: "{}" } },
+      { function: { name: "issue_refund", arguments: "{}" } },
+    ],
+  },
+];
+
+const result = await evaluator({ outputs });
+
+console.log(result);
+```
+
+```
+{
+    key: 'trajectory_tool_permission',
+    score: 0.5,
+}
+```
+</details>
+
+The agent called `issue_refund`, which is denied, so 1 of 2 tool calls is unauthorized and the score is `0.5`.
 
 ## Trajectory LLM-as-judge
 
