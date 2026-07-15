@@ -88,6 +88,7 @@ def create_graph_trajectory_llm_as_judge(
     | Runnable
     | Callable[..., list[ChatCompletionMessage]] = DEFAULT_REF_COMPARE_PROMPT,
     model: Optional[str] = None,
+    system: Optional[str] = None,
     feedback_key: str = "graph_trajectory_accuracy",
     judge: Optional[
         Union[
@@ -128,6 +129,7 @@ def create_graph_trajectory_llm_as_judge(
         prompt=prompt,
         judge=judge,
         model=model,
+        system=system,
         continuous=continuous,
         choices=choices,
         use_reasoning=use_reasoning,
@@ -165,6 +167,7 @@ def create_async_graph_trajectory_llm_as_judge(
     | Runnable
     | Callable[..., list[ChatCompletionMessage]] = DEFAULT_REF_COMPARE_PROMPT,
     model: Optional[str] = None,
+    system: Optional[str] = None,
     feedback_key: str = "graph_trajectory_accuracy",
     judge: Optional[
         Union[
@@ -205,6 +208,7 @@ def create_async_graph_trajectory_llm_as_judge(
         prompt=prompt,
         judge=judge,
         model=model,
+        system=system,
         continuous=continuous,
         choices=choices,
         use_reasoning=use_reasoning,
