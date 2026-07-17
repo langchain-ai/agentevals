@@ -1,9 +1,12 @@
 from __future__ import annotations
 from warnings import warn
 
-from agentevals.trajectory.utils import _normalize_to_openai_messages_list
+from agentevals.trajectory.utils import (
+    _extract_tool_calls,
+    _is_trajectory_superset,
+    _normalize_to_openai_messages_list,
+)
 from agentevals.types import ChatCompletionMessage
-from agentevals.trajectory.utils import _is_trajectory_superset
 from agentevals.utils import _run_evaluator, _arun_evaluator
 from agentevals.types import ToolArgsMatchMode, ToolArgsMatchOverrides
 
@@ -28,7 +31,15 @@ def _scorer(
     is_superset = _is_trajectory_superset(
         reference_outputs, outputs, tool_args_match_mode, tool_args_match_overrides
     )
-    return is_superset
+    if not is_superset:
+        out_names = [c["name"] for c in _extract_tool_calls(outputs)]
+        ref_names = [c["name"] for c in _extract_tool_calls(reference_outputs)]
+        extra = [n for n in out_names if n not in ref_names]
+        return (
+            False,
+            f"Trajectory subset check failed: output contains tool calls not found in reference: {extra}.",
+        )
+    return True
 
 
 def trajectory_subset(

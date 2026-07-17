@@ -32,24 +32,39 @@ def _scorer(
             "Strict trajectory match requires both outputs and reference_outputs"
         )
     if len(outputs) != len(reference_outputs):
-        return False
-    for output, reference_output in zip(outputs, reference_outputs):
+        return (
+            False,
+            f"Trajectory length mismatch: expected {len(reference_outputs)} steps, got {len(outputs)}.",
+        )
+    for step_idx, (output, reference_output) in enumerate(
+        zip(outputs, reference_outputs)
+    ):
+        step = step_idx + 1
         if output["role"] != reference_output["role"]:
-            return False
+            return (
+                False,
+                f"Step {step}: role mismatch. Expected '{reference_output['role']}', got '{output['role']}'.",
+            )
         elif ("tool_calls" in output and output["tool_calls"] is not None) != (
             "tool_calls" in reference_output
             and reference_output["tool_calls"] is not None
         ):
             # One has tool calls while the other doesn't
-            return False
+            return (
+                False,
+                f"Step {step}: one side has tool calls, the other does not.",
+            )
         elif "tool_calls" in output and output["tool_calls"] is not None:
             # Both have tool calls, compare them
             if not isinstance(output["tool_calls"], list) or not isinstance(
                 reference_output["tool_calls"], list
             ):
-                return False
+                return (False, f"Step {step}: tool_calls is not a list.")
             if len(output["tool_calls"]) != len(reference_output["tool_calls"]):
-                return False
+                return (
+                    False,
+                    f"Step {step}: tool call count mismatch. Expected {len(reference_output['tool_calls'])}, got {len(output['tool_calls'])}.",
+                )
             # Create a copy of reference tool calls to track matches
             seen = [False] * len(reference_output["tool_calls"])
             for output_call in output["tool_calls"]:
@@ -72,7 +87,30 @@ def _scorer(
                             seen[i] = True
                             break
                 if not found_match:
-                    return False
+                    out_name = output_call["function"]["name"]
+                    ref_names = [
+                        r["function"]["name"]
+                        for r in reference_output["tool_calls"]
+                    ]
+                    if out_name in ref_names:
+                        ref_call = next(
+                            r
+                            for r in reference_output["tool_calls"]
+                            if r["function"]["name"] == out_name
+                        )
+                        return (
+                            False,
+                            f"Step {step}, tool '{out_name}': argument mismatch "
+                            f"(match_mode='{tool_args_match_mode}'). "
+                            f"Expected: {ref_call['function']['arguments']}. "
+                            f"Got: {output_call['function']['arguments']}.",
+                        )
+                    else:
+                        return (
+                            False,
+                            f"Step {step}: tool name mismatch. "
+                            f"Expected one of {ref_names}, got '{out_name}'.",
+                        )
     return True
 
 
