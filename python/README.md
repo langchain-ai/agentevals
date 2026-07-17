@@ -83,7 +83,7 @@ For more details on this evaluator, including how to customize it, see the secti
   - [Trajectory LLM-as-judge](#trajectory-llm-as-judge)
   - [Graph Trajectory](#graph-trajectory)
     - [Graph trajectory LLM-as-judge](#graph-trajectory-llm-as-judge)
-    - [Graph trajectory strict match](#graph-trajectory-strict-match)
+    - [Graph trajectory match](#graph-trajectory-match)
 - [Python Async Support](#python-async-support)
 - [LangSmith Integration](#langsmith-integration)
   - [Pytest or Vitest/Jest](#pytest-or-vitestjest)
@@ -721,63 +721,59 @@ In order to format them properly into the prompt, `reference_outputs` should be 
 
 Also note that like other LLM-as-judge evaluators, you can pass extra params into the evaluator to format them into the prompt.
 
-### Graph trajectory strict match
+### Graph trajectory match
 
-The `graph_trajectory_strict_match` evaluator is a simple evaluator that checks if the steps in the provided graph trajectory match the reference trajectory exactly.
+`agentevals` offers `create_graph_trajectory_match_evaluator` and `create_async_graph_trajectory_match_evaluator` factory methods that mirror the agent trajectory match API. You can set `trajectory_match_mode` to `"strict"`, `"unordered"`, `"subset"`, or `"superset"`.
+
+These evaluators compare the **nodes visited** across all steps rather than tool calls within messages:
+
+- `"strict"` — same steps in the same order within each turn
+- `"unordered"` — same set of nodes overall, regardless of order or turn boundaries
+- `"subset"` — output nodes are a subset of the reference nodes
+- `"superset"` — output nodes are a superset of the reference nodes
 
 ```python
-from agentevals.graph_trajectory.utils import (
-    extract_langgraph_trajectory_from_thread,
-)
-from agentevals.graph_trajectory.strict import graph_trajectory_strict_match
+from agentevals.graph_trajectory.match import create_graph_trajectory_match_evaluator
 
-from langgraph.prebuilt import create_react_agent
-from langgraph.checkpoint.memory import MemorySaver
-from langgraph.types import Command, interrupt
-
-from langchain_core.tools import tool
-
-@tool
-def search(query: str):
-    """Call to surf the web."""
-    user_answer = interrupt("Tell me the answer to the question.")
-    return user_answer
-
-tools = [search]
-
-checkpointer = MemorySaver()
-graph = create_react_agent(
-    model="gpt-4o-mini",
-    checkpointer=checkpointer,
-    tools=[search],
-)
-
-graph.invoke(
-    {"messages": [{"role": "user", "content": "what's the weather in sf?"}]},
-    config={"configurable": {"thread_id": "1"}},
-)
-# Resume the agent with a new command, simulating a human-in-the-loop workflow
-graph.invoke(
-    Command(resume="It is rainy and 70 degrees!"),
-    config={"configurable": {"thread_id": "1"}},
-)
-
-# Extract the trajectory from the first two thread runs
-extracted_trajectory = extract_langgraph_trajectory_from_thread(
-    graph, {"configurable": {"thread_id": "1"}}
-)
-
-reference_trajectory = {
-    # not used for strict match
+# The agent visited an extra "retriever" node not in the reference
+outputs = {
     "results": [],
-    "steps": [["__start__", "agent", "tools", "__interrupt__"], ["agent"]],
+    "steps": [["__start__", "agent", "tools", "retriever"], ["agent"]],
+}
+reference_outputs = {
+    "results": [],
+    "steps": [["__start__", "agent", "tools"], ["agent"]],
 }
 
-res = graph_trajectory_strict_match(
-    outputs=extracted_trajectory["outputs"],
-    reference_outputs=reference_trajectory,
+evaluator = create_graph_trajectory_match_evaluator(
+    trajectory_match_mode="superset",
 )
+result = evaluator(outputs=outputs, reference_outputs=reference_outputs)
+print(result)
+```
 
+```
+{
+  'key': 'graph_trajectory_superset_match',
+  'score': True,
+}
+```
+
+The existing `graph_trajectory_strict_match` function is still available for direct use:
+
+```python
+from agentevals.graph_trajectory.strict import graph_trajectory_strict_match
+
+res = graph_trajectory_strict_match(
+    outputs={
+        "results": [],
+        "steps": [["__start__", "agent", "tools", "__interrupt__"], ["agent"]],
+    },
+    reference_outputs={
+        "results": [],
+        "steps": [["__start__", "agent", "tools", "__interrupt__"], ["agent"]],
+    },
+)
 print(res)
 ```
 

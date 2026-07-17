@@ -1,4 +1,5 @@
 from __future__ import annotations
+from collections import Counter
 from typing import Iterable, TYPE_CHECKING
 import warnings
 
@@ -128,3 +129,24 @@ async def aextract_langgraph_trajectory_from_thread(
     return extract_langgraph_trajectory_from_snapshots(
         await _aget_langgraph_state_history_recursive(graph, config)
     )
+
+
+def _extract_nodes(trajectory: GraphTrajectory) -> list[str]:
+    """Flatten all node names from a graph trajectory's steps."""
+    return [node for step in trajectory["steps"] for node in step]
+
+
+def _is_graph_trajectory_superset(
+    outputs: GraphTrajectory,
+    reference_outputs: GraphTrajectory,
+) -> bool:
+    """Check whether the output trajectory's nodes are a superset of the reference.
+
+    Every node in the reference must appear at least as many times in the output.
+    """
+    output_counts = Counter(_extract_nodes(outputs))
+    reference_counts = Counter(_extract_nodes(reference_outputs))
+    for node, count in reference_counts.items():
+        if output_counts.get(node, 0) < count:
+            return False
+    return True
