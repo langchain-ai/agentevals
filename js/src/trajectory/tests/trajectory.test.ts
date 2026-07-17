@@ -5,6 +5,7 @@ import { expect } from "vitest";
 import { HumanMessage, AIMessage, ToolMessage } from "@langchain/core/messages";
 import { createTrajectoryMatchEvaluator } from "../match.js";
 import { FlexibleChatCompletionMessage } from "../../types.js";
+import { _flattenThinkingBlocks } from "../utils.js";
 
 ls.describe("trajectory", () => {
   ls.test.each([
@@ -1490,4 +1491,121 @@ ls.describe("trajectory", () => {
     });
     expect(evaluatorResult.score).toBe(score);
   });
+});
+
+ls.describe("flattenThinkingBlocks", () => {
+  ls.test(
+    "flattens Anthropic thinking blocks to tagged string",
+    { inputs: {} },
+    async () => {
+      const messages = [
+        {
+          role: "assistant",
+          content: [
+            { type: "thinking", thinking: "I should look this up" },
+            { type: "text", text: "Let me check that for you." },
+          ],
+        },
+      ];
+      const result = _flattenThinkingBlocks(messages as any);
+      expect(result[0].content).toBe(
+        "<thinking>I should look this up</thinking>\nLet me check that for you."
+      );
+    }
+  );
+
+  ls.test(
+    "flattens reasoning blocks to tagged string",
+    { inputs: {} },
+    async () => {
+      const messages = [
+        {
+          role: "assistant",
+          content: [
+            { type: "reasoning", reasoning: "Step 1: analyze" },
+            { type: "text", text: "Here is my answer." },
+          ],
+        },
+      ];
+      const result = _flattenThinkingBlocks(messages as any);
+      expect(result[0].content).toBe(
+        "<thinking>Step 1: analyze</thinking>\nHere is my answer."
+      );
+    }
+  );
+
+  ls.test("drops redacted thinking blocks", { inputs: {} }, async () => {
+    const messages = [
+      {
+        role: "assistant",
+        content: [
+          { type: "redacted_thinking", data: "opaque" },
+          { type: "text", text: "Final answer." },
+        ],
+      },
+    ];
+    const result = _flattenThinkingBlocks(messages as any);
+    expect(result[0].content).toBe("Final answer.");
+  });
+
+  ls.test(
+    "passes through string content unchanged",
+    { inputs: {} },
+    async () => {
+      const messages = [
+        { role: "assistant", content: "Just a normal message" },
+        { role: "user", content: "Hello" },
+      ];
+      const result = _flattenThinkingBlocks(messages as any);
+      expect(result[0].content).toBe("Just a normal message");
+      expect(result[1].content).toBe("Hello");
+    }
+  );
+
+  ls.test(
+    "handles only thinking blocks with no text",
+    { inputs: {} },
+    async () => {
+      const messages = [
+        {
+          role: "assistant",
+          content: [
+            { type: "thinking", thinking: "Just reasoning, no output" },
+          ],
+        },
+      ];
+      const result = _flattenThinkingBlocks(messages as any);
+      expect(result[0].content).toBe(
+        "<thinking>Just reasoning, no output</thinking>"
+      );
+    }
+  );
+
+  ls.test(
+    "preserves tool_calls alongside flattened content",
+    { inputs: {} },
+    async () => {
+      const messages = [
+        {
+          role: "assistant",
+          content: [
+            { type: "thinking", thinking: "I need the weather tool" },
+            { type: "text", text: "Let me check." },
+          ],
+          tool_calls: [
+            {
+              function: {
+                name: "get_weather",
+                arguments: JSON.stringify({ city: "SF" }),
+              },
+            },
+          ],
+        },
+      ];
+      const result = _flattenThinkingBlocks(messages as any);
+      expect(typeof result[0].content).toBe("string");
+      expect(result[0].tool_calls).toBeDefined();
+      expect(result[0].tool_calls!.length).toBe(1);
+    }
+  );
 });

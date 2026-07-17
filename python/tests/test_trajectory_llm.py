@@ -1,4 +1,5 @@
 from agentevals.trajectory.llm import (
+    _format_inputs,
     create_trajectory_llm_as_judge,
     TRAJECTORY_ACCURACY_PROMPT_WITH_REFERENCE,
     TRAJECTORY_ACCURACY_PROMPT,
@@ -190,3 +191,23 @@ According to this reference trajectory:
     )
     assert eval_result["key"] == "trajectory_accuracy"
     assert not eval_result["score"]
+
+
+@pytest.mark.langsmith
+def test_format_inputs_flattens_thinking():
+    outputs = [
+        ChatCompletionMessage(
+            role="assistant",
+            content=[
+                {"type": "thinking", "thinking": "private reasoning"},
+                {"type": "text", "text": "public answer"},
+            ],
+        ),
+    ]
+    formatted_outputs, formatted_reference_outputs = _format_inputs(
+        outputs, reference_outputs=outputs
+    )
+    for rendered in (formatted_outputs, formatted_reference_outputs):
+        assert "<thinking>private reasoning</thinking>" in rendered
+        assert "public answer" in rendered
+        assert "'type': 'thinking'" not in rendered

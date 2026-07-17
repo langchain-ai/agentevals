@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as ls from "langsmith/vitest";
 import { expect } from "vitest";
 
 import {
+  _formatInputs,
   createTrajectoryLLMAsJudge,
   TRAJECTORY_ACCURACY_PROMPT,
 } from "../llm.js";
@@ -225,6 +227,31 @@ According to this reference trajectory:
 
       expect(evalResult.key).toBe("trajectory_accuracy");
       expect(evalResult.score).toBe(false);
+    }
+  );
+
+  ls.test(
+    "_formatInputs flattens thinking blocks in the judge prompt",
+    { inputs: {} },
+    async () => {
+      const outputs = [
+        {
+          role: "assistant",
+          content: [
+            { type: "thinking", thinking: "private reasoning" },
+            { type: "text", text: "public answer" },
+          ],
+        },
+      ];
+      const [formattedOutputs, formattedReferenceOutputs] = _formatInputs({
+        outputs: outputs as any,
+        referenceOutputs: outputs as any,
+      });
+      for (const rendered of [formattedOutputs, formattedReferenceOutputs]) {
+        expect(rendered).toContain("<thinking>private reasoning</thinking>");
+        expect(rendered).toContain("public answer");
+        expect(rendered).not.toContain('"type": "thinking"');
+      }
     }
   );
 });

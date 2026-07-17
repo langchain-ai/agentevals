@@ -4,6 +4,7 @@ __all__ = [
     "_get_matcher_for_tool_name",
     "_normalize_to_openai_messages_list",
     "_convert_to_openai_message",
+    "_flatten_thinking_blocks",
 ]
 
 import json
@@ -42,6 +43,31 @@ def _convert_to_openai_message(
         if message.get("id") is not None and converted.get("id") is None:
             converted["id"] = message.get("id")
     return converted  # type: ignore
+
+
+def _flatten_thinking_blocks(
+    messages: list[ChatCompletionMessage],
+) -> list[ChatCompletionMessage]:
+    result = []
+    for message in messages:
+        content = message.get("content", "")
+        if isinstance(content, list):
+            parts = []
+            for block in content:
+                if isinstance(block, dict):
+                    block_type = block.get("type")
+                    if block_type in ("thinking", "reasoning"):
+                        text = block.get(block_type) or ""
+                        parts.append(f"<thinking>{text}</thinking>")
+                    elif block_type == "redacted_thinking":
+                        continue
+                    elif block_type == "text":
+                        parts.append(block.get("text", ""))
+                elif isinstance(block, str):
+                    parts.append(block)
+            message = {**message, "content": "\n".join(parts)}
+        result.append(message)
+    return result
 
 
 def _normalize_to_openai_messages_list(

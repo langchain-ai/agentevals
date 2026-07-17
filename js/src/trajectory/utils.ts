@@ -219,6 +219,37 @@ export function _getMatcherForToolName(
   return matcher;
 }
 
+export function _flattenThinkingBlocks(
+  messages: ChatCompletionMessage[]
+): ChatCompletionMessage[] {
+  return messages.map((message) => {
+    const content = message.content;
+    if (!Array.isArray(content)) {
+      return message;
+    }
+    const parts: string[] = [];
+    for (const block of content) {
+      if (typeof block === "object" && block !== null) {
+        const blockType = (block as Record<string, unknown>).type;
+        if (blockType === "thinking" || blockType === "reasoning") {
+          const text =
+            (block as Record<string, unknown>)[blockType] ?? "";
+          parts.push(`<thinking>${text}</thinking>`);
+        } else if (blockType === "redacted_thinking") {
+          continue;
+        } else if (blockType === "text") {
+          parts.push(
+            ((block as Record<string, unknown>).text as string) ?? ""
+          );
+        }
+      } else if (typeof block === "string") {
+        parts.push(block);
+      }
+    }
+    return { ...message, content: parts.join("\n") };
+  });
+}
+
 export function _chatCompletionMessagesToString(
   messages: ChatCompletionMessage[]
 ): string {
