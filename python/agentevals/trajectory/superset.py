@@ -26,14 +26,16 @@ def _scorer(
     tool_args_match_overrides: Optional[ToolArgsMatchOverrides] = None,
     **kwargs: Any,
 ):
-    if outputs is None or reference_outputs is None:
+    if not isinstance(outputs, list) or not isinstance(reference_outputs, list):
         raise ValueError(
-            "Trajectory superset match requires both outputs and reference_outputs"
+            "Trajectory superset match requires both outputs and reference_outputs to be lists"
         )
-    is_superset = _is_trajectory_superset(
+    is_superset, error_message = _is_trajectory_superset(
         outputs, reference_outputs, tool_args_match_mode, tool_args_match_overrides
     )
-    return is_superset
+    if not is_superset:
+        return False, f'Output trajectory missing required tool calls: {error_message}'
+    return True, None
 
 
 def trajectory_superset(

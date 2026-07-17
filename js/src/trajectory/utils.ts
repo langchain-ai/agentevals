@@ -41,7 +41,7 @@ export async function _isTrajectorySuperset(
   referenceOutputs: ChatCompletionMessage[],
   toolArgsMatchMode: ToolArgsMatchMode,
   toolArgsMatchOverrides?: ToolArgsMatchOverrides
-): Promise<boolean> {
+): Promise<boolean | [false, string]> {
   const outputToolCalls = _extractToolCalls(outputs);
   const referenceToolCalls = _extractToolCalls(referenceOutputs);
 
@@ -85,7 +85,10 @@ export async function _isTrajectorySuperset(
 
     // If we didn't find a match for this reference call, we're not a superset
     if (!foundMatch) {
-      return false;
+      return [
+        false,
+        `Missing tool call: expected tool "${refName}" with arguments ${JSON.stringify(refArgs)} but no matching call found in output trajectory`,
+      ];
     }
   }
 

@@ -14,21 +14,28 @@ export const _scorer = async (params: {
   referenceOutputs: ChatCompletionMessage[];
   toolArgsMatchMode: ToolArgsMatchMode;
   toolArgsMatchOverrides?: ToolArgsMatchOverrides;
-}): Promise<boolean> => {
-  const isUnorderedMatch =
-    (await _isTrajectorySuperset(
-      params.outputs,
-      params.referenceOutputs,
-      params.toolArgsMatchMode,
-      params.toolArgsMatchOverrides
-    )) &&
-    (await _isTrajectorySuperset(
-      params.referenceOutputs,
-      params.outputs,
-      params.toolArgsMatchMode,
-      params.toolArgsMatchOverrides
-    ));
-  return isUnorderedMatch;
+}): Promise<boolean | [false, string]> => {
+  const outputResult = await _isTrajectorySuperset(
+    params.outputs,
+    params.referenceOutputs,
+    params.toolArgsMatchMode,
+    params.toolArgsMatchOverrides
+  );
+  if (outputResult !== true) {
+    const outputSupersetError = Array.isArray(outputResult) ? outputResult[1] : undefined;
+    return [false, `Output trajectory missing required tool calls: ${outputSupersetError}`];
+  }
+  const referenceResult = await _isTrajectorySuperset(
+    params.referenceOutputs,
+    params.outputs,
+    params.toolArgsMatchMode,
+    params.toolArgsMatchOverrides
+  );
+  if (referenceResult !== true) {
+    const referenceSupersetError = Array.isArray(referenceResult) ? referenceResult[1] : undefined;
+    return [false, `Output has extra tool calls that are not in the reference: ${referenceSupersetError}`];
+  }
+  return true;
 };
 
 /**

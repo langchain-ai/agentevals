@@ -100,7 +100,7 @@ def _is_trajectory_superset(
     matched_reference_calls = set()
 
     # For each reference tool call, find a matching output tool call
-    for ref_call in reference_tool_calls:
+    for ref_idx, ref_call in enumerate(reference_tool_calls):
         ref_name = ref_call["name"]
         ref_args = ref_call["args"]
 
@@ -129,9 +129,10 @@ def _is_trajectory_superset(
 
         # If we didn't find a match for this reference call, we're not a superset
         if not found_match:
-            return False
+            error_message = f'Missing tool call: expected tool "{ref_name}" with arguments {ref_args} but no matching call found in output trajectory'
+            return False, error_message
 
-    return True
+    return True, None
 
 
 def _exact_match(tool_call: dict, reference_tool_call: dict) -> bool:

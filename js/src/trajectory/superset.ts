@@ -14,14 +14,18 @@ export const _scorer = async (params: {
   referenceOutputs: ChatCompletionMessage[];
   toolArgsMatchMode: ToolArgsMatchMode;
   toolArgsMatchOverrides?: ToolArgsMatchOverrides;
-}): Promise<boolean> => {
+}): Promise<boolean | [false, string]> => {
   const isSuperset = await _isTrajectorySuperset(
     params.outputs,
     params.referenceOutputs,
     params.toolArgsMatchMode,
     params.toolArgsMatchOverrides
   );
-  return isSuperset;
+  if (isSuperset !== true) {
+    const errorMessage = Array.isArray(isSuperset) ? isSuperset[1] : undefined;
+    return [false, `Output trajectory missing required tool calls: ${errorMessage}`];
+  }
+  return true;
 };
 
 /**
