@@ -6,6 +6,7 @@ export {
   createTrajectoryMatchEvaluator,
   type TrajectoryMatchMode,
 } from "./trajectory/match.js";
+export { createTrajectoryToolPermissionEvaluator } from "./trajectory/toolPermission.js";
 export {
   createTrajectoryLLMAsJudge,
   TRAJECTORY_ACCURACY_PROMPT,
