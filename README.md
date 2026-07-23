@@ -1203,21 +1203,21 @@ print(extracted_trajectory)
           'messages': [
               {'role': 'user', 'content': 'It is rainy and 70 degrees!'}
           ]}
+  ],
+  'outputs': {
+      'results': [
+          {},
+          {
+              'messages': [
+                  {'role': 'ai', 'content': 'The current weather in San Francisco is rainy, with a temperature of 70 degrees.'}
+              ]
+          }
       ],
-      'outputs': {
-          'results': [
-            {},
-            {
-                'messages': [
-                    {'role': 'ai', 'content': 'The current weather in San Francisco is rainy, with a temperature of 70 degrees.'}
-                ]
-            }
-        ],
-        'steps': [
-            ['__start__', 'agent', 'tools', '__interrupt__'],
-            ['agent']
-        ]
-    }
+      'steps': [
+          ['__start__', 'agent', 'tools', '__interrupt__'],
+          ['agent']
+      ]
+  }
 }
 ```
 
