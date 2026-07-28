@@ -41,6 +41,8 @@ Once you've done this, you can run your first trajectory evaluator. We represent
 <summary>Python</summary>
 
 ```python
+import json
+
 from agentevals.trajectory.llm import create_trajectory_llm_as_judge, TRAJECTORY_ACCURACY_PROMPT
 
 trajectory_evaluator = create_trajectory_llm_as_judge(
@@ -470,7 +472,7 @@ const outputs = [
   },
   { role: "tool", content: "Nothing fun is happening, you should stay indoors and read!" },
   { role: "assistant", content: "The weather in SF is 80 degrees and sunny, but there is nothing fun happening." },
-] satisifes FlexibleChatCompletionMessage[];
+] satisfies FlexibleChatCompletionMessage[];
 
 const referenceOutputs = [
   { role: "user", content: "What is the weather in SF and is there anything fun happening?" },
