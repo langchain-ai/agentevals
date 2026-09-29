@@ -26,7 +26,11 @@ def _scorer(
             "Trajectory subset match requires both outputs and reference_outputs"
         )
     is_superset = _is_trajectory_superset(
-        reference_outputs, outputs, tool_args_match_mode, tool_args_match_overrides
+        reference_outputs,
+        outputs,
+        tool_args_match_mode,
+        tool_args_match_overrides,
+        swapped=True,
     )
     return is_superset
 
