@@ -87,6 +87,7 @@ For more details on this evaluator, including how to customize it, see the secti
     - [Subset/superset match](#subset-and-superset-match)
     - [Tool args match modes](#tool-args-match-modes)
   - [Trajectory LLM-as-judge](#trajectory-llm-as-judge)
+  - [Action hallucination](#action-hallucination)
   - [Graph Trajectory](#graph-trajectory)
     - [Graph trajectory LLM-as-judge](#graph-trajectory-llm-as-judge)
     - [Graph trajectory strict match](#graph-trajectory-strict-match)
@@ -573,6 +574,10 @@ const fewShotExamples = [
 ```
 
 See the [`openevals`](https://github.com/langchain-ai/openevals?tab=readme-ov-file#llm-as-judge) repo for a fully up to date list of parameters.
+
+## Action hallucination
+
+Not yet available in TypeScript.
 
 ## Graph trajectory
 

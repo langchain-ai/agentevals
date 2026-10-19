@@ -149,6 +149,7 @@ For more details on this evaluator, including how to customize it, see the secti
     - [Subset/superset match](#subset-and-superset-match)
     - [Tool args match modes](#tool-args-match-modes)
   - [Trajectory LLM-as-judge](#trajectory-llm-as-judge)
+  - [Action hallucination](#action-hallucination)
   - [Graph Trajectory](#graph-trajectory)
     - [Graph trajectory LLM-as-judge](#graph-trajectory-llm-as-judge)
     - [Graph trajectory strict match](#graph-trajectory-strict-match)
@@ -1090,6 +1091,63 @@ const fewShotExamples = [
 </details>
 
 See the [`openevals`](https://github.com/langchain-ai/openevals?tab=readme-ov-file#llm-as-judge) repo for a fully up to date list of parameters.
+
+## Action hallucination
+
+<details open>
+<summary>Python</summary>
+
+The action hallucination evaluator checks whether the agent's final message claims an action ("I've emailed you", "Your refund has been issued") that no successful tool call in the trajectory backs up. It does not need a reference trajectory or an LLM: claims are extracted with deterministic rules and matched to the tool that would have performed them. The score is `False` when a claimed action's tool was never called or every call to it failed, and `comment` lists the offending claims with the reason (`not_called` or `tool_failed`). To avoid false alarms, a claim that matches a tool only by its verb ("I've raised this with our team" against `create_ticket`), or whose action another tool that ran may have performed, is not flagged as `not_called`.
+
+Pass the agent's tools with `tools` (names, or dicts in OpenAI function format). Without it, only tools that appear in the trajectory's tool calls are known, so a claim about a tool that was never called cannot be judged.
+
+```python
+from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
+from agentevals.trajectory.action_hallucination import create_action_hallucination_evaluator
+
+outputs = [
+    HumanMessage(content="Refund order 42 and email me a confirmation."),
+    AIMessage(
+        content="",
+        tool_calls=[
+            {"id": "call_1", "name": "issue_refund", "args": {"order_id": "42"}},
+            {"id": "call_2", "name": "send_email", "args": {"to": "me"}},
+        ],
+    ),
+    ToolMessage(content="Refund issued.", tool_call_id="call_1"),
+    ToolMessage(content="SMTP gateway timeout", tool_call_id="call_2", status="error"),
+    AIMessage(content="I issued the refund and I have emailed you a confirmation."),
+]
+
+evaluator = create_action_hallucination_evaluator(
+    tools=["send_email", "lookup_order", "issue_refund"]
+)
+
+result = evaluator(outputs=outputs)
+
+print(result)
+```
+
+```
+{
+    'key': 'action_hallucination',
+    'score': False,
+    'comment': 'send_email (tool_failed): "I have emailed you a confirmation"',
+}
+```
+
+**Note:** Tool call failures are read from `ToolMessage.status`. OpenAI-format tool messages usually carry no status, so with those inputs every tool call that was made counts as successful unless the message has `"status": "error"`.
+
+For runtime use with automatic capture, see [toolreceipt](https://github.com/yohannesjoya/toolreceipt).
+
+</details>
+
+<details>
+<summary>TypeScript</summary>
+
+Not yet available in TypeScript.
+
+</details>
 
 ## Graph trajectory
 
